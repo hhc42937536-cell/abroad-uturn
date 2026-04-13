@@ -15,5 +15,11 @@
       "src": "/api/check_prices",
       "dest": "api/webhook.py"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/check_prices",
+      "schedule": "0 8 * * *"
+    }
   ]
 }

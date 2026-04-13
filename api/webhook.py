@@ -1092,6 +1092,87 @@ def build_help_message() -> list:
     }]
 
 
+# ─── 出發地設定 ──────────────────────────────────────
+
+# 台灣機場 IATA
+TW_AIRPORTS = {
+    "台北": "TPE", "桃園": "TPE", "松山": "TSA",
+    "高雄": "KHH", "小港": "KHH",
+    "台中": "RMQ", "清泉崗": "RMQ",
+    "台南": "TNN",
+    "花蓮": "HUN",
+}
+
+
+def _get_user_origin(user_id: str) -> str:
+    """取得使用者設定的出發地（預設 TPE）"""
+    if not UPSTASH_REDIS_URL or not user_id:
+        return "TPE"
+    origin = redis_get(f"origin:{user_id}")
+    return origin if origin else "TPE"
+
+
+def handle_set_origin(user_id: str, text: str) -> list:
+    """設定出發機場"""
+    city = text.replace("出發地", "").replace("設定", "").replace("改", "").strip()
+
+    if not city:
+        # 顯示選擇器
+        current = _get_user_origin(user_id)
+        current_name = {v: k for k, v in TW_AIRPORTS.items()}.get(current, current)
+        buttons = []
+        for name, code in [("台北 桃園", "TPE"), ("高雄 小港", "KHH"), ("台中 清泉崗", "RMQ"), ("台南", "TNN")]:
+            marker = " \u2705" if code == current else ""
+            buttons.append({
+                "type": "button",
+                "style": "primary" if code == current else "secondary",
+                "height": "sm",
+                "action": {"type": "message", "label": f"{name}{marker}", "text": f"出發地 {name.split()[0]}"},
+            })
+        return [{
+            "type": "flex",
+            "altText": "設定出發機場",
+            "contents": {
+                "type": "bubble", "size": "kilo",
+                "header": {
+                    "type": "box", "layout": "vertical",
+                    "backgroundColor": "#FF6B35", "paddingAll": "15px",
+                    "contents": [
+                        {"type": "text", "text": "\U0001f6eb \u8a2d\u5b9a\u51fa\u767c\u6a5f\u5834",
+                         "color": "#FFFFFF", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": f"\u76ee\u524d\uff1a{current_name} ({current})",
+                         "color": "#FFE0CC", "size": "sm"},
+                    ],
+                },
+                "body": {
+                    "type": "box", "layout": "vertical",
+                    "spacing": "sm", "paddingAll": "15px",
+                    "contents": buttons,
+                },
+            },
+        }]
+
+    # 解析城市
+    code = TW_AIRPORTS.get(city)
+    if not code:
+        return [{"type": "text", "text":
+            f"\u627e\u4e0d\u5230\u300c{city}\u300d\u7684\u6a5f\u5834\n\n"
+            f"\u652f\u63f4\u7684\u51fa\u767c\u5730\uff1a\u53f0\u5317\u3001\u9ad8\u96c4\u3001\u53f0\u4e2d\u3001\u53f0\u5357\n"
+            f"\u4f8b\u5982\uff1a\u300c\u51fa\u767c\u5730 \u9ad8\u96c4\u300d"
+        }]
+
+    # 儲存
+    if UPSTASH_REDIS_URL and user_id:
+        redis_set(f"origin:{user_id}", code, ttl=86400 * 365)
+
+    city_name = {v: k for k, v in TW_AIRPORTS.items()}.get(code, city)
+    return [{"type": "text", "text":
+        f"\u2705 \u51fa\u767c\u5730\u5df2\u8a2d\u5b9a\u70ba\uff1a{city} ({code})\n\n"
+        f"\u4ee5\u5f8c\u641c\u5c0b\u90fd\u6703\u5f9e {code} \u51fa\u767c\uff01\n"
+        f"\u8f38\u5165\u300c\u4fbf\u5b9c\u300d\u8a66\u8a66\u770b \u2708\ufe0f"
+    }]
+
+
 # ─── 文字訊息路由 ─────────────────────────────────────
 
 def handle_text_message(text: str, user_id: str = "") -> list:
@@ -1099,9 +1180,16 @@ def handle_text_message(text: str, user_id: str = "") -> list:
     text = text.strip()
 
     # ── 探索最便宜（步驟 1：選月份）──
+    # 取得使用者出發地
+    origin = _get_user_origin(user_id)
+
+    # ── 出發地設定 ──
+    if "出發地" in text or text in ("設定出發地", "出發機場", "改出發地"):
+        return handle_set_origin(user_id, text)
+
     # ── 快速探索（直接秀價格）──
     if text in ("便宜", "最便宜", "探索", "便宜國外探索"):
-        return handle_quick_explore()
+        return handle_quick_explore(origin)
 
     # ── 選月份探索 ──
     if text in ("探索最便宜", "便宜探索", "選月份"):
@@ -1111,7 +1199,7 @@ def handle_text_message(text: str, user_id: str = "") -> list:
     if text.startswith("\u63a2\u7d22|"):
         parts = text.split("|")
         if len(parts) >= 2:
-            return handle_explore(parts[1])
+            return handle_explore(parts[1], origin)
 
     # ── 機票比價（步驟 1：提示輸入）──
     if text in ("\u6a5f\u7968\u6bd4\u50f9", "\u6bd4\u50f9", "\u591a\u5e73\u53f0\u6bd4\u50f9"):
@@ -1145,7 +1233,7 @@ def handle_text_message(text: str, user_id: str = "") -> list:
     if dest:
         depart, ret = _parse_date_range(text)
         if depart:
-            return handle_compare(text)
+            return handle_compare(text, origin)
         else:
             city_name = IATA_TO_NAME.get(dest, dest)
             return [{"type": "text", "text":
