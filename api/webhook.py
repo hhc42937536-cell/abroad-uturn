@@ -1242,6 +1242,38 @@ def handle_text_message(text: str, user_id: str = "") -> list:
                 f"\u300c{city_name} 6/15-6/20\u300d"
             }]
 
+    # ── 旅行工具箱 ──
+    if text in ("旅行工具", "工具箱", "工具"):
+        return [{
+            "type": "flex",
+            "altText": "旅行工具箱",
+            "contents": {
+                "type": "bubble", "size": "kilo",
+                "header": {
+                    "type": "box", "layout": "vertical",
+                    "backgroundColor": "#5C6BC0", "paddingAll": "15px",
+                    "contents": [
+                        {"type": "text", "text": "\U0001f9f3 旅行工具箱",
+                         "color": "#FFFFFF", "weight": "bold", "size": "lg"},
+                    ],
+                },
+                "body": {
+                    "type": "box", "layout": "vertical",
+                    "spacing": "sm", "paddingAll": "15px",
+                    "contents": [
+                        {"type": "button", "style": "primary", "color": "#FF6B35", "height": "sm",
+                         "action": {"type": "message", "label": "\U0001f6eb 設定出發地", "text": "出發地"}},
+                        {"type": "button", "style": "secondary", "height": "sm",
+                         "action": {"type": "message", "label": "\U0001f4c5 選月份探索", "text": "探索最便宜"}},
+                        {"type": "button", "style": "secondary", "height": "sm",
+                         "action": {"type": "message", "label": "\U0001f514 我的追蹤清單", "text": "我的追蹤"}},
+                        {"type": "button", "style": "secondary", "height": "sm",
+                         "action": {"type": "message", "label": "\U0001f4d6 使用教學", "text": "使用教學"}},
+                    ],
+                },
+            },
+        }]
+
     # ── 未來功能占位 ──
     coming_soon_keywords = {
         "\u5f48\u6027\u65e5\u671f": "\u5f48\u6027\u65e5\u671f\u641c\u5c0b",
@@ -1249,7 +1281,6 @@ def handle_text_message(text: str, user_id: str = "") -> list:
         "\u8f49\u6a5f": "\u8f49\u6a5f\u6700\u7701\u7d44\u5408",
         "\u6a5f\u52a0\u9152": "\u6a5f+\u9152+\u7968\u6253\u5305",
         "\u71b1\u9580\u570b\u5bb6": "\u71b1\u9580\u570b\u5bb6\u5feb\u9078",
-        "\u65c5\u884c\u5de5\u5177": "\u65c5\u884c\u5c0f\u5de5\u5177\u7bb1",
     }
     for kw, feature in coming_soon_keywords.items():
         if kw in text:
