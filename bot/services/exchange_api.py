@@ -3,6 +3,7 @@
 資料來源：ExchangeRate-API Open Access
 https://www.exchangerate-api.com/docs/free
 """
+from __future__ import annotations
 
 import json
 import urllib.request

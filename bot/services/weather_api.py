@@ -4,6 +4,7 @@
 - 預報模式：16 天內用 /v1/forecast（精確）
 - 歷史模式：超過 16 天用 /v1/climate 取同月歷史平均（估算）
 """
+from __future__ import annotations
 
 import json
 import urllib.request

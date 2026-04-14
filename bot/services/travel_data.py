@@ -1,4 +1,5 @@
 """靜態旅遊資料讀取（簽證、海關、文化、打包清單）"""
+from __future__ import annotations
 
 import json
 import os

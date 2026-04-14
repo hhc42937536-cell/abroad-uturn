@@ -1,4 +1,5 @@
 """Travelpayouts 機票 API + Mock 資料"""
+from __future__ import annotations
 
 import json
 import time

@@ -1,4 +1,5 @@
 """Session 狀態管理（Redis-backed）"""
+from __future__ import annotations
 
 import json
 import time
