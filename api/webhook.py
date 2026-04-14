@@ -15,6 +15,7 @@ Vercel Serverless Function (Python)
 import json
 import sys
 import os
+import traceback
 from http.server import BaseHTTPRequestHandler
 
 # 確保 bot/ 模組可被 import（Vercel 部署環境）
@@ -94,9 +95,10 @@ class handler(BaseHTTPRequestHandler):
                     continue
 
             except Exception as e:
-                print(f"[webhook] Error: {e}")
+                tb = traceback.format_exc()
+                print(f"[webhook] Error: {e}\n{tb}")
                 reply_message(reply_token, [{"type": "text", "text":
-                    "\u7cfb\u7d71\u767c\u751f\u932f\u8aa4\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66 \U0001f64f"}])
+                    f"\u7cfb\u7d71\u767c\u751f\u932f\u8aa4\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66 \U0001f64f\n[debug] {type(e).__name__}: {str(e)[:100]}"}])
                 log_usage(user_id, "error", is_success=False)
 
     def _json_response(self, status: int, data: dict):
