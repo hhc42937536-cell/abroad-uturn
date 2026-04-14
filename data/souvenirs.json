@@ -1,0 +1,169 @@
+{
+  "_meta": {
+    "description": "各國伴手禮 & 必買推薦",
+    "last_updated": "2026-04"
+  },
+  "JP": {
+    "country_name": "日本",
+    "must_buy": [
+      {"name": "藥妝三本柱：痘痘藥膏・眼藥水・止痛貼", "category": "藥妝", "price_range": "JPY 300-1,500", "where": "松本清・大國藥妝・唐吉訶德"},
+      {"name": "肌研極潤玻尿酸化妝水", "category": "藥妝美妝", "price_range": "JPY 600-900", "where": "松本清・藥妝店全國"},
+      {"name": "HABA 角鯊烷油・美容液", "category": "美妝保養", "price_range": "JPY 2,000-4,000", "where": "HABA 專櫃・百貨"},
+      {"name": "日本限定 KitKat 口味（抹茶/清酒）", "category": "零食伴手禮", "price_range": "JPY 400-800", "where": "便利商店・機場"},
+      {"name": "象印・虎牌電子鍋（IH款）", "category": "小家電", "price_range": "JPY 8,000-25,000", "where": "Yodobashi・BIC CAMERA・唐吉訶德"},
+      {"name": "Panasonic 奈米水離子吹風機 EH-NA0J", "category": "小家電", "price_range": "JPY 6,000-9,000", "where": "BIC CAMERA・Yodobashi"},
+      {"name": "SHARP/Panasonic 美容儀・洗臉機", "category": "小家電", "price_range": "JPY 3,000-15,000", "where": "電器量販店"},
+      {"name": "防曬乳（安耐曬・Biore UV）", "category": "藥妝", "price_range": "JPY 800-1,500", "where": "藥妝店・便利商店"},
+      {"name": "白色戀人・東京香蕉・薯條三兄弟", "category": "甜點伴手禮", "price_range": "JPY 800-1,500", "where": "機場・車站限定"},
+      {"name": "無印良品旅行小物・收納袋", "category": "生活雜貨", "price_range": "JPY 300-2,000", "where": "MUJI 全國"}
+    ],
+    "shopping_areas": [
+      {"name": "唐吉訶德（ドン・キホーテ）", "type": "藥妝+家電+伴手禮", "tip": "24 小時營業，滿 5,000 日圓免稅，APP 有折價券"},
+      {"name": "松本清・大國藥妝・Sundrug", "type": "藥妝專門", "tip": "三家比價再買，常有 2 件 9 折"},
+      {"name": "Yodobashi Camera・BIC CAMERA", "type": "電器量販", "tip": "外國人有退稅 + 額外 5% 折扣，記得帶護照"},
+      {"name": "成田・羽田・關西機場免稅店", "type": "機場免稅", "tip": "限定商品多，價格未必最便宜但省時方便"}
+    ],
+    "tax_free_tip": "消費滿 5,000 日圓可免稅，需出示護照，隔離袋封存不能在境內開封"
+  },
+  "KR": {
+    "country_name": "韓國",
+    "must_buy": [
+      {"name": "Olive Young 自有品牌面膜・精華", "category": "美妝", "price_range": "KRW 1,000-5,000/片", "where": "Olive Young 全國（明洞最大）"},
+      {"name": "COSRX・Some By Mi・TIRTIR 韓系保養", "category": "美妝保養", "price_range": "KRW 10,000-35,000", "where": "Olive Young・免稅店"},
+      {"name": "Laneige 水面膜・氣墊粉餅", "category": "美妝", "price_range": "KRW 15,000-35,000", "where": "Laneige 專櫃・Olive Young"},
+      {"name": "韓國醫美體驗（肉毒・玻尿酸・皮膚雷射）", "category": "醫美", "price_range": "KRW 50,000-300,000", "where": "江南・弘大・狎鷗亭皮膚科"},
+      {"name": "韓式大頭貼機（인생네컷・포토이즘）", "category": "體驗", "price_range": "KRW 4,000-6,000/次", "where": "弘大・明洞・梨大隨處可見"},
+      {"name": "蜂蜜奶油杏仁・海苔脆片", "category": "零食", "price_range": "KRW 3,000-10,000", "where": "CU/GS25 便利商店・大賣場"},
+      {"name": "K-POP 周邊（小卡・立牌・應援棒）", "category": "娛樂周邊", "price_range": "KRW 5,000-50,000", "where": "HYBE・SM・YG・JYP 官方商店"},
+      {"name": "紅蔘精・正官庄禮盒", "category": "保健", "price_range": "KRW 30,000-150,000", "where": "正官庄專賣店・機場免稅店"},
+      {"name": "韓服體驗（景福宮周邊租借）", "category": "體驗", "price_range": "KRW 15,000-30,000/2hr", "where": "景福宮・北村韓屋村周邊"},
+      {"name": "Dyson 吹風機・電捲棒（韓國比台灣便宜）", "category": "小家電", "price_range": "KRW 200,000-550,000", "where": "樂天免稅店・電子城"}
+    ],
+    "shopping_areas": [
+      {"name": "Olive Young 明洞本店", "type": "韓系美妝", "tip": "最大分店、貨最齊，常有 1+1 活動，App 有折扣"},
+      {"name": "江南・狎鷗亭皮膚科一條街", "type": "醫美診所", "tip": "韓國醫美比台灣便宜 30-60%，事先預約比較保險"},
+      {"name": "弘大大頭貼街（인생네컷聚集）", "type": "拍貼體驗", "tip": "弘大停車場周邊最密集，排版樣式多，一次多拍幾間"},
+      {"name": "樂天・新世界免稅店", "type": "免稅購物", "tip": "線上預購再到機場取貨，Dyson/保健品最划算"},
+      {"name": "東大門 Doota Mall・Designer Club", "type": "批發流行服飾", "tip": "深夜才開，凌晨 2-3 點最熱鬧，適合批貨"}
+    ],
+    "medical_beauty": {
+      "intro": "韓國醫美為何值得去？",
+      "reasons": [
+        "價格約台灣的 5-7 折（肉毒約 KRW 50,000 起）",
+        "醫師技術國際認證，診所林立競爭激烈",
+        "許多診所有中文服務人員"
+      ],
+      "popular_treatments": [
+        {"name": "肉毒桿菌（咬肌/額頭）", "price": "KRW 50,000-150,000", "tip": "術後2週效果最佳，出發前1週不建議"},
+        {"name": "玻尿酸（唇/法令紋）", "price": "KRW 150,000-400,000", "tip": "當日可正常出行，微腫約3天"},
+        {"name": "皮膚雷射（斑點/毛孔）", "price": "KRW 80,000-250,000", "tip": "術後防曬很重要，建議最後一天做"},
+        {"name": "水光針（保濕補水）", "price": "KRW 100,000-300,000", "tip": "效果立竿見影，很適合旅遊前做"}
+      ],
+      "areas": "江南區（清潭洞・狎鷗亭）> 弘大 > 明洞",
+      "warning": "⚠️ 建議事先查詢診所評價（Naver/韓國旅遊討論版），避免觀光區黑心診所"
+    },
+    "tax_free_tip": "消費滿 30,000 韓元可退稅，指定店家有 Tax Free 標誌，機場退稅最方便"
+  },
+  "TH": {
+    "country_name": "泰國",
+    "must_buy": [
+      {"name": "NaRaYa 曼谷包（各式尺寸顏色）", "category": "配件", "price_range": "THB 100-800", "where": "NaRaYa 專賣店（Siam/機場）"},
+      {"name": "Harnn・Thann 天然草本保養品", "category": "保養美妝", "price_range": "THB 300-1,500", "where": "Harnn 專賣店・機場免稅"},
+      {"name": "青草藥膏・白花油・薄荷棒（正官廟牌）", "category": "藥品", "price_range": "THB 30-100", "where": "藥局・7-11 全國"},
+      {"name": "泰國手工皂・香茅精油", "category": "日用保養", "price_range": "THB 50-300", "where": "夜市・水上市場・OTOP"},
+      {"name": "小老闆海苔・椰子脆片・芒果乾", "category": "零食", "price_range": "THB 20-200", "where": "7-11・Big C・Tops 超市"},
+      {"name": "泰式按摩課程體驗（Wat Po 正宗）", "category": "體驗", "price_range": "THB 300-800/hr", "where": "臥佛寺按摩學校・Lert Rit"},
+      {"name": "Jaspal・Fly Now 泰國設計師品牌", "category": "服飾", "price_range": "THB 500-3,000", "where": "Siam Paragon・Central World"},
+      {"name": "泰式奶茶即溶包・ChaTraMue 牌", "category": "飲品", "price_range": "THB 80-200", "where": "超市・機場"}
+    ],
+    "hot_experiences": [
+      {"name": "恰圖恰週末市場（全球最大戶外市集）", "tip": "僅週六日開放，逛到腳軟，必殺價"},
+      {"name": "泰式古法按摩（臥佛寺按摩學校）", "tip": "最正宗，2小時約 THB 420，提前預約"},
+      {"name": "安帕瓦水上市場（週末限定）", "tip": "曼谷近郊2小時，傍晚螢火蟲船遊"},
+      {"name": "美功鐵道市場（列車穿越攤販）", "tip": "火車來時攤販收攤讓道，超獨特景點"},
+      {"name": "空中酒吧（Vertigo/Lebua/Octave）", "tip": "曼谷俯瞰夜景必去，需著正式服裝"}
+    ],
+    "shopping_areas": [
+      {"name": "恰圖恰週末市場（JJ Market）", "type": "市集", "tip": "全球最大，8,000 個攤位，周六日才開"},
+      {"name": "Big C・Tops・Villa Market", "type": "超市", "tip": "零食伴手禮最便宜，離境前最後衝刺"},
+      {"name": "Siam Paragon・Central World・ICON Siam", "type": "百貨", "tip": "高端品牌，Tax Refund 退稅，ICON SIAM 最新最大"}
+    ],
+    "tax_free_tip": "消費滿 2,000 泰銖可退稅（VAT 7%），機場有退稅櫃檯，需出示護照"
+  },
+  "SG": {
+    "country_name": "新加坡",
+    "must_buy": [
+      {"name": "TWG 茶葉禮盒（新加坡頂級茶品牌）", "category": "茶品", "price_range": "SGD 20-80", "where": "TWG 專賣店・Changi 機場"},
+      {"name": "班蘭蛋糕・咖椰吐司套餐（Bengawan Solo/亞坤）", "category": "甜點食品", "price_range": "SGD 5-30", "where": "Bengawan Solo 全島・亞坤分店"},
+      {"name": "美珍香・林志源豬肉乾（真空包裝可帶回）", "category": "零食", "price_range": "SGD 20-50", "where": "牛車水本店・機場"},
+      {"name": "Charles & Keith・Pedro 包包（比台灣便宜）", "category": "時尚配件", "price_range": "SGD 50-200", "where": "烏節路・Vivocity・機場"},
+      {"name": "Haidilao 火鍋底料・蝦醬・叻沙醬", "category": "食品調料", "price_range": "SGD 5-20", "where": "FairPrice 超市・Cold Storage"},
+      {"name": "環球影城紀念品・聖淘沙限定", "category": "紀念品", "price_range": "SGD 10-60", "where": "環球影城官方商店"},
+      {"name": "虎標萬金油（原裝正品比外地便宜）", "category": "藥品", "price_range": "SGD 5-15", "where": "藥局・機場免稅"}
+    ],
+    "hot_experiences": [
+      {"name": "濱海灣花園擎天樹燈光秀（免費）", "tip": "每晚 7:45 & 8:45，必看！"},
+      {"name": "聖淘沙環球影城一日遊", "tip": "建議平日去，旺季人很多"},
+      {"name": "新加坡動物園・夜間野生動物園", "tip": "夜間野生動物園是全球獨特體驗"},
+      {"name": "克拉碼頭酒吧河邊夜生活", "tip": "週五六最熱鬧，河邊邊喝邊看夜景"},
+      {"name": "F1 賽道夜間體驗（每年9月）", "tip": "全球唯一夜間街道賽，提前購票"}
+    ],
+    "shopping_areas": [
+      {"name": "烏節路 ION・313・Orchard Central", "type": "精品購物", "tip": "GST 退稅最方便，eTRS 機器自助操作"},
+      {"name": "牛車水・小印度・甘榜格南", "type": "文化體驗+伴手禮", "tip": "傳統好物集中地，體驗多元文化"},
+      {"name": "樟宜機場 T1-T4 + Jewel", "type": "免稅購物", "tip": "全球最棒機場，預留 2-3 小時逛"}
+    ],
+    "tax_free_tip": "消費滿 100 新幣可退 GST（9%），需使用 eTRS 系統，機場退現金"
+  },
+  "KUL": {
+    "country_name": "吉隆坡（馬來西亞）",
+    "must_buy": [
+      {"name": "Beryl's・Royale 巧克力禮盒", "category": "甜點伴手禮", "price_range": "MYR 15-60", "where": "機場・巴底雅購物中心"},
+      {"name": "白咖啡（怡保・OldTown白咖啡）", "category": "飲品", "price_range": "MYR 10-30", "where": "超市・機場"},
+      {"name": "錫器（Royal Selangor 錫製品）", "category": "工藝品", "price_range": "MYR 30-300", "where": "Royal Selangor 工廠直營店"},
+      {"name": "馬來傳統峇迪布料・峇迪衫", "category": "服飾", "price_range": "MYR 20-150", "where": "Central Market・Kasturi Walk"},
+      {"name": "椰糖・班蘭層糕・Dodol椰糖糕", "category": "傳統甜點", "price_range": "MYR 5-20", "where": "Central Market・市集"},
+      {"name": "Padini・Voir 本地品牌服飾（便宜）", "category": "服飾", "price_range": "MYR 30-150", "where": "Pavilion・Mid Valley 百貨"},
+      {"name": "3M 隔熱紙・汽車用品（比台灣便宜）", "category": "汽車用品", "price_range": "MYR 50-300", "where": "Petaling Street 周邊"}
+    ],
+    "hot_experiences": [
+      {"name": "雙子塔 KLCC 公園夜景免費", "tip": "夜晚燈光最美，觀景台需提前訂票"},
+      {"name": "黑風洞（Batu Caves）印度教聖地", "tip": "272 階彩色階梯，早上去較涼爽"},
+      {"name": "茨廠街（Petaling Street）美食之夜", "tip": "吃椰漿飯、肉骨茶、班蘭蛋糕必去"},
+      {"name": "雲頂高原賭場+遊樂園", "tip": "馬來西亞唯一合法賭場，交通要事先查"},
+      {"name": "檳城喬治市文化街壁畫", "tip": "從吉隆坡搭飛機 1 小時，很值得多一天"}
+    ],
+    "shopping_areas": [
+      {"name": "Pavilion KL・Suria KLCC", "type": "精品百貨", "tip": "國際品牌齊全，GST 退稅辦理"},
+      {"name": "Central Market 中央市場", "type": "文化手工藝", "tip": "傳統工藝品集中，可殺價"},
+      {"name": "吉隆坡機場 KLIA・KLIA2", "type": "免稅購物", "tip": "KLIA2 是低成本航空，伴手禮比機內便宜"}
+    ],
+    "tax_free_tip": "外國旅客可申請 GST 退稅，消費滿 300 MYR，機場有退稅櫃檯"
+  },
+  "VN": {
+    "country_name": "越南",
+    "must_buy": [
+      {"name": "越南滴漏咖啡（G7・中原・Highland Coffee）", "category": "飲品", "price_range": "VND 50,000-200,000", "where": "超市・便利商店・機場"},
+      {"name": "腰果（生・蜂蜜・椰子口味）", "category": "零食", "price_range": "VND 100,000-300,000", "where": "濱城市場・Vinmart 超市"},
+      {"name": "奧黛（傳統旗袍）現場訂製", "category": "服飾", "price_range": "VND 300,000-1,500,000", "where": "胡志明 Bui Thi Xuan 裁縫街"},
+      {"name": "越南手工刺繡畫・漆器盤", "category": "工藝", "price_range": "VND 100,000-500,000", "where": "Dong Khoi 街・Ben Thanh"},
+      {"name": "Cà phê Trứng 蛋咖啡體驗（河內特有）", "category": "體驗飲品", "price_range": "VND 30,000-60,000", "where": "河內 Giang Café・Dinh Café"},
+      {"name": "越南法棍（Bánh mì）材料包", "category": "食品", "price_range": "VND 20,000-80,000", "where": "市場・超市"},
+      {"name": "椰子糖・鳳梨酥（Bến Tre 特產）", "category": "甜點零食", "price_range": "VND 30,000-100,000", "where": "超市・市場"}
+    ],
+    "hot_experiences": [
+      {"name": "胡志明市法式風情步行區（濱城區）", "tip": "教堂・郵局・統一宮，半天走完"},
+      {"name": "古芝地道（Cu Chi Tunnels）歷史體驗", "tip": "越戰遺址，可爬進地道，出發前買好防蚊液"},
+      {"name": "湄公河三角洲一日遊", "tip": "從胡志明坐船，划竹筏・嚐椰糖・騎腳踏車"},
+      {"name": "Bui Vien 夜生活街（背包客天堂）", "tip": "週五六最熱鬧，便宜啤酒、彈唱表演"},
+      {"name": "河內 Hoan Kiem 湖還劍湖夜景", "tip": "週末封街步行區，路邊小吃超好吃"}
+    ],
+    "shopping_areas": [
+      {"name": "濱城市場（Bến Thành Market）", "type": "傳統市場", "tip": "必殺價，開價 2-3 倍，英文可講，態度堅定"},
+      {"name": "Vincom Center・SC VivoCity", "type": "百貨購物中心", "tip": "標價購物不用殺價，適合不想花力氣的人"},
+      {"name": "Big C・Vinmart・Co.opmart", "type": "超市", "tip": "咖啡/零食掃貨最方便，快出發時去"}
+    ],
+    "tax_free_tip": "越南目前無旅客退稅制度，所見價格即為最終價"
+  }
+}
+

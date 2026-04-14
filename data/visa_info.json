@@ -1,0 +1,248 @@
+{
+  "_meta": {
+    "description": "台灣護照持有者各國簽證需求",
+    "source": "外交部領事事務局",
+    "last_updated": "2026-04",
+    "disclaimer": "僅供參考，請以各國官方公告為準"
+  },
+  "JP": {
+    "country_name": "日本",
+    "visa_required": false,
+    "stay_limit": "90天",
+    "passport_validity": "入境時有效即可",
+    "notes": "需出示回程機票",
+    "entry_card": true
+  },
+  "KR": {
+    "country_name": "韓國",
+    "visa_required": false,
+    "stay_limit": "90天（K-ETA 已取消）",
+    "passport_validity": "入境時有效即可",
+    "notes": "2025年起免K-ETA",
+    "entry_card": true
+  },
+  "TH": {
+    "country_name": "泰國",
+    "visa_required": false,
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "需出示回程機票與住宿證明",
+    "entry_card": true
+  },
+  "SG": {
+    "country_name": "新加坡",
+    "visa_required": false,
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "需填寫 SG Arrival Card（線上）",
+    "entry_card": true
+  },
+  "MY": {
+    "country_name": "馬來西亞",
+    "visa_required": false,
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "需填寫 MDAC 入境卡（線上）",
+    "entry_card": true
+  },
+  "VN": {
+    "country_name": "越南",
+    "visa_required": false,
+    "stay_limit": "45天",
+    "passport_validity": "6個月以上",
+    "notes": "2023年起免簽延長至45天",
+    "entry_card": true
+  },
+  "ID": {
+    "country_name": "印尼",
+    "visa_required": "落地簽",
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "落地簽費用約 USD 35，可延長30天",
+    "entry_card": true
+  },
+  "PH": {
+    "country_name": "菲律賓",
+    "visa_required": false,
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "需出示回程機票",
+    "entry_card": true
+  },
+  "KH": {
+    "country_name": "柬埔寨",
+    "visa_required": "落地簽/電子簽",
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "落地簽 USD 30，建議先辦電子簽",
+    "entry_card": true
+  },
+  "MM": {
+    "country_name": "緬甸",
+    "visa_required": "電子簽",
+    "stay_limit": "28天",
+    "passport_validity": "6個月以上",
+    "notes": "需事先申請電子簽證（eVisa）",
+    "entry_card": true
+  },
+  "HK": {
+    "country_name": "香港",
+    "visa_required": false,
+    "stay_limit": "90天",
+    "passport_validity": "1個月以上",
+    "notes": "持台灣護照免簽",
+    "entry_card": false
+  },
+  "MO": {
+    "country_name": "澳門",
+    "visa_required": false,
+    "stay_limit": "30天",
+    "passport_validity": "入境時有效即可",
+    "notes": "持台灣護照免簽",
+    "entry_card": false
+  },
+  "CN": {
+    "country_name": "中國",
+    "visa_required": "需台胞證",
+    "stay_limit": "依台胞證效期",
+    "passport_validity": "6個月以上",
+    "notes": "需持有效台胞證，可在線辦理",
+    "entry_card": true
+  },
+  "GB": {
+    "country_name": "英國",
+    "visa_required": false,
+    "stay_limit": "180天",
+    "passport_validity": "旅程結束時有效即可",
+    "notes": "需出示回程機票與財力證明（抽查）",
+    "entry_card": false
+  },
+  "FR": {
+    "country_name": "法國",
+    "visa_required": false,
+    "stay_limit": "90天（申根區）",
+    "passport_validity": "離開申根區後3個月以上",
+    "notes": "申根區180天內最多停留90天",
+    "entry_card": false
+  },
+  "IT": {
+    "country_name": "義大利",
+    "visa_required": false,
+    "stay_limit": "90天（申根區）",
+    "passport_validity": "離開申根區後3個月以上",
+    "notes": "申根區180天內最多停留90天",
+    "entry_card": false
+  },
+  "ES": {
+    "country_name": "西班牙",
+    "visa_required": false,
+    "stay_limit": "90天（申根區）",
+    "passport_validity": "離開申根區後3個月以上",
+    "notes": "申根區免簽",
+    "entry_card": false
+  },
+  "DE": {
+    "country_name": "德國",
+    "visa_required": false,
+    "stay_limit": "90天（申根區）",
+    "passport_validity": "離開申根區後3個月以上",
+    "notes": "申根區免簽",
+    "entry_card": false
+  },
+  "NL": {
+    "country_name": "荷蘭",
+    "visa_required": false,
+    "stay_limit": "90天（申根區）",
+    "passport_validity": "離開申根區後3個月以上",
+    "notes": "申根區免簽",
+    "entry_card": false
+  },
+  "AT": {
+    "country_name": "奧地利",
+    "visa_required": false,
+    "stay_limit": "90天（申根區）",
+    "passport_validity": "離開申根區後3個月以上",
+    "notes": "申根區免簽",
+    "entry_card": false
+  },
+  "CZ": {
+    "country_name": "捷克",
+    "visa_required": false,
+    "stay_limit": "90天（申根區）",
+    "passport_validity": "離開申根區後3個月以上",
+    "notes": "申根區免簽",
+    "entry_card": false
+  },
+  "CH": {
+    "country_name": "瑞士",
+    "visa_required": false,
+    "stay_limit": "90天（申根區）",
+    "passport_validity": "離開申根區後3個月以上",
+    "notes": "申根區免簽",
+    "entry_card": false
+  },
+  "TR": {
+    "country_name": "土耳其",
+    "visa_required": "電子簽",
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "需先申請電子簽證（e-Visa）",
+    "entry_card": true
+  },
+  "US": {
+    "country_name": "美國",
+    "visa_required": false,
+    "stay_limit": "90天（ESTA）",
+    "passport_validity": "6個月以上",
+    "notes": "需事先申請 ESTA（USD 21），兩年有效",
+    "entry_card": false
+  },
+  "CA": {
+    "country_name": "加拿大",
+    "visa_required": false,
+    "stay_limit": "180天（eTA）",
+    "passport_validity": "旅程結束時有效即可",
+    "notes": "需事先申請 eTA（CAD 7）",
+    "entry_card": false
+  },
+  "AU": {
+    "country_name": "澳洲",
+    "visa_required": "電子簽（ETA）",
+    "stay_limit": "90天",
+    "passport_validity": "旅程結束時有效即可",
+    "notes": "需事先透過 APP 申請 ETA",
+    "entry_card": false
+  },
+  "NZ": {
+    "country_name": "紐西蘭",
+    "visa_required": false,
+    "stay_limit": "90天（NZeTA）",
+    "passport_validity": "離開紐西蘭後3個月以上",
+    "notes": "需事先申請 NZeTA",
+    "entry_card": false
+  },
+  "AE": {
+    "country_name": "阿聯酋",
+    "visa_required": false,
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "2024年起台灣護照免簽",
+    "entry_card": false
+  },
+  "PW": {
+    "country_name": "帛琉",
+    "visa_required": false,
+    "stay_limit": "30天",
+    "passport_validity": "6個月以上",
+    "notes": "需出示回程機票",
+    "entry_card": true
+  },
+  "GU": {
+    "country_name": "關島",
+    "visa_required": false,
+    "stay_limit": "45天（ESTA）",
+    "passport_validity": "6個月以上",
+    "notes": "需持有效 ESTA",
+    "entry_card": false
+  }
+}

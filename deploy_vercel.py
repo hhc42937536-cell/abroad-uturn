@@ -19,19 +19,37 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 # ── 設定（優先讀環境變數，否則用下方預設值）──────────
-VERCEL_TOKEN = os.environ.get("VERCEL_TOKEN", "")          # 請設定環境變數
-VERCEL_PROJECT_ID = os.environ.get("VERCEL_PROJECT_ID", "") # 請設定環境變數
+VERCEL_TOKEN = os.environ.get("VERCEL_TOKEN", "")
+VERCEL_PROJECT_ID = os.environ.get("VERCEL_PROJECT_ID", "")
 VERCEL_TEAM_ID = os.environ.get("VERCEL_TEAM_ID", "")  # 個人帳號留空
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# 要上傳的檔案清單
-DEPLOY_FILES = [
-    "api/webhook.py",
-    "requirements.txt",
-    "vercel.json",
-    "pyproject.toml",
-]
+# 要上傳的檔案清單（自動掃描 bot/ 和 data/）
+def _build_file_list():
+    files = [
+        "api/webhook.py",
+        "requirements.txt",
+        "vercel.json",
+    ]
+    # 加入 pyproject.toml（如果存在）
+    if os.path.exists(os.path.join(BASE_DIR, "pyproject.toml")):
+        files.append("pyproject.toml")
+    # 掃描 bot/ 目錄
+    for root, dirs, fnames in os.walk(os.path.join(BASE_DIR, "bot")):
+        for fname in fnames:
+            if fname.endswith(".py"):
+                rel = os.path.relpath(os.path.join(root, fname), BASE_DIR).replace("\\", "/")
+                files.append(rel)
+    # 掃描 data/ 目錄
+    for root, dirs, fnames in os.walk(os.path.join(BASE_DIR, "data")):
+        for fname in fnames:
+            if fname.endswith(".json"):
+                rel = os.path.relpath(os.path.join(root, fname), BASE_DIR).replace("\\", "/")
+                files.append(rel)
+    return files
+
+DEPLOY_FILES = _build_file_list()
 
 
 def api_request(method: str, path: str, body=None) -> dict:

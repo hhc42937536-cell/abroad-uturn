@@ -1,0 +1,240 @@
+{
+  "_meta": {
+    "description": "各城市當地交通攻略（地鐵卡、路線、App）",
+    "last_updated": "2026-04"
+  },
+
+  "TYO": {
+    "city_name": "東京", "flag": "🇯🇵",
+    "cards": [
+      {
+        "name": "Suica / PASMO",
+        "type": "IC 交通卡",
+        "deposit": "押金 ¥500",
+        "where_to_buy": "JR 自動售票機、便利商店（7-11 等）",
+        "coverage": "JR、地下鐵、都營巴士、甚至便利商店消費",
+        "tip": "2023 年起實體 Suica 限量，建議用 Apple Pay / Google Pay 綁 Suica（手機版無押金限制）",
+        "app": "Suica App（iOS/Android）"
+      }
+    ],
+    "metro_lines": [
+      "🔵 東京地下鐵（東京Metro）9條線",
+      "🟠 都營地下鐵 4條線",
+      "🔴 JR 山手線（環狀，連接主要車站）"
+    ],
+    "key_stations": ["新宿", "澀谷", "池袋", "上野", "東京", "品川"],
+    "tips": [
+      "Google Maps 日本可直接規劃地鐵路線，超準確",
+      "山手線環繞市區，大部分景點靠這條線",
+      "深夜 12 點後末班車，要注意時間"
+    ],
+    "grab_available": false,
+    "taxi_app": "GO App（日本計程車）"
+  },
+
+  "OSA": {
+    "city_name": "大阪", "flag": "🇯🇵",
+    "cards": [
+      {
+        "name": "ICOCA",
+        "type": "IC 交通卡",
+        "deposit": "押金 ¥500",
+        "where_to_buy": "JR 西日本自動售票機",
+        "coverage": "JR、大阪地下鐵、巴士、關西各城市通用",
+        "tip": "可在東京用 Suica 代替，ICOCA / Suica 全國互通",
+        "app": "ICOCA App"
+      },
+      {
+        "name": "大阪周遊卡",
+        "type": "觀光一日/二日券",
+        "deposit": "¥2,800（一日）/ ¥3,600（二日）",
+        "where_to_buy": "大阪旅遊局、關西機場、難波站",
+        "coverage": "地鐵無限搭 + 50 個景點免費入場",
+        "tip": "如果要衝景點（大阪城、通天閣等）超划算"
+      }
+    ],
+    "metro_lines": [
+      "🔴 御堂筋線（最重要，連接梅田↔難波↔天王寺）",
+      "🟢 中央線（連接大阪城↔天保山）",
+      "🟡 阪急電鐵（往京都、神戶）"
+    ],
+    "key_stations": ["梅田", "難波", "天王寺", "心齋橋", "大阪城公園"],
+    "tips": [
+      "御堂筋線是大阪最重要的一條，記住這條就夠了",
+      "京都來回建議搭阪急電鐵（比新幹線便宜很多）",
+      "難波與心齋橋步行距離，不需搭車"
+    ],
+    "grab_available": false,
+    "taxi_app": "GO App"
+  },
+
+  "SEL": {
+    "city_name": "首爾", "flag": "🇰🇷",
+    "cards": [
+      {
+        "name": "T-money 卡",
+        "type": "交通儲值卡",
+        "deposit": "卡費 ₩2,500",
+        "where_to_buy": "GS25、CU、7-Eleven 便利商店、地鐵站",
+        "coverage": "首爾地鐵、公車、部分計程車",
+        "tip": "也可在便利商店消費，買咖啡買零食都能刷",
+        "app": "Kakao Map（韓國最準確的地圖）"
+      }
+    ],
+    "metro_lines": [
+      "🔵 1號線（서울역 首爾站，往仁川方向）",
+      "🟢 2號線（環狀，弘大、新村、梨大、江南、弘大入口）",
+      "🟠 3號線（景福宮、安國、玉水）",
+      "🔴 4號線（明洞、東大門、惠化）"
+    ],
+    "key_stations": ["弘大入口", "明洞", "江南", "景福宮", "首爾站", "東大門"],
+    "tips": [
+      "2號線最重要，弘大/新村/江南都在這條",
+      "Kakao Map 比 Google Maps 更準，一定要裝",
+      "深夜可搭「Owl Bus」夜間公車（T-money 可用）",
+      "計程車 Kakao T App 叫車方便又安全"
+    ],
+    "grab_available": false,
+    "taxi_app": "Kakao T（韓國 Uber）"
+  },
+
+  "BKK": {
+    "city_name": "曼谷", "flag": "🇹🇭",
+    "cards": [
+      {
+        "name": "兔子卡（Rabbit Card）",
+        "type": "BTS 空鐵儲值卡",
+        "deposit": "卡費 ฿100 + 儲值",
+        "where_to_buy": "各 BTS 空鐵站售票處",
+        "coverage": "BTS 空鐵（Sukhumvit Line + Silom Line）",
+        "tip": "只能用於 BTS，MRT 地鐵要另外買票或買 MRT 卡"
+      },
+      {
+        "name": "MRT 儲值卡",
+        "type": "地下鐵儲值卡",
+        "deposit": "押金 ฿30 + 儲值",
+        "where_to_buy": "MRT 各站售票機",
+        "coverage": "MRT 藍線（Blue Line）、紫線",
+        "tip": "BTS 和 MRT 各自獨立，不互通"
+      }
+    ],
+    "metro_lines": [
+      "🟢 BTS Sukhumvit Line（暹羅↔勝利紀念碑↔On Nut）",
+      "🔴 BTS Silom Line（暹羅↔沙潘塔克辛 Saphan Taksin）",
+      "🔵 MRT 藍線（環狀，連接火車站、唐人街、Lumphini）"
+    ],
+    "key_stations": ["Siam（BTS 轉乘樞紐）", "Asok", "Nana", "Silom", "Saphan Taksin"],
+    "tips": [
+      "Grab 在曼谷非常好用，比計程車便宜且不被坑",
+      "BTS 和 MRT 不互通，轉乘要走路換站",
+      "暹羅站是 BTS 兩條線的交叉點，記住這個站",
+      "去大皇宮建議搭船（昭披耶河快船），省錢又有趣"
+    ],
+    "grab_available": true,
+    "taxi_app": "Grab（首選）"
+  },
+
+  "SIN": {
+    "city_name": "新加坡", "flag": "🇸🇬",
+    "cards": [
+      {
+        "name": "EZ-Link 卡",
+        "type": "交通儲值卡",
+        "deposit": "卡費 S$5 + 儲值",
+        "where_to_buy": "樟宜機場 MRT 站、各 MRT 站 TransitLink 服務台、7-Eleven",
+        "coverage": "MRT、LRT、公車、部分計程車",
+        "tip": "也可用 Visa/Mastercard 感應直接刷卡搭乘，不一定要買卡"
+      }
+    ],
+    "metro_lines": [
+      "🔴 NS線（北南線，連接兀蘭↔濱海）",
+      "🟢 EW線（東西線，樟宜機場↔裕廊）",
+      "🔵 CC線（環線，連接各主要換乘站）",
+      "🟡 DT線（濱海市區線，直達牛車水、小印度）"
+    ],
+    "key_stations": ["Raffles Place（金融區）", "Orchard（烏節路購物）", "Bugis", "Harbourfront（聖淘沙入口）", "Changi Airport"],
+    "tips": [
+      "新加坡地鐵覆蓋率超高，幾乎哪都到",
+      "信用卡感應（Contactless）可直接搭，非常方便",
+      "Grab 也很普遍，機場往市區可考慮 Grab",
+      "週末 Orchard 一帶人很多，建議避開尖峰時段"
+    ],
+    "grab_available": true,
+    "taxi_app": "Grab"
+  },
+
+  "HKG": {
+    "city_name": "香港", "flag": "🇭🇰",
+    "cards": [
+      {
+        "name": "八達通（Octopus Card）",
+        "type": "交通儲值卡",
+        "deposit": "押金 HK$50 + 儲值",
+        "where_to_buy": "機場、各地鐵站、便利商店",
+        "coverage": "地鐵（MTR）、公車、小巴、天星小輪、部分商店",
+        "tip": "離港時可到地鐵站退押金 HK$50。也有「旅客版八達通」含機場快線單程票，更划算"
+      }
+    ],
+    "metro_lines": [
+      "🔴 荃灣線（尖沙咀↔中環↔荃灣）",
+      "🔵 觀塘線（旺角↔油麻地↔九龍灣）",
+      "🟢 港島線（中環↔銅鑼灣↔柴灣）",
+      "🟡 機場快線（香港站↔機場，24分鐘）"
+    ],
+    "key_stations": ["中環", "尖沙咀", "旺角", "銅鑼灣", "香港站（機場快線）"],
+    "tips": [
+      "機場快線是往返機場最快方式，可市區辦理登機",
+      "天星小輪 HK$4 橫渡維港，便宜又有景色",
+      "叮叮車（電車）港島段觀光超推薦",
+      "Uber/Grab 在香港較少，建議搭地鐵"
+    ],
+    "grab_available": false,
+    "taxi_app": "HKTaxi App"
+  },
+
+  "KUL": {
+    "city_name": "吉隆坡", "flag": "🇲🇾",
+    "cards": [
+      {
+        "name": "Touch 'n Go 卡",
+        "type": "交通儲值卡",
+        "deposit": "卡費 RM10 + 儲值",
+        "where_to_buy": "機場、便利商店（7-11）、各捷運站",
+        "coverage": "KTM、LRT、MRT、Monorail、公路收費站",
+        "tip": "也有 Touch 'n Go eWallet（手機版），掃碼付款更方便"
+      }
+    ],
+    "metro_lines": [
+      "🔵 LRT Kelana Jaya Line（連接 KLCC↔Petaling Jaya）",
+      "🟢 MRT Putrajaya Line（往吉隆坡南部）",
+      "🔴 KL Monorail（Bukit Bintang 商圈）",
+      "🟡 KLIA Ekspres（機場快線，28 分鐘進市區）"
+    ],
+    "key_stations": ["KL Sentral（總站）", "KLCC（雙子塔）", "Bukit Bintang（購物商圈）", "Masjid Jamek"],
+    "tips": [
+      "Grab 在吉隆坡超好用，計程車較不建議",
+      "KLIA Ekspres 是最快進市區方式",
+      "各捷運系統互不相通，轉乘要走路",
+      "Bukit Bintang 商圈可以步行逛，不需搭車"
+    ],
+    "grab_available": true,
+    "taxi_app": "Grab（強烈推薦）"
+  },
+
+  "SGN": {
+    "city_name": "胡志明市", "flag": "🇻🇳",
+    "cards": [],
+    "metro_lines": [
+      "🟢 Metro Line 1（2024 年底通車，濱城市場↔平陽省）"
+    ],
+    "key_stations": ["Ben Thanh 濱城市場站"],
+    "tips": [
+      "目前地鐵只有 1 號線剛通車，路線有限",
+      "Grab 是最主要交通工具，非常普遍且安全",
+      "Grab Bike（摩托車）便宜又快，塞車時超實用",
+      "市區景點集中，很多地方可以步行"
+    ],
+    "grab_available": true,
+    "taxi_app": "Grab（必裝）"
+  }
+}

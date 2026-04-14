@@ -14,12 +14,20 @@
     {
       "src": "/api/check_prices",
       "dest": "api/webhook.py"
+    },
+    {
+      "src": "/api/refresh_trending",
+      "dest": "api/webhook.py"
     }
   ],
   "crons": [
     {
       "path": "/api/check_prices",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/refresh_trending",
+      "schedule": "0 2 * * *"
     }
   ]
 }

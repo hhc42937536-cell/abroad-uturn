@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "description": "打包清單模板，依氣候和旅行類型分類"
+  },
+  "base": {
+    "documents": ["護照（效期確認）", "機票電子檔", "飯店訂房確認", "旅平險保單", "護照影本（與正本分開放）"],
+    "electronics": ["手機充電器", "行動電源", "萬用轉接頭", "耳機"],
+    "essentials": ["現金（台幣+當地貨幣）", "信用卡", "個人藥品", "面紙/濕紙巾"],
+    "toiletries": ["牙刷牙膏", "洗面乳", "防曬乳", "個人保養品（100ml以下）"]
+  },
+  "tropical": {
+    "label": "熱帶（東南亞、南島）",
+    "items": ["輕薄透氣衣物", "短褲/裙", "拖鞋/涼鞋", "防蚊液", "雨傘/輕便雨衣", "泳衣", "太陽眼鏡", "帽子"]
+  },
+  "temperate": {
+    "label": "溫帶（日韓、歐洲春秋）",
+    "items": ["薄外套/風衣", "長褲", "舒適好走的鞋", "摺疊傘"]
+  },
+  "cold": {
+    "label": "寒帶/冬季",
+    "items": ["羽絨外套", "毛帽/圍巾/手套", "保暖衣物", "暖暖包", "防滑靴"]
+  },
+  "country_specific": {
+    "JP": ["IC卡（Suica/PASMO，可到當地買）", "室內拖鞋（旅館用）"],
+    "KR": ["轉接頭（圓孔C/F型，必帶）", "T-money 卡（到當地買）"],
+    "TH": ["長褲長裙（進寺廟用）", "防曬乳（SPF50+）", "腸胃藥"],
+    "SG": ["轉接頭（英式G型，必帶）", "輕便雨具（午後常有雷陣雨）"],
+    "VN": ["腸胃藥", "防曬乳", "Grab APP（先下載）"],
+    "ID": ["轉接頭（圓孔C/F型）", "防蚊液（登革熱地區）", "沙龍（進寺廟用，可現場借）"],
+    "HK": ["轉接頭（英式G型）", "八達通卡（到當地買）"],
+    "CN": ["VPN APP（先下載好）", "現金人民幣", "轉接頭（多型號，建議萬用）"],
+    "US": ["ESTA 確認函", "國際駕照（如需租車）"],
+    "AU": ["轉接頭（八字型I型，必帶）", "防曬乳（紫外線極強）"]
+  },
+  "climate_map": {
+    "JP": {"spring": "temperate", "summer": "temperate", "autumn": "temperate", "winter": "cold"},
+    "KR": {"spring": "temperate", "summer": "temperate", "autumn": "temperate", "winter": "cold"},
+    "TH": {"spring": "tropical", "summer": "tropical", "autumn": "tropical", "winter": "tropical"},
+    "SG": {"spring": "tropical", "summer": "tropical", "autumn": "tropical", "winter": "tropical"},
+    "MY": {"spring": "tropical", "summer": "tropical", "autumn": "tropical", "winter": "tropical"},
+    "VN": {"spring": "tropical", "summer": "tropical", "autumn": "tropical", "winter": "temperate"},
+    "ID": {"spring": "tropical", "summer": "tropical", "autumn": "tropical", "winter": "tropical"},
+    "PH": {"spring": "tropical", "summer": "tropical", "autumn": "tropical", "winter": "tropical"},
+    "HK": {"spring": "temperate", "summer": "tropical", "autumn": "temperate", "winter": "temperate"},
+    "CN": {"spring": "temperate", "summer": "temperate", "autumn": "temperate", "winter": "cold"},
+    "GB": {"spring": "temperate", "summer": "temperate", "autumn": "temperate", "winter": "cold"},
+    "FR": {"spring": "temperate", "summer": "temperate", "autumn": "temperate", "winter": "cold"},
+    "IT": {"spring": "temperate", "summer": "temperate", "autumn": "temperate", "winter": "cold"},
+    "US": {"spring": "temperate", "summer": "temperate", "autumn": "temperate", "winter": "cold"},
+    "AU": {"spring": "temperate", "summer": "tropical", "autumn": "temperate", "winter": "temperate"}
+  }
+}

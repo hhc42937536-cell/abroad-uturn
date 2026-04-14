@@ -1,0 +1,76 @@
+{
+  "_meta": {
+    "description": "追星行程相關資料：藝人/團體資訊、常見活動場地、周邊商店",
+    "last_updated": "2026-04",
+    "note": "活動日期需即時爬蟲更新，此檔案為靜態基礎資料"
+  },
+  "groups": {
+    "JP": [
+      {"name": "乃木坂46", "agency": "Sony Music", "genre": "J-POP/偶像"},
+      {"name": "Snow Man", "agency": "Johnny's", "genre": "J-POP/偶像"},
+      {"name": "SixTONES", "agency": "Johnny's", "genre": "J-POP/偶像"},
+      {"name": "YOASOBI", "agency": "Sony Music", "genre": "J-POP"},
+      {"name": "Official髭男dism", "agency": "IRORI Records", "genre": "J-POP/樂團"},
+      {"name": "Ado", "agency": "Universal Music", "genre": "J-POP"},
+      {"name": "King & Prince", "agency": "Johnny's", "genre": "J-POP/偶像"},
+      {"name": "BE:FIRST", "agency": "BMSG", "genre": "J-POP/偶像"}
+    ],
+    "KR": [
+      {"name": "BTS", "agency": "HYBE", "genre": "K-POP"},
+      {"name": "BLACKPINK", "agency": "YG", "genre": "K-POP"},
+      {"name": "TWICE", "agency": "JYP", "genre": "K-POP"},
+      {"name": "Stray Kids", "agency": "JYP", "genre": "K-POP"},
+      {"name": "aespa", "agency": "SM", "genre": "K-POP"},
+      {"name": "NewJeans", "agency": "ADOR/HYBE", "genre": "K-POP"},
+      {"name": "SEVENTEEN", "agency": "PLEDIS/HYBE", "genre": "K-POP"},
+      {"name": "IVE", "agency": "Starship", "genre": "K-POP"},
+      {"name": "LE SSERAFIM", "agency": "Source Music/HYBE", "genre": "K-POP"},
+      {"name": "NCT", "agency": "SM", "genre": "K-POP"},
+      {"name": "EXO", "agency": "SM", "genre": "K-POP"},
+      {"name": "TXT", "agency": "HYBE", "genre": "K-POP"}
+    ]
+  },
+  "venues": {
+    "JP": [
+      {"name": "東京巨蛋", "city": "東京", "capacity": "55,000", "nearest_station": "水道橋/後樂園"},
+      {"name": "日產體育場", "city": "橫濱", "capacity": "72,000", "nearest_station": "新橫濱"},
+      {"name": "京瓷巨蛋大阪", "city": "大阪", "capacity": "36,000", "nearest_station": "大正"},
+      {"name": "埼玉超級競技場", "city": "埼玉", "capacity": "37,000", "nearest_station": "新都心"},
+      {"name": "國立代代木競技場", "city": "東京", "capacity": "13,000", "nearest_station": "原宿"},
+      {"name": "幕張展覽館", "city": "千葉", "capacity": "9,000", "nearest_station": "海浜幕張"},
+      {"name": "名古屋巨蛋", "city": "名古屋", "capacity": "40,000", "nearest_station": "名古屋巨蛋前矢田"},
+      {"name": "福岡巨蛋", "city": "福岡", "capacity": "38,000", "nearest_station": "唐人町"}
+    ],
+    "KR": [
+      {"name": "首爾奧林匹克體操競技場", "city": "首爾", "capacity": "15,000", "nearest_station": "Sports Complex"},
+      {"name": "首爾高尺天空巨蛋", "city": "首爾", "capacity": "25,000", "nearest_station": "九一站"},
+      {"name": "KSPO DOME", "city": "首爾", "capacity": "15,000", "nearest_station": "Sports Complex"},
+      {"name": "仁川文鶴競技場", "city": "仁川", "capacity": "50,000", "nearest_station": "文鶴競技場"},
+      {"name": "蠶室綜合運動場", "city": "首爾", "capacity": "69,950", "nearest_station": "蠶室"}
+    ]
+  },
+  "fan_shops": {
+    "JP": [
+      {"name": "Johnny's Shop 原宿", "type": "傑尼斯周邊", "location": "東京原宿"},
+      {"name": "AKB48 劇場", "type": "AKB系周邊", "location": "東京秋葉原"},
+      {"name": "Animate", "type": "動漫/偶像周邊", "location": "池袋總店/全國"},
+      {"name": "Tower Records", "type": "CD/特典", "location": "澀谷/全國"}
+    ],
+    "KR": [
+      {"name": "HYBE INSIGHT", "type": "BTS/HYBE系展覽", "location": "首爾龍山"},
+      {"name": "SM Town", "type": "SM藝人周邊", "location": "首爾江南COEX"},
+      {"name": "YG Entertainment", "type": "YG藝人周邊", "location": "首爾合井"},
+      {"name": "JYP Entertainment", "type": "JYP藝人周邊", "location": "首爾清潭洞"},
+      {"name": "Myeongdong K-POP Store", "type": "綜合K-POP", "location": "首爾明洞"},
+      {"name": "LINE FRIENDS BT21", "type": "BT21周邊", "location": "首爾明洞/弘大"}
+    ]
+  },
+  "tips": [
+    "演唱會門票通常需要加入日韓會員才能抽選，建議提早3-6個月準備",
+    "日本傑尼斯系演唱會禁止拍照錄影，違規會被請出場",
+    "韓國演唱會通常允許手機拍照（但不能錄影），依主辦規定",
+    "場館周邊通常有交換小卡的粉絲聚集，可以帶自己的小卡去交換",
+    "建議提早到場，場外通常有期間限定快閃店和應援物販售",
+    "住宿建議訂在場館附近或交通直達處，散場人潮很多"
+  ]
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-LINE Rich Menu 建立腳本（3x3 九格版）— 出國優轉 AbroadUturn
-==========================================================
+LINE Rich Menu 建立腳本（3x2 六格版）— 出國優轉 AbroadUturn v2
+=============================================================
 產生 Rich Menu 圖片並透過 LINE API 建立、上傳、設為預設。
 
 使用方式：
@@ -11,7 +11,7 @@ LINE Rich Menu 建立腳本（3x3 九格版）— 出國優轉 AbroadUturn
   # 或只生圖不部署：
   python create_rich_menu.py --image-only
 
-  # 使用自訂 9 張小圖合成（放在 rich_menu_tiles/ 資料夾）：
+  # 使用自訂小圖合成（放在 rich_menu_tiles/ 資料夾）：
   python create_rich_menu.py --token TOKEN --tiles-dir rich_menu_tiles
 """
 
@@ -39,18 +39,18 @@ ROW_HS = [562, 562, 562]
 
 # 9 格內容（左上 → 右 → 下一排）
 CELLS = [
-    # 上排：核心功能
-    {"label": "便宜國外探索",  "sub": "近期最便宜目的地",    "icon": "\u2708\ufe0f\U0001f30d", "text": "便宜"},
-    {"label": "機票比價",      "sub": "多平台即時比價",      "icon": "\U0001f4ca\U0001f4b0", "text": "機票比價"},
-    {"label": "彈性日期",      "sub": "找最便宜的出發日",    "icon": "\U0001f4c5\U0001f504", "text": "彈性日期"},
-    # 中排
-    {"label": "直飛優先",      "sub": "舒適直飛含稅總價",    "icon": "\U0001f6eb\U0001f680", "text": "直飛"},
-    {"label": "轉機最省",      "sub": "最低總價轉機方案",    "icon": "\U0001f504\U0001f4b8", "text": "轉機"},
-    {"label": "機+酒打包",     "sub": "最低組合總價",        "icon": "\U0001f3e8\u2708\ufe0f", "text": "機加酒"},
-    # 下排
-    {"label": "熱門國家",      "sub": "日韓泰東南亞歐洲",    "icon": "\U0001f1ef\U0001f1f5\U0001f1f0\U0001f1f7", "text": "熱門國家"},
-    {"label": "旅行工具箱",    "sub": "出發地/打包/簽證/天氣",  "icon": "\U0001f9f3\U0001f6e1\ufe0f", "text": "旅行工具"},
-    {"label": "價格追蹤",      "sub": "降價立即通知你",      "icon": "\U0001f514\U0001f4c9", "text": "我的追蹤"},
+    # 上排：最主要的三個模式
+    {"label": "說走就走",      "sub": "1分鐘一鍵出發",   "icon": "\U0001f680\U0001f525", "text": "說走就走"},
+    {"label": "完整出國規劃",  "sub": "8步詳細計畫書",   "icon": "\u2728\U0001f30d", "text": "開始規劃"},
+    {"label": "探索最便宜",    "sub": "最低價目的地",    "icon": "\U0001f30d\u2708\ufe0f", "text": "便宜"},
+    # 中排：實用工具
+    {"label": "當地交通攻略",  "sub": "地鐵卡/路線/App", "icon": "\U0001f687\U0001f4b3", "text": "交通攻略"},
+    {"label": "住宿推薦",      "sub": "飯店/區域推薦",   "icon": "\U0001f3e8\U0001f50d", "text": "住宿"},
+    {"label": "我的旅行計畫",  "sub": "查看/繼續計畫",   "icon": "\U0001f4cb\U0001f504", "text": "我的旅行計畫"},
+    # 下排：特色功能
+    {"label": "現在最夯",      "sub": "熱門玩法/必買",   "icon": "\U0001f525\U0001f30d", "text": "現在最夯"},
+    {"label": "追星行程規劃",  "sub": "演唱會/見面會",   "icon": "\u2b50\U0001f3b5", "text": "追星"},
+    {"label": "設定",          "sub": "出發地/說明",     "icon": "\u2699\ufe0f\U0001f6eb", "text": "設定"},
 ]
 
 # 色系（旅遊暖橘主題）
@@ -114,9 +114,9 @@ def generate_image() -> bytes:
     row_ys = [sum(ROW_HS[:r]) for r in range(ROWS)]
 
     try:
-        font_icon  = ImageFont.truetype(FONT_EMOJI, 130)
-        font_label = ImageFont.truetype(FONT_ZH, 68)
-        font_sub   = ImageFont.truetype(FONT_ZH, 38)
+        font_icon  = ImageFont.truetype(FONT_EMOJI, 185)
+        font_label = ImageFont.truetype(FONT_ZH, 98)
+        font_sub   = ImageFont.truetype(FONT_ZH, 74)
     except Exception as e:
         print(f"  警告：字型載入失敗 ({e})，使用預設字型")
         font_icon = font_label = font_sub = ImageFont.load_default()
@@ -143,9 +143,12 @@ def generate_image() -> bytes:
         if row > 0:
             draw.line([(x, y), (x + cw, y)], fill=SEP_COLOR, width=2)
 
-        # Icon
-        icon_y = cy - 100
-        icon_text = cell["icon"][:2]  # 最多取 2 個 emoji
+        # 三層垂直均分：icon 上段、主標中段、副標下段
+        icon_y  = y + int(ch * 0.28)   # 上方 28%
+        label_y = y + int(ch * 0.62)   # 中下 62%
+        sub_y   = y + int(ch * 0.84)   # 底部 84%
+
+        icon_text = cell["icon"][:2]
         try:
             draw.text((cx, icon_y), icon_text, fill=ICON_COLOR,
                       font=font_icon, anchor="mm", embedded_color=True)
@@ -153,12 +156,10 @@ def generate_image() -> bytes:
             draw.text((cx, icon_y), icon_text, fill=ICON_COLOR,
                       font=font_icon, anchor="mm")
 
-        # 主標題
-        draw.text((cx, cy + 15), cell["label"], fill=LABEL_COLOR,
+        draw.text((cx, label_y), cell["label"], fill=LABEL_COLOR,
                   font=font_label, anchor="mm")
 
-        # 副標題
-        draw.text((cx, cy + 70), cell["sub"], fill=SUB_COLOR,
+        draw.text((cx, sub_y), cell["sub"], fill=SUB_COLOR,
                   font=font_sub, anchor="mm")
 
     buf = io.BytesIO()
@@ -268,8 +269,8 @@ def create_rich_menu() -> str:
     body = {
         "size": {"width": IMG_W, "height": IMG_H},
         "selected": True,
-        "name": "出國優轉選單 v1（3x3）",
-        "chatBarText": "\u2728 \u9ede\u6211\u958b\u59cb\u63a2\u7d22\u4fbf\u5b9c\u6a5f\u7968",
+        "name": "\u51fa\u570b\u512a\u8f49\u9078\u55ae v2\uff083x2\uff09",
+        "chatBarText": "\u2728 \u9ede\u6211\u958b\u59cb\u898f\u5283\u65c5\u7a0b",
         "areas": build_areas(),
     }
     result = line_api("POST", "/v2/bot/richmenu", body)

@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "description": "各國海關禁帶物品與免稅額度",
+    "last_updated": "2026-04",
+    "disclaimer": "僅供參考，請以各國海關官方公告為準"
+  },
+  "_taiwan_return": {
+    "description": "台灣入境限制（所有旅客回國都適用）",
+    "prohibited": ["毒品", "槍械", "仿冒品", "未經檢疫肉類製品", "新鮮水果蔬菜（多數國家）"],
+    "duty_free": {
+      "alcohol": "1公升",
+      "cigarettes": "200支（1條）",
+      "currency_twd": "10萬元",
+      "currency_foreign": "等值美金1萬元",
+      "goods_value": "2萬元以下免稅"
+    },
+    "important": "攜帶超過等值1萬美元需申報；肉類製品違規攜帶最高罰100萬"
+  },
+  "JP": {
+    "prohibited_in": ["肉類製品（含真空包裝）", "新鮮水果蔬菜", "仿冒品", "毒品"],
+    "restricted_in": ["處方藥（需附處方箋英文版）", "超過2個月用量的藥品需事先申請"],
+    "duty_free": {"alcohol": "3瓶（760ml/瓶）", "cigarettes": "200支", "perfume": "2oz"},
+    "important": ["日本對肉類查驗嚴格，肉乾牛肉乾也不行", "電子菸液體需確認容量限制"]
+  },
+  "KR": {
+    "prohibited_in": ["肉類製品", "水果蔬菜", "仿冒品"],
+    "restricted_in": ["處方藥需附處方箋"],
+    "duty_free": {"alcohol": "2瓶（合計2L以下，USD 400以下）", "cigarettes": "200支", "perfume": "60ml"},
+    "important": ["入境韓國攜帶超過1萬美元需申報", "電子菸可攜帶但公共場所禁用"]
+  },
+  "TH": {
+    "prohibited_in": ["電子菸（嚴格禁止，罰款極重）", "毒品", "色情物品", "仿冒品"],
+    "restricted_in": ["處方藥需附處方箋", "佛像出境需許可"],
+    "duty_free": {"alcohol": "1公升", "cigarettes": "200支"},
+    "important": ["泰國嚴禁電子菸！攜帶可罰款最高50萬泰銖或坐牢", "菸酒超量罰款極重"]
+  },
+  "SG": {
+    "prohibited_in": ["口香糖（嚴禁）", "電子菸", "毒品（死刑）", "仿冒品"],
+    "restricted_in": ["處方藥需附處方箋", "菸酒需全額繳稅"],
+    "duty_free": {"alcohol": "免稅額極低，建議不帶", "cigarettes": "無免稅額度（每支都要稅）"},
+    "important": ["新加坡菸品無免稅額，每支菸都要課稅", "口香糖嚴禁攜入", "亂丟垃圾罰款極重"]
+  },
+  "VN": {
+    "prohibited_in": ["毒品", "色情物品", "政治敏感出版物"],
+    "restricted_in": ["處方藥需附處方箋", "大量外幣需申報"],
+    "duty_free": {"alcohol": "1.5公升（烈酒）或2公升（低酒精）", "cigarettes": "200支"},
+    "important": ["攜帶超過5000美元現金需申報"]
+  },
+  "ID": {
+    "prohibited_in": ["毒品（極嚴，可判死刑）", "槍械", "色情物品"],
+    "restricted_in": ["處方藥需附處方箋", "動植物產品需檢疫"],
+    "duty_free": {"alcohol": "1公升", "cigarettes": "200支"},
+    "important": ["印尼對毒品零容忍，最重可判死刑"]
+  },
+  "HK": {
+    "prohibited_in": ["毒品", "槍械", "電擊器"],
+    "restricted_in": ["肉類需檢疫", "藥品合理自用量"],
+    "duty_free": {"alcohol": "1公升（酒精濃度>30%）", "cigarettes": "19支"},
+    "important": ["香港菸品免稅額極低，只有19支"]
+  },
+  "CN": {
+    "prohibited_in": ["政治敏感出版物", "地圖（非官方版）", "毒品"],
+    "restricted_in": ["動植物", "大量外幣需申報", "VPN 軟體"],
+    "duty_free": {"alcohol": "1.5公升", "cigarettes": "400支"},
+    "important": ["Google/LINE/Facebook 在中國無法使用，需準備 VPN", "攜帶超過5000美元需申報"]
+  },
+  "US": {
+    "prohibited_in": ["肉類製品", "新鮮水果蔬菜", "古巴雪茄"],
+    "restricted_in": ["處方藥需附處方箋", "超過1萬美元現金需申報"],
+    "duty_free": {"alcohol": "1公升", "cigarettes": "200支", "goods": "USD 800"},
+    "important": ["美國海關對食品查驗嚴格", "液態物品手提限100ml"]
+  },
+  "AU": {
+    "prohibited_in": ["所有食品（檢疫極嚴）", "動植物", "毒品"],
+    "restricted_in": ["處方藥需附英文處方箋", "木製品"],
+    "duty_free": {"alcohol": "2.25公升", "cigarettes": "25支"},
+    "important": ["澳洲檢疫全球最嚴，任何食品（包含泡麵、零食）都建議申報", "未申報罰款極重"]
+  }
+}
