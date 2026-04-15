@@ -55,7 +55,6 @@ def route_text(text: str, user_id: str) -> list:
         return handle_hotels(text, user_id)
 
     if text in ("\u8a2d\u5b9a",):
-        from bot.handlers.settings import get_user_origin
         current = get_user_origin(user_id)
         name_map = {"TPE": "\u53f0\u5317\u6241\u5712", "KHH": "\u9ad8\u96c4\u5c0f\u6e2f", "RMQ": "\u53f0\u4e2d\u6e05\u6cc9\u5c97", "TNN": "\u53f0\u5357"}
         current_name = name_map.get(current, current)
