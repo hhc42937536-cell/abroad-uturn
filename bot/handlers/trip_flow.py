@@ -964,11 +964,43 @@ def _prompt_summary(user_id: str) -> list:
                        "uri": agoda_url(city_kw, depart, ret)},
         })
 
+    # 產生下載 token，存行程資料到 Redis（72 小時）
+    import uuid
+    from bot.services.redis_store import redis_set
+    from bot.config import LINE_CHANNEL_ACCESS_TOKEN
+    import json as _json
+
+    download_token = uuid.uuid4().hex
+    plan_data = {
+        "flag": flag, "city": city, "days_text": days_text,
+        "origin_name": origin_name, "date_display": date_display,
+        "adults": adults, "budget": budget,
+        "flight_text": flight_text,
+        "hotel_pref": hotel_pref,
+        "visa_text": visa_text,
+        "weather_text": weather_text,
+        "exchange_text": exchange_text,
+        "plug_text": culture_highlights,
+        "custom": custom,
+        "must_eat": _get_must_eat(dest),
+        "itinerary": _get_itinerary_for_download(dest, depart, ret),
+    }
+    redis_set(f"download:{download_token}", _json.dumps(plan_data, ensure_ascii=False), ttl=259200)
+
+    # 取得 Vercel 部署 URL
+    vercel_url = "https://abroad-uturn.vercel.app"
+    download_url = f"{vercel_url}/api/download?token={download_token}"
+
+    footer_buttons.append({
+        "type": "button", "style": "secondary", "height": "sm",
+        "action": {"type": "uri", "label": "📥 下載行程計畫書 (.txt)",
+                   "uri": download_url},
+    })
     footer_buttons.extend([
         {"type": "button", "style": "secondary", "height": "sm",
-         "action": {"type": "message", "label": "\U0001f504 \u91cd\u65b0\u898f\u5283", "text": "\u958b\u59cb\u898f\u5283"}},
+         "action": {"type": "message", "label": "🔄 重新規劃", "text": "開始規劃"}},
         {"type": "button", "style": "secondary", "height": "sm",
-         "action": {"type": "message", "label": "\U0001f30d \u63a2\u7d22\u5176\u4ed6\u76ee\u7684\u5730", "text": "\u4fbf\u5b9c"}},
+         "action": {"type": "message", "label": "🌍 探索其他目的地", "text": "便宜"}},
     ])
 
     # 清除 session（規劃完成）
@@ -1004,6 +1036,58 @@ def _prompt_summary(user_id: str) -> list:
             },
         },
     ]
+
+
+def _get_must_eat(dest_code: str) -> list:
+    """取得目的地必吃清單（供下載用）"""
+    try:
+        from bot.utils.itinerary_builder import _get_template
+        tmpl = _get_template(dest_code)
+        return tmpl.get("must_eat", [])
+    except Exception:
+        return []
+
+
+def _get_itinerary_for_download(dest_code: str, depart: str, ret: str) -> list:
+    """取得天天行程資料（供下載用，純文字格式）"""
+    try:
+        import datetime
+        from bot.utils.itinerary_builder import _get_template, _calc_days
+        tmpl = _get_template(dest_code)
+        if not tmpl:
+            return []
+        days = _calc_days(depart, ret)
+        full_days = tmpl.get("full_days", [])
+        result = []
+        for day_num in range(1, days + 1):
+            date_label = ""
+            if depart:
+                try:
+                    d = datetime.date.fromisoformat(depart[:10])
+                    actual = d + datetime.timedelta(days=day_num - 1)
+                    date_label = f"{actual.month}/{actual.day}"
+                except Exception:
+                    pass
+            if day_num == 1:
+                plan = tmpl.get("arrival", {})
+                title = f"Day {day_num} 抵達"
+            elif day_num == days:
+                plan = tmpl.get("departure", {})
+                title = f"Day {day_num} 返台"
+            else:
+                idx = (day_num - 2) % max(len(full_days), 1)
+                plan = full_days[idx] if full_days else {}
+                title = f"Day {day_num} {plan.get('theme', '深度探索')}"
+            result.append({
+                "title": title,
+                "date_label": date_label,
+                "am": plan.get("am", ""),
+                "pm": plan.get("pm", ""),
+                "eve": plan.get("eve", ""),
+            })
+        return result
+    except Exception:
+        return []
 
 
 def _summary_row(label: str, value: str) -> dict:

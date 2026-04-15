@@ -5,12 +5,20 @@
       "src": "api/webhook.py",
       "use": "@vercel/python",
       "config": { "maxLambdaSize": "50mb" }
+    },
+    {
+      "src": "api/download.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/webhook",
       "dest": "api/webhook.py"
+    },
+    {
+      "src": "/api/download",
+      "dest": "api/download.py"
     },
     {
       "src": "/api/check_prices",
