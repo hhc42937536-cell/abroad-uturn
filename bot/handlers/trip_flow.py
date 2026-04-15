@@ -941,6 +941,12 @@ def _prompt_summary(user_id: str) -> list:
         "type": "text", "text": "\u26a0\ufe0f \u7c3d\u8b49/\u6d77\u95dc\u8cc7\u8a0a\u50c5\u4f9b\u53c3\u8003\uff0c\u8acb\u4ee5\u5b98\u65b9\u516c\u544a\u70ba\u6e96",
         "size": "xxs", "color": "#999999", "wrap": True, "margin": "md",
     })
+    summary_body.append({"type": "separator", "margin": "md"})
+    summary_body.append({
+        "type": "text",
+        "text": "\u2b06\ufe0f \u8a08\u756b\u66f8\u4e0a\u65b9\u9084\u6709\uff1a\u5929\u5929\u884c\u7a0b\u5361\u7247\u00b7\u884c\u524d\u9808\u77e5\uff0c\u5de6\u53f3\u6ed1\u52d5\u67e5\u770b",
+        "size": "xs", "color": "#E91E63", "weight": "bold", "wrap": True, "margin": "sm",
+    })
 
     # 訂票連結
     footer_buttons = []
