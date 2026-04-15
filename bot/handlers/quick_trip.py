@@ -87,6 +87,50 @@ def _ask_days(user_id: str) -> list:
     }]
 
 
+def _mock_with_dates(origin: str, depart: datetime.date, ret: datetime.date) -> list:
+    """生成 mock 航班資料，日期完全符合 depart/ret，不用固定月份日期"""
+    dep_str = depart.isoformat()
+    ret_str = ret.isoformat()
+    return [
+        {"origin": origin, "destination": "NRT", "price": 4280,
+         "airline": "MM", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 210},
+        {"origin": origin, "destination": "ICN", "price": 3650,
+         "airline": "7C", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 165},
+        {"origin": origin, "destination": "BKK", "price": 5120,
+         "airline": "TG", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 225},
+        {"origin": origin, "destination": "DPS", "price": 6800,
+         "airline": "CI", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 1, "duration": 420},
+        {"origin": origin, "destination": "SIN", "price": 5580,
+         "airline": "TR", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 270},
+        {"origin": origin, "destination": "OSA", "price": 4950,
+         "airline": "MM", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 195},
+        {"origin": origin, "destination": "HKG", "price": 3280,
+         "airline": "CX", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 105},
+        {"origin": origin, "destination": "SGN", "price": 4150,
+         "airline": "VJ", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 195},
+        {"origin": origin, "destination": "OKA", "price": 3980,
+         "airline": "MM", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 180},
+        {"origin": origin, "destination": "FUK", "price": 4100,
+         "airline": "JX", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 175},
+        {"origin": origin, "destination": "CTS", "price": 5200,
+         "airline": "MM", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 240},
+        {"origin": origin, "destination": "KUL", "price": 4500,
+         "airline": "AK", "departure_at": dep_str, "return_at": ret_str,
+         "transfers": 0, "duration": 270},
+    ]
+
+
 def _find_options(user_id: str, days: int) -> list:
     """根據天數找 3 個便宜選項（「再找3個」會跳過已顯示過的目的地）"""
     origin = get_user_origin(user_id)
@@ -106,7 +150,8 @@ def _find_options(user_id: str, days: int) -> list:
     if TRAVELPAYOUTS_TOKEN:
         flights = search_cheapest_any(origin, limit=80)
     if not flights:
-        flights = mock_explore_data(depart_date.strftime("%Y-%m"), origin)
+        # mock 資料：用實際的出發/回程日期，確保天數符合使用者選擇
+        flights = _mock_with_dates(origin, depart_date, return_date)
     if not flights:
         return [{"type": "text", "text": "暫時找不到便宜方案，請稍後再試 🙏"}]
 
