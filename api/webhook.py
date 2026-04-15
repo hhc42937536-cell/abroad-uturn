@@ -41,7 +41,7 @@ class handler(BaseHTTPRequestHandler):
             result = refresh_all()
             self._json_response(200, result)
         else:
-            self._json_response(200, {"status": "ok", "bot": "AbroadUturn", "version": "2.4"})
+            self._json_response(200, {"status": "ok", "bot": "AbroadUturn", "version": "2.4", "build": "debug-113f0ca"})
 
     def do_POST(self):
         """LINE Webhook"""
