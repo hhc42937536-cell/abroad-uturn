@@ -993,7 +993,7 @@ def _prompt_summary(user_id: str) -> list:
 
     footer_buttons.append({
         "type": "button", "style": "secondary", "height": "sm",
-        "action": {"type": "uri", "label": "📥 下載行程計畫書 (.txt)",
+        "action": {"type": "uri", "label": "📥 下載行程計畫書 (.docx)",
                    "uri": download_url},
     })
     footer_buttons.extend([
