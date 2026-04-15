@@ -1,7 +1,7 @@
 """快速探索最便宜目的地（保留的獨立功能）"""
 
 from bot.config import TRAVELPAYOUTS_TOKEN
-from bot.constants.cities import IATA_TO_NAME, TW_AIRPORTS
+from bot.constants.cities import IATA_TO_NAME, TW_AIRPORTS, TW_ALL_AIRPORTS
 from bot.services.travelpayouts import search_cheapest_by_month, search_cheapest_any, mock_explore_data
 from bot.flex.flight_bubble import flight_bubble
 from bot.flex.month_picker import month_picker_flex
@@ -12,7 +12,9 @@ def _dedupe_flights(flights: list, limit: int = 10) -> list:
     seen = {}
     for f in flights:
         dest = f.get("destination", "")
-        if dest and (dest not in seen or f.get("price", 99999) < seen[dest].get("price", 99999)):
+        if not dest or dest in TW_ALL_AIRPORTS:
+            continue
+        if dest not in seen or f.get("price", 99999) < seen[dest].get("price", 99999):
             seen[dest] = f
     return sorted(seen.values(), key=lambda x: x.get("price", 99999))[:limit]
 

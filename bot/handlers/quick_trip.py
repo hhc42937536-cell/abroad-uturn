@@ -13,7 +13,7 @@ import datetime
 import json
 
 from bot.config import TRAVELPAYOUTS_TOKEN
-from bot.constants.cities import IATA_TO_NAME, CITY_FLAG, IATA_TO_COUNTRY, TW_AIRPORTS
+from bot.constants.cities import IATA_TO_NAME, CITY_FLAG, IATA_TO_COUNTRY, TW_AIRPORTS, TW_ALL_AIRPORTS
 from bot.constants.airlines import airline_name
 from bot.services.travelpayouts import search_cheapest_any, mock_explore_data
 from bot.session.manager import set_session, get_session, update_session
@@ -111,11 +111,11 @@ def _find_options(user_id: str, days: int) -> list:
     if not flights:
         return [{"type": "text", "text": "\u66ab\u6642\u627e\u4e0d\u5230\u8db3\u5920\u4fbf\u5b9c\u7684\u65b9\u6848\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66 \U0001f64f"}]
 
-    # 按目的地去重，留最低價
+    # 按目的地去重，留最低價（排除台灣國內線）
     seen = {}
     for f in flights:
         dest = f.get("destination", "")
-        if not dest:
+        if not dest or dest in TW_ALL_AIRPORTS:
             continue
         if dest not in seen or f.get("price", 99999) < seen[dest].get("price", 99999):
             seen[dest] = f
