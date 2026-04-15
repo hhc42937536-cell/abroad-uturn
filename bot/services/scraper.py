@@ -23,10 +23,10 @@ def _fetch_url(url: str, timeout: int = 10) -> str | None:
         return None
 
 
-def scrape_idol_events(artist_name: str, country: str = "") -> list:
+def scrape_idol_events(artist_name: str, country: str = "", search_name: str = "") -> list:
     """
     爬蟲搜尋藝人活動資訊
-    使用 Songkick / Bandsintown 風格的搜尋
+    search_name: 英文搜尋名（優先用於 Bandsintown/Songkick）
     回傳: [{"title": "...", "date": "...", "venue": "...", "city": "...", "url": "..."}]
     """
     cache_key = f"idol_events:{artist_name}:{country}"
@@ -38,25 +38,30 @@ def scrape_idol_events(artist_name: str, country: str = "") -> list:
             pass
 
     events = []
+    query = search_name if search_name else artist_name
 
-    # 方式 1: 搜尋 Bandsintown
-    events.extend(_scrape_bandsintown(artist_name))
+    # 方式 1: Kpopmap（KR 藝人優先，按名字過濾）
+    if country == "KR":
+        try:
+            from bot.services.trending import scrape_kpopmap_events
+            kpop_events = scrape_kpopmap_events()
+            name_lower = query.lower()
+            matched = [e for e in kpop_events
+                       if name_lower in e.get("title", "").lower()
+                       or name_lower in e.get("artist", "").lower()]
+            events.extend(matched)
+        except Exception as e:
+            print(f"[scraper] Kpopmap error: {e}")
 
-    # 方式 2: 搜尋 Songkick
+    # 方式 2: Bandsintown（用英文名搜尋）
     if not events:
-        events.extend(_scrape_songkick(artist_name))
+        events.extend(_scrape_bandsintown(query))
 
-    # 過濾國家
-    if country and events:
-        country_map = {"JP": ["Japan", "日本", "Tokyo", "Osaka", "Nagoya", "Fukuoka", "Sapporo", "Yokohama"],
-                       "KR": ["Korea", "韓國", "Seoul", "Busan", "Incheon"]}
-        keywords = country_map.get(country, [])
-        if keywords:
-            filtered = [e for e in events if any(kw.lower() in (e.get("city", "") + e.get("venue", "")).lower() for kw in keywords)]
-            if filtered:
-                events = filtered
+    # 方式 3: Songkick（備援）
+    if not events:
+        events.extend(_scrape_songkick(query))
 
-    # 快取 6 小時
+    # 快取 6 小時（有結果才存）
     if events:
         redis_set(cache_key, json.dumps(events, ensure_ascii=False), ttl=21600)
 

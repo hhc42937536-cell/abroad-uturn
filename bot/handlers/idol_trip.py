@@ -209,7 +209,7 @@ def _show_idol_menu() -> list:
 
 
 def _show_artist_info(artist: dict, data: dict) -> list:
-    """顯示藝人資訊 + 場館 + 周邊商店"""
+    """顯示藝人資訊 + 近期活動 + 周邊商店"""
     name = artist["name"]
     agency = artist.get("agency", "")
     genre = artist.get("genre", "")
@@ -223,16 +223,8 @@ def _show_artist_info(artist: dict, data: dict) -> list:
 
     bubbles = []
 
-    # Bubble 1: 藝人資訊 + 活動搜尋
-    body_text = f"\U0001f3b5 {name}\n\U0001f3e2 \u7d93\u7d00\u516c\u53f8\uff1a{agency}\n\U0001f3b6 \u985e\u578b\uff1a{genre}"
-
-    # 嘗試爬蟲抓活動
-    events = scrape_idol_events(name, country)
-    if events:
-        body_text += "\n\n\U0001f4c5 \u8fd1\u671f\u6d3b\u52d5\uff1a"
-        for evt in events[:3]:
-            body_text += f"\n\u2022 {evt['date']} {evt.get('venue', '')} ({evt.get('city', '')})"
-
+    # Bubble 1: 藝人資訊卡
+    body_text = f"\U0001f3e2 {agency}\n\U0001f3b6 {genre}"
     bubbles.append({
         "type": "bubble", "size": "kilo",
         "header": {
@@ -255,41 +247,72 @@ def _show_artist_info(artist: dict, data: dict) -> list:
             "spacing": "sm", "paddingAll": "10px",
             "contents": [
                 {"type": "button", "style": "primary", "color": "#E91E63", "height": "sm",
-                 "action": {"type": "message", "label": f"\u2708\ufe0f \u898f\u5283\u8ffd\u661f\u65c5\u7a0b",
+                 "action": {"type": "message", "label": "\u2708\ufe0f \u898f\u5283\u8ffd\u661f\u65c5\u7a0b",
                             "text": "\u958b\u59cb\u898f\u5283"}},
             ],
         },
     })
 
-    # Bubble 2: 場館資訊
-    venues = data.get("venues", {}).get(country, [])
-    if venues:
-        venue_lines = []
-        for v in venues[:5]:
-            venue_lines.append(f"\U0001f3df\ufe0f {v['name']}")
-            venue_lines.append(f"   \U0001f4cd {v['city']} \u2022 {v.get('capacity', '')} \u4eba")
-            venue_lines.append(f"   \U0001f689 {v.get('nearest_station', '')}")
-            venue_lines.append("")
+    # Bubble 2: 近期活動（爬蟲即時）
+    import urllib.parse
+    search_name = artist.get("search_name", "")
+    events = scrape_idol_events(name, country, search_name=search_name)
+    if events:
+        event_items = []
+        for evt in events[:5]:
+            line = f"\U0001f4c5 {evt['date']}"
+            if evt.get("venue"):
+                line += f"\n   \U0001f3df\ufe0f {evt['venue']}"
+            if evt.get("city"):
+                line += f"  \U0001f4cd {evt['city']}"
+            event_items.append({
+                "type": "text", "text": line,
+                "size": "sm", "color": "#333333", "wrap": True, "margin": "sm",
+            })
+        event_body_contents = event_items
+        footer_contents = [
+            {"type": "button", "style": "link", "height": "sm",
+             "action": {"type": "uri", "label": "\U0001f517 \u67e5\u66f4\u591a\u6d3b\u52d5",
+                        "uri": f"https://www.bandsintown.com/{urllib.parse.quote(name.lower().replace(' ', '-'))}"}}
+        ]
+    else:
+        slug = urllib.parse.quote(name.lower().replace(" ", "-"))
+        event_body_contents = [
+            {"type": "text", "text": "\u76ee\u524d\u672a\u67e5\u5230\u8fd1\u671f\u516c\u958b\u6d3b\u52d5",
+             "size": "sm", "color": "#888888", "wrap": True},
+            {"type": "text", "text": "\u53ef\u81ea\u884c\u81f3\u4ee5\u4e0b\u5e73\u53f0\u67e5\u8a62\uff1a",
+             "size": "xs", "color": "#aaaaaa", "margin": "md"},
+        ]
+        footer_contents = [
+            {"type": "button", "style": "link", "height": "sm",
+             "action": {"type": "uri", "label": "Bandsintown",
+                        "uri": f"https://www.bandsintown.com/{slug}"}},
+            {"type": "button", "style": "link", "height": "sm",
+             "action": {"type": "uri", "label": "Songkick",
+                        "uri": f"https://www.songkick.com/search?query={urllib.parse.quote(name)}"}},
+        ]
 
-        bubbles.append({
-            "type": "bubble", "size": "kilo",
-            "header": {
-                "type": "box", "layout": "vertical",
-                "backgroundColor": "#1565C0", "paddingAll": "12px",
-                "contents": [
-                    {"type": "text", "text": "\U0001f3df\ufe0f \u5e38\u898b\u6f14\u51fa\u5834\u9928",
-                     "color": "#FFFFFF", "weight": "bold", "size": "md"},
-                ],
-            },
-            "body": {
-                "type": "box", "layout": "vertical",
-                "paddingAll": "12px",
-                "contents": [
-                    {"type": "text", "text": "\n".join(venue_lines).strip(),
-                     "size": "sm", "color": "#444444", "wrap": True},
-                ],
-            },
-        })
+    bubbles.append({
+        "type": "bubble", "size": "kilo",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1565C0", "paddingAll": "12px",
+            "contents": [
+                {"type": "text", "text": f"\U0001f4e2 {name} \u8fd1\u671f\u6d3b\u52d5",
+                 "color": "#FFFFFF", "weight": "bold", "size": "md"},
+            ],
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "paddingAll": "12px", "spacing": "xs",
+            "contents": event_body_contents,
+        },
+        "footer": {
+            "type": "box", "layout": "vertical",
+            "paddingAll": "8px",
+            "contents": footer_contents,
+        },
+    })
 
     # Bubble 3: 周邊商店
     fan_shops = data.get("fan_shops", {}).get(country, [])
@@ -330,16 +353,52 @@ def _show_artist_info(artist: dict, data: dict) -> list:
 
 
 def _show_scraped_events(artist_name: str, events: list) -> list:
-    """顯示爬蟲抓到的活動"""
-    lines = [f"\U0001f4c5 {artist_name} \u8fd1\u671f\u6d3b\u52d5\uff1a\n"]
-    for evt in events[:8]:
-        lines.append(f"\u2022 {evt['date']} | {evt.get('venue', 'TBA')}")
+    """顯示爬蟲抓到的活動（Flex Bubble，與 _show_artist_info 同格式）"""
+    import urllib.parse
+    slug = urllib.parse.quote(artist_name.lower().replace(" ", "-"))
+
+    event_items = []
+    for evt in events[:5]:
+        line = f"\U0001f4c5 {evt['date']}"
+        if evt.get("venue"):
+            line += f"\n   \U0001f3df\ufe0f {evt['venue']}"
         if evt.get("city"):
-            lines[-1] += f" ({evt['city']})"
-        if evt.get("url"):
-            lines.append(f"   \U0001f517 {evt['url']}")
-        lines.append("")
+            line += f"  \U0001f4cd {evt['city']}"
+        event_items.append({
+            "type": "text", "text": line,
+            "size": "sm", "color": "#333333", "wrap": True, "margin": "sm",
+        })
 
-    lines.append("\u8f38\u5165\u300c\u958b\u59cb\u898f\u5283\u300d\u53ef\u4ee5\u76f4\u63a5\u898f\u5283\u8ffd\u661f\u65c5\u7a0b\uff01")
+    bubble = {
+        "type": "bubble", "size": "kilo",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#1565C0", "paddingAll": "12px",
+            "contents": [
+                {"type": "text", "text": f"\U0001f4e2 {artist_name} \u8fd1\u671f\u6d3b\u52d5",
+                 "color": "#FFFFFF", "weight": "bold", "size": "md"},
+            ],
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "paddingAll": "12px", "spacing": "xs",
+            "contents": event_items,
+        },
+        "footer": {
+            "type": "box", "layout": "vertical",
+            "paddingAll": "8px",
+            "contents": [
+                {"type": "button", "style": "link", "height": "sm",
+                 "action": {"type": "uri", "label": "\U0001f517 \u67e5\u66f4\u591a\u6d3b\u52d5",
+                            "uri": f"https://www.bandsintown.com/{slug}"}},
+                {"type": "button", "style": "link", "height": "sm",
+                 "action": {"type": "message", "label": "\u2708\ufe0f \u898f\u5283\u8ffd\u661f\u65c5\u7a0b",
+                            "text": "\u958b\u59cb\u898f\u5283"}},
+            ],
+        },
+    }
 
-    return [{"type": "text", "text": "\n".join(lines)}]
+    return [
+        {"type": "flex", "altText": f"\U0001f4e2 {artist_name} \u8fd1\u671f\u6d3b\u52d5",
+         "contents": bubble},
+    ]

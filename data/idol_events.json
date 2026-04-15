@@ -6,28 +6,28 @@
   },
   "groups": {
     "JP": [
-      {"name": "乃木坂46", "agency": "Sony Music", "genre": "J-POP/偶像"},
-      {"name": "Snow Man", "agency": "Johnny's", "genre": "J-POP/偶像"},
-      {"name": "SixTONES", "agency": "Johnny's", "genre": "J-POP/偶像"},
-      {"name": "YOASOBI", "agency": "Sony Music", "genre": "J-POP"},
-      {"name": "Official髭男dism", "agency": "IRORI Records", "genre": "J-POP/樂團"},
-      {"name": "Ado", "agency": "Universal Music", "genre": "J-POP"},
-      {"name": "King & Prince", "agency": "Johnny's", "genre": "J-POP/偶像"},
-      {"name": "BE:FIRST", "agency": "BMSG", "genre": "J-POP/偶像"}
+      {"name": "乃木坂46", "search_name": "Nogizaka46", "agency": "Sony Music", "genre": "J-POP/偶像"},
+      {"name": "Snow Man", "search_name": "Snow Man", "agency": "Johnny's", "genre": "J-POP/偶像"},
+      {"name": "SixTONES", "search_name": "SixTONES", "agency": "Johnny's", "genre": "J-POP/偶像"},
+      {"name": "YOASOBI", "search_name": "YOASOBI", "agency": "Sony Music", "genre": "J-POP"},
+      {"name": "Official髭男dism", "search_name": "Official Hige Dandism", "agency": "IRORI Records", "genre": "J-POP/樂團"},
+      {"name": "Ado", "search_name": "Ado", "agency": "Universal Music", "genre": "J-POP"},
+      {"name": "King & Prince", "search_name": "King and Prince", "agency": "Johnny's", "genre": "J-POP/偶像"},
+      {"name": "BE:FIRST", "search_name": "BE:FIRST", "agency": "BMSG", "genre": "J-POP/偶像"}
     ],
     "KR": [
-      {"name": "BTS", "agency": "HYBE", "genre": "K-POP"},
-      {"name": "BLACKPINK", "agency": "YG", "genre": "K-POP"},
-      {"name": "TWICE", "agency": "JYP", "genre": "K-POP"},
-      {"name": "Stray Kids", "agency": "JYP", "genre": "K-POP"},
-      {"name": "aespa", "agency": "SM", "genre": "K-POP"},
-      {"name": "NewJeans", "agency": "ADOR/HYBE", "genre": "K-POP"},
-      {"name": "SEVENTEEN", "agency": "PLEDIS/HYBE", "genre": "K-POP"},
-      {"name": "IVE", "agency": "Starship", "genre": "K-POP"},
-      {"name": "LE SSERAFIM", "agency": "Source Music/HYBE", "genre": "K-POP"},
-      {"name": "NCT", "agency": "SM", "genre": "K-POP"},
-      {"name": "EXO", "agency": "SM", "genre": "K-POP"},
-      {"name": "TXT", "agency": "HYBE", "genre": "K-POP"}
+      {"name": "BTS", "search_name": "BTS", "agency": "HYBE", "genre": "K-POP"},
+      {"name": "BLACKPINK", "search_name": "BLACKPINK", "agency": "YG", "genre": "K-POP"},
+      {"name": "TWICE", "search_name": "TWICE", "agency": "JYP", "genre": "K-POP"},
+      {"name": "Stray Kids", "search_name": "Stray Kids", "agency": "JYP", "genre": "K-POP"},
+      {"name": "aespa", "search_name": "aespa", "agency": "SM", "genre": "K-POP"},
+      {"name": "NewJeans", "search_name": "NewJeans", "agency": "ADOR/HYBE", "genre": "K-POP"},
+      {"name": "SEVENTEEN", "search_name": "SEVENTEEN", "agency": "PLEDIS/HYBE", "genre": "K-POP"},
+      {"name": "IVE", "search_name": "IVE", "agency": "Starship", "genre": "K-POP"},
+      {"name": "LE SSERAFIM", "search_name": "LE SSERAFIM", "agency": "Source Music/HYBE", "genre": "K-POP"},
+      {"name": "NCT", "search_name": "NCT 127", "agency": "SM", "genre": "K-POP"},
+      {"name": "EXO", "search_name": "EXO", "agency": "SM", "genre": "K-POP"},
+      {"name": "TXT", "search_name": "Tomorrow X Together", "agency": "HYBE", "genre": "K-POP"}
     ]
   },
   "venues": {
