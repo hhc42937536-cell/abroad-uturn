@@ -26,43 +26,48 @@ def _load_idol_data() -> dict:
 
 def handle_idol_trip(text: str, user_id: str = "") -> list:
     """追星行程規劃入口"""
-    clean = text.replace("\u8ffd\u661f", "").replace("\u884c\u7a0b", "").replace("\u898f\u5283", "").strip()
+    clean = text.replace("追星", "").replace("行程", "").replace("規劃", "").strip()
 
     if not clean:
         return _show_idol_menu()
 
-    # 搜尋藝人
     data = _load_idol_data()
+
+    # 1. 搜尋歌手/團體
     all_groups = []
-    for country_groups in data.get("groups", {}).values():
-        all_groups.extend(country_groups)
+    for cc, groups in data.get("groups", {}).items():
+        for g in groups:
+            all_groups.append((g, cc))
 
-    # 模糊匹配
-    matched = None
-    for group in all_groups:
+    for group, cc in all_groups:
         if clean.lower() in group["name"].lower() or group["name"].lower() in clean.lower():
-            matched = group
-            break
+            return _show_artist_info(group, data, country=cc, is_actor=False)
 
-    if matched:
-        return _show_artist_info(matched, data)
+    # 2. 搜尋演員
+    all_actors = []
+    for cc, actors in data.get("actors", {}).items():
+        for a in actors:
+            all_actors.append((a, cc))
 
-    # 沒匹配到，嘗試爬蟲搜尋
+    for actor, cc in all_actors:
+        if clean.lower() in actor["name"].lower() or actor["name"].lower() in clean.lower():
+            return _show_artist_info(actor, data, country=cc, is_actor=True)
+
+    # 3. 沒匹配到，嘗試爬蟲搜尋
     events = scrape_idol_events(clean)
     if events:
         return _show_scraped_events(clean, events)
 
     return [{
-        "type": "text", "text":
-            f"\u627e\u4e0d\u5230\u300c{clean}\u300d\u7684\u76f8\u95dc\u6d3b\u52d5\u8cc7\u8a0a\n\n"
-            f"\u8acb\u78ba\u8a8d\u85dd\u4eba/\u5718\u9ad4\u540d\u7a31\uff0c\u6216\u8a66\u8a66\uff1a\n"
-            f"\u300c\u8ffd\u661f BTS\u300d\u300c\u8ffd\u661f TWICE\u300d\u300c\u8ffd\u661f Snow Man\u300d",
+        "type": "text",
+        "text": f"找不到「{clean}」的相關活動資訊\n\n可以試試：\n「追星 邊佑錫」「追星 BTS」「追星 Snow Man」",
         "quickReply": {
             "items": [
-                {"type": "action", "action": {"type": "message", "label": "BTS", "text": "\u8ffd\u661f BTS"}},
-                {"type": "action", "action": {"type": "message", "label": "BLACKPINK", "text": "\u8ffd\u661f BLACKPINK"}},
-                {"type": "action", "action": {"type": "message", "label": "\u4e43\u672946", "text": "\u8ffd\u661f \u4e43\u672946"}},
-                {"type": "action", "action": {"type": "message", "label": "Snow Man", "text": "\u8ffd\u661f Snow Man"}},
+                {"type": "action", "action": {"type": "message", "label": "邊佑錫", "text": "追星 邊佑錫"}},
+                {"type": "action", "action": {"type": "message", "label": "BTS", "text": "追星 BTS"}},
+                {"type": "action", "action": {"type": "message", "label": "BLACKPINK", "text": "追星 BLACKPINK"}},
+                {"type": "action", "action": {"type": "message", "label": "乃木坂46", "text": "追星 乃木坂46"}},
+                {"type": "action", "action": {"type": "message", "label": "Snow Man", "text": "追星 Snow Man"}},
             ],
         },
     }]
@@ -97,6 +102,15 @@ def _show_idol_menu() -> list:
             "action": {"type": "message", "label": g["name"][:12], "text": f"\u8ffd\u661f {g['name']}"},
         })
 
+    # ── 韓劇演員 bubble ──
+    kr_actors = data.get("actors", {}).get("KR", [])
+    actor_buttons = []
+    for a in kr_actors[:6]:
+        actor_buttons.append({
+            "type": "button", "style": "secondary", "height": "sm",
+            "action": {"type": "message", "label": a["name"][:8], "text": f"追星 {a['name']}"},
+        })
+
     # ── 追星小知識 bubble ──
     tip_lines = []
     for t in tips[:4]:
@@ -117,9 +131,9 @@ def _show_idol_menu() -> list:
                 "type": "box", "layout": "vertical",
                 "backgroundColor": "#E91E63", "paddingAll": "12px",
                 "contents": [
-                    {"type": "text", "text": "\U0001f1f0\U0001f1f7 K-POP \u97d3\u570b\u5076\u50cf",
+                    {"type": "text", "text": "🇰🇷 K-POP 韓國偶像",
                      "color": "#FFFFFF", "weight": "bold", "size": "md"},
-                    {"type": "text", "text": "\u9ede\u9078\u4f60\u559c\u6b61\u7684\u5718\u9ad4",
+                    {"type": "text", "text": "點選你喜歡的團體",
                      "color": "#FFFFFF88", "size": "xs"},
                 ],
             },
@@ -129,6 +143,28 @@ def _show_idol_menu() -> list:
                 "contents": kr_buttons,
             },
         },
+        # 韓劇演員
+        {
+            "type": "bubble", "size": "kilo",
+            "header": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#1A237E", "paddingAll": "12px",
+                "contents": [
+                    {"type": "text", "text": "🎬 韓劇／韓星 演員",
+                     "color": "#FFFFFF", "weight": "bold", "size": "md"},
+                    {"type": "text", "text": "粉絲見面會・來台活動",
+                     "color": "#FFFFFF88", "size": "xs"},
+                ],
+            },
+            "body": {
+                "type": "box", "layout": "vertical",
+                "spacing": "sm", "paddingAll": "12px",
+                "contents": actor_buttons if actor_buttons else [
+                    {"type": "text", "text": "輸入「追星 邊佑錫」查詢",
+                     "size": "sm", "color": "#888888"},
+                ],
+            },
+        },
         # J-POP
         {
             "type": "bubble", "size": "kilo",
@@ -136,9 +172,9 @@ def _show_idol_menu() -> list:
                 "type": "box", "layout": "vertical",
                 "backgroundColor": "#FF5722", "paddingAll": "12px",
                 "contents": [
-                    {"type": "text", "text": "\U0001f1ef\U0001f1f5 J-POP \u65e5\u672c\u5076\u50cf",
+                    {"type": "text", "text": "🇯🇵 J-POP 日本偶像",
                      "color": "#FFFFFF", "weight": "bold", "size": "md"},
-                    {"type": "text", "text": "\u9ede\u9078\u4f60\u559c\u6b61\u7684\u85dd\u4eba",
+                    {"type": "text", "text": "點選你喜歡的藝人",
                      "color": "#FFFFFF88", "size": "xs"},
                 ],
             },
@@ -208,30 +244,31 @@ def _show_idol_menu() -> list:
     ]
 
 
-def _show_artist_info(artist: dict, data: dict) -> list:
-    """顯示藝人資訊 + 近期活動 + 周邊商店"""
+def _show_artist_info(artist: dict, data: dict, country: str = "", is_actor: bool = False) -> list:
+    """顯示藝人/演員資訊 + 近期活動 + 周邊商店"""
     name = artist["name"]
     agency = artist.get("agency", "")
-    genre = artist.get("genre", "")
-
-    # 判斷國家
-    country = ""
-    for cc, groups in data.get("groups", {}).items():
-        if artist in groups:
-            country = cc
-            break
 
     bubbles = []
 
-    # Bubble 1: 藝人資訊卡
-    body_text = f"\U0001f3e2 {agency}\n\U0001f3b6 {genre}"
+    # Bubble 1: 資訊卡
+    if is_actor:
+        known_for = artist.get("known_for", "")
+        body_text = f"🎬 {known_for}\n🏢 {agency}" if known_for else f"🏢 {agency}"
+        header_color = "#1A237E"
+        header_icon = "🎬"
+    else:
+        genre = artist.get("genre", "")
+        body_text = f"\U0001f3e2 {agency}\n\U0001f3b6 {genre}"
+        header_color = "#E91E63"
+        header_icon = "⭐"
     bubbles.append({
         "type": "bubble", "size": "kilo",
         "header": {
             "type": "box", "layout": "vertical",
-            "backgroundColor": "#E91E63", "paddingAll": "12px",
+            "backgroundColor": header_color, "paddingAll": "12px",
             "contents": [
-                {"type": "text", "text": f"\u2b50 {name}",
+                {"type": "text", "text": f"{header_icon} {name}",
                  "color": "#FFFFFF", "weight": "bold", "size": "lg"},
             ],
         },
@@ -246,9 +283,9 @@ def _show_artist_info(artist: dict, data: dict) -> list:
             "type": "box", "layout": "vertical",
             "spacing": "sm", "paddingAll": "10px",
             "contents": [
-                {"type": "button", "style": "primary", "color": "#E91E63", "height": "sm",
-                 "action": {"type": "message", "label": "\u2708\ufe0f \u898f\u5283\u8ffd\u661f\u65c5\u7a0b",
-                            "text": "\u958b\u59cb\u898f\u5283"}},
+                {"type": "button", "style": "primary", "color": header_color, "height": "sm",
+                 "action": {"type": "message", "label": "✈️ 規劃追星旅程",
+                            "text": "開始規劃"}},
             ],
         },
     })
@@ -256,7 +293,7 @@ def _show_artist_info(artist: dict, data: dict) -> list:
     # Bubble 2: 近期活動（爬蟲即時）
     import urllib.parse
     search_name = artist.get("search_name", "")
-    events = scrape_idol_events(name, country, search_name=search_name)
+    events = scrape_idol_events(name, country, search_name=search_name, is_actor=is_actor)
     if events:
         event_items = []
         for evt in events[:5]:
@@ -276,21 +313,32 @@ def _show_artist_info(artist: dict, data: dict) -> list:
                         "uri": f"https://www.bandsintown.com/{urllib.parse.quote(name.lower().replace(' ', '-'))}"}}
         ]
     else:
-        slug = urllib.parse.quote(name.lower().replace(" ", "-"))
+        enc_search = urllib.parse.quote(search_name if search_name else name)
         event_body_contents = [
-            {"type": "text", "text": "\u76ee\u524d\u672a\u67e5\u5230\u8fd1\u671f\u516c\u958b\u6d3b\u52d5",
+            {"type": "text", "text": "目前未查到近期公開活動",
              "size": "sm", "color": "#888888", "wrap": True},
-            {"type": "text", "text": "\u53ef\u81ea\u884c\u81f3\u4ee5\u4e0b\u5e73\u53f0\u67e5\u8a62\uff1a",
+            {"type": "text", "text": "可至以下平台查詢：",
              "size": "xs", "color": "#aaaaaa", "margin": "md"},
         ]
-        footer_contents = [
-            {"type": "button", "style": "link", "height": "sm",
-             "action": {"type": "uri", "label": "Bandsintown",
-                        "uri": f"https://www.bandsintown.com/{slug}"}},
-            {"type": "button", "style": "link", "height": "sm",
-             "action": {"type": "uri", "label": "Songkick",
-                        "uri": f"https://www.songkick.com/search?query={urllib.parse.quote(name)}"}},
-        ]
+        if is_actor:
+            footer_contents = [
+                {"type": "button", "style": "link", "height": "sm",
+                 "action": {"type": "uri", "label": "🎟 Interpark 粉絲見面會",
+                            "uri": f"https://ticket.interpark.com/webzine/paper/TPNoticeList_Calendar.asp?SearchWord={enc_search}"}},
+                {"type": "button", "style": "link", "height": "sm",
+                 "action": {"type": "uri", "label": "🎵 Melon Ticket",
+                            "uri": f"https://ticket.melon.com/search/index.htm?searchKeyword={enc_search}"}},
+            ]
+        else:
+            slug = urllib.parse.quote((search_name if search_name else name).lower().replace(" ", "-"))
+            footer_contents = [
+                {"type": "button", "style": "link", "height": "sm",
+                 "action": {"type": "uri", "label": "Bandsintown",
+                            "uri": f"https://www.bandsintown.com/{slug}"}},
+                {"type": "button", "style": "link", "height": "sm",
+                 "action": {"type": "uri", "label": "Songkick",
+                            "uri": f"https://www.songkick.com/search?query={enc_search}"}},
+            ]
 
     bubbles.append({
         "type": "bubble", "size": "kilo",

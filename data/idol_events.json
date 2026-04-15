@@ -1,19 +1,24 @@
 {
   "_meta": {
-    "description": "追星行程相關資料：藝人/團體資訊、常見活動場地、周邊商店",
+    "description": "追星行程相關資料：藝人/團體/演員資訊、周邊商店",
     "last_updated": "2026-04",
     "note": "活動日期需即時爬蟲更新，此檔案為靜態基礎資料"
   },
   "groups": {
     "JP": [
       {"name": "乃木坂46", "search_name": "Nogizaka46", "agency": "Sony Music", "genre": "J-POP/偶像"},
+      {"name": "櫻坂46", "search_name": "Sakurazaka46", "agency": "Sony Music", "genre": "J-POP/偶像"},
+      {"name": "日向坂46", "search_name": "Hinatazaka46", "agency": "Sony Music", "genre": "J-POP/偶像"},
       {"name": "Snow Man", "search_name": "Snow Man", "agency": "Johnny's", "genre": "J-POP/偶像"},
       {"name": "SixTONES", "search_name": "SixTONES", "agency": "Johnny's", "genre": "J-POP/偶像"},
+      {"name": "なにわ男子", "search_name": "Naniwa Danshi", "agency": "Johnny's", "genre": "J-POP/偶像"},
+      {"name": "Travis Japan", "search_name": "Travis Japan", "agency": "Johnny's", "genre": "J-POP/偶像"},
       {"name": "YOASOBI", "search_name": "YOASOBI", "agency": "Sony Music", "genre": "J-POP"},
       {"name": "Official髭男dism", "search_name": "Official Hige Dandism", "agency": "IRORI Records", "genre": "J-POP/樂團"},
       {"name": "Ado", "search_name": "Ado", "agency": "Universal Music", "genre": "J-POP"},
-      {"name": "King & Prince", "search_name": "King and Prince", "agency": "Johnny's", "genre": "J-POP/偶像"},
-      {"name": "BE:FIRST", "search_name": "BE:FIRST", "agency": "BMSG", "genre": "J-POP/偶像"}
+      {"name": "BE:FIRST", "search_name": "BE:FIRST", "agency": "BMSG", "genre": "J-POP/偶像"},
+      {"name": "imase", "search_name": "imase", "agency": "Universal Music", "genre": "J-POP"},
+      {"name": "優里", "search_name": "Yuri", "agency": "Warner Music", "genre": "J-POP"}
     ],
     "KR": [
       {"name": "BTS", "search_name": "BTS", "agency": "HYBE", "genre": "K-POP"},
@@ -25,28 +30,50 @@
       {"name": "SEVENTEEN", "search_name": "SEVENTEEN", "agency": "PLEDIS/HYBE", "genre": "K-POP"},
       {"name": "IVE", "search_name": "IVE", "agency": "Starship", "genre": "K-POP"},
       {"name": "LE SSERAFIM", "search_name": "LE SSERAFIM", "agency": "Source Music/HYBE", "genre": "K-POP"},
-      {"name": "NCT", "search_name": "NCT 127", "agency": "SM", "genre": "K-POP"},
+      {"name": "NCT 127", "search_name": "NCT 127", "agency": "SM", "genre": "K-POP"},
+      {"name": "NCT DREAM", "search_name": "NCT DREAM", "agency": "SM", "genre": "K-POP"},
       {"name": "EXO", "search_name": "EXO", "agency": "SM", "genre": "K-POP"},
-      {"name": "TXT", "search_name": "Tomorrow X Together", "agency": "HYBE", "genre": "K-POP"}
+      {"name": "TXT", "search_name": "Tomorrow X Together", "agency": "HYBE", "genre": "K-POP"},
+      {"name": "ENHYPEN", "search_name": "ENHYPEN", "agency": "HYBE", "genre": "K-POP"},
+      {"name": "NMIXX", "search_name": "NMIXX", "agency": "JYP", "genre": "K-POP"},
+      {"name": "ITZY", "search_name": "ITZY", "agency": "JYP", "genre": "K-POP"},
+      {"name": "Red Velvet", "search_name": "Red Velvet", "agency": "SM", "genre": "K-POP"},
+      {"name": "MAMAMOO", "search_name": "MAMAMOO", "agency": "RBW", "genre": "K-POP"},
+      {"name": "(G)I-DLE", "search_name": "G-IDLE", "agency": "Cube", "genre": "K-POP"},
+      {"name": "BIGBANG", "search_name": "BIGBANG", "agency": "YG", "genre": "K-POP"},
+      {"name": "Super Junior", "search_name": "Super Junior", "agency": "SM", "genre": "K-POP"},
+      {"name": "MONSTA X", "search_name": "MONSTA X", "agency": "Starship", "genre": "K-POP"},
+      {"name": "ATEEZ", "search_name": "ATEEZ", "agency": "KQ", "genre": "K-POP"},
+      {"name": "DAY6", "search_name": "DAY6", "agency": "JYP", "genre": "K-POP"},
+      {"name": "2PM", "search_name": "2PM", "agency": "JYP", "genre": "K-POP"}
     ]
   },
-  "venues": {
-    "JP": [
-      {"name": "東京巨蛋", "city": "東京", "capacity": "55,000", "nearest_station": "水道橋/後樂園"},
-      {"name": "日產體育場", "city": "橫濱", "capacity": "72,000", "nearest_station": "新橫濱"},
-      {"name": "京瓷巨蛋大阪", "city": "大阪", "capacity": "36,000", "nearest_station": "大正"},
-      {"name": "埼玉超級競技場", "city": "埼玉", "capacity": "37,000", "nearest_station": "新都心"},
-      {"name": "國立代代木競技場", "city": "東京", "capacity": "13,000", "nearest_station": "原宿"},
-      {"name": "幕張展覽館", "city": "千葉", "capacity": "9,000", "nearest_station": "海浜幕張"},
-      {"name": "名古屋巨蛋", "city": "名古屋", "capacity": "40,000", "nearest_station": "名古屋巨蛋前矢田"},
-      {"name": "福岡巨蛋", "city": "福岡", "capacity": "38,000", "nearest_station": "唐人町"}
-    ],
+  "actors": {
     "KR": [
-      {"name": "首爾奧林匹克體操競技場", "city": "首爾", "capacity": "15,000", "nearest_station": "Sports Complex"},
-      {"name": "首爾高尺天空巨蛋", "city": "首爾", "capacity": "25,000", "nearest_station": "九一站"},
-      {"name": "KSPO DOME", "city": "首爾", "capacity": "15,000", "nearest_station": "Sports Complex"},
-      {"name": "仁川文鶴競技場", "city": "仁川", "capacity": "50,000", "nearest_station": "文鶴競技場"},
-      {"name": "蠶室綜合運動場", "city": "首爾", "capacity": "69,950", "nearest_station": "蠶室"}
+      {"name": "邊佑錫", "search_name": "Byeon Woo-seok", "known_for": "선재 업고 튀어（我的幸福結局）", "agency": "Awesome ENT", "type": "演員"},
+      {"name": "朴寶劍", "search_name": "Park Bo-gum", "known_for": "請回答1988・雲畫的月光", "agency": "Blossom Entertainment", "type": "演員"},
+      {"name": "李鐘碩", "search_name": "Lee Jong-suk", "known_for": "W兩個世界・醫生", "agency": "A-MAN Project", "type": "演員"},
+      {"name": "金秀賢", "search_name": "Kim Soo-hyun", "known_for": "來自星星的你・皇后的傘兵", "agency": "GOLDMEDALIST", "type": "演員"},
+      {"name": "玄彬", "search_name": "Hyun Bin", "known_for": "愛的迫降・秘密花園", "agency": "VAST Entertainment", "type": "演員"},
+      {"name": "孔劉", "search_name": "Gong Yoo", "known_for": "鬼怪・釜山行", "agency": "Management SOOP", "type": "演員"},
+      {"name": "李敏鎬", "search_name": "Lee Min-ho", "known_for": "繼承者們・花樣男子", "agency": "MYM Entertainment", "type": "演員"},
+      {"name": "宋仲基", "search_name": "Song Joong-ki", "known_for": "太陽的後裔・成為宇宙英雄", "agency": "History D&C", "type": "演員"},
+      {"name": "池昌旭", "search_name": "Ji Chang-wook", "known_for": "Melting Me Softly・惡魔法官", "agency": "Glorious Entertainment", "type": "演員"},
+      {"name": "朴敘俊", "search_name": "Park Seo-joon", "known_for": "梨泰院Class・她的私生活", "agency": "Awesome ENT", "type": "演員"},
+      {"name": "丁海寅", "search_name": "Jung Hae-in", "known_for": "雪降花・DP逃兵追緝令", "agency": "FNC Entertainment", "type": "演員"},
+      {"name": "車銀優", "search_name": "Cha Eun-woo", "known_for": "真的不想努力・花遊記", "agency": "Fantagio", "type": "演員/偶像"},
+      {"name": "李準基", "search_name": "Lee Joon-gi", "known_for": "月之戀人・軍主的假面", "agency": "SidusHQ", "type": "演員"},
+      {"name": "崔宇植", "search_name": "Choi Woo-shik", "known_for": "寄生上流・我的出走日記", "agency": "Management SOOP", "type": "演員"},
+      {"name": "劉亞仁", "search_name": "Yoo Ah-in", "known_for": "六龍飛天・燃燒", "agency": "UAA", "type": "演員"}
+    ],
+    "JP": [
+      {"name": "山崎賢人", "search_name": "Kento Yamazaki", "known_for": "Alice in Borderland・醫龍", "agency": "Stardust Promotion", "type": "演員"},
+      {"name": "菅田將暉", "search_name": "Masaki Suda", "known_for": "大豆田永久子・花束般的戀愛", "agency": "ワイルドバンチ", "type": "演員"},
+      {"name": "吉澤亮", "search_name": "Ryo Yoshizawa", "known_for": "初戀・進擊的巨人", "agency": "Stardust Promotion", "type": "演員"},
+      {"name": "坂口健太郎", "search_name": "Kentaro Ito", "known_for": "東京女子圖鑑・MIU404", "agency": "Stardust Promotion", "type": "演員"},
+      {"name": "横浜流星", "search_name": "Ryusei Yokohama", "known_for": "日本沉沒・天堂與地獄", "agency": "Stardust Promotion", "type": "演員"},
+      {"name": "浜辺美波", "search_name": "Minami Hamabe", "known_for": "哥吉拉・排球少年劇場版", "agency": "Grick", "type": "演員"},
+      {"name": "永野芽郁", "search_name": "Mei Nagano", "known_for": "半澤直樹・ひなたが丘", "agency": "Horipro", "type": "演員"}
     ]
   },
   "fan_shops": {
@@ -66,7 +93,8 @@
     ]
   },
   "tips": [
-    "演唱會門票通常需要加入日韓會員才能抽選，建議提早3-6個月準備",
+    "演唱會/見面會門票通常需要加入官方粉絲俱樂部才能搶購，建議提早3-6個月準備",
+    "韓國演員粉絲見面會（팬미팅）票券可在 Interpark、Melon Ticket 購買",
     "日本傑尼斯系演唱會禁止拍照錄影，違規會被請出場",
     "韓國演唱會通常允許手機拍照（但不能錄影），依主辦規定",
     "場館周邊通常有交換小卡的粉絲聚集，可以帶自己的小卡去交換",

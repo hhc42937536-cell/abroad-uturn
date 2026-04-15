@@ -23,10 +23,12 @@ def _fetch_url(url: str, timeout: int = 10) -> str | None:
         return None
 
 
-def scrape_idol_events(artist_name: str, country: str = "", search_name: str = "") -> list:
+def scrape_idol_events(artist_name: str, country: str = "", search_name: str = "",
+                       is_actor: bool = False) -> list:
     """
-    爬蟲搜尋藝人活動資訊
-    search_name: 英文搜尋名（優先用於 Bandsintown/Songkick）
+    爬蟲搜尋藝人/演員活動資訊
+    search_name: 英文搜尋名（優先用於外部平台搜尋）
+    is_actor: True 時走演員專用來源（Interpark / Melon Ticket）
     回傳: [{"title": "...", "date": "...", "venue": "...", "city": "...", "url": "..."}]
     """
     cache_key = f"idol_events:{artist_name}:{country}"
@@ -40,32 +42,72 @@ def scrape_idol_events(artist_name: str, country: str = "", search_name: str = "
     events = []
     query = search_name if search_name else artist_name
 
-    # 方式 1: Kpopmap（KR 藝人優先，按名字過濾）
-    if country == "KR":
-        try:
-            from bot.services.trending import scrape_kpopmap_events
-            kpop_events = scrape_kpopmap_events()
-            name_lower = query.lower()
-            matched = [e for e in kpop_events
-                       if name_lower in e.get("title", "").lower()
-                       or name_lower in e.get("artist", "").lower()]
-            events.extend(matched)
-        except Exception as e:
-            print(f"[scraper] Kpopmap error: {e}")
+    if is_actor:
+        # 演員：搜尋 Interpark / Melon Ticket 粉絲見面會
+        events.extend(_scrape_interpark_actor(query))
+        if not events:
+            events.extend(_scrape_songkick(query))
+    else:
+        # 歌手/偶像：Kpopmap（KR）→ Bandsintown → Songkick
+        if country == "KR":
+            try:
+                from bot.services.trending import scrape_kpopmap_events
+                kpop_events = scrape_kpopmap_events()
+                name_lower = query.lower()
+                matched = [e for e in kpop_events
+                           if name_lower in e.get("title", "").lower()
+                           or name_lower in e.get("artist", "").lower()]
+                events.extend(matched)
+            except Exception as e:
+                print(f"[scraper] Kpopmap error: {e}")
 
-    # 方式 2: Bandsintown（用英文名搜尋）
-    if not events:
-        events.extend(_scrape_bandsintown(query))
+        if not events:
+            events.extend(_scrape_bandsintown(query))
+        if not events:
+            events.extend(_scrape_songkick(query))
 
-    # 方式 3: Songkick（備援）
-    if not events:
-        events.extend(_scrape_songkick(query))
-
-    # 快取 6 小時（有結果才存）
     if events:
         redis_set(cache_key, json.dumps(events, ensure_ascii=False), ttl=21600)
 
     return events[:10]
+
+
+def _scrape_interpark_actor(search_name: str) -> list:
+    """搜尋 Interpark 韓國演員粉絲見面會"""
+    events = []
+    try:
+        query = urllib.parse.quote(search_name)
+        url = f"https://ticket.interpark.com/webzine/paper/TPNoticeList_Calendar.asp?SearchWord={query}"
+        html = _fetch_url(url, timeout=12)
+        if not html:
+            return []
+
+        # 解析活動標題與日期
+        title_matches = re.findall(
+            r'<td[^>]*class="[^"]*subject[^"]*"[^>]*>.*?<a[^>]*>(.*?)</a>',
+            html, re.DOTALL | re.IGNORECASE
+        )
+        date_matches = re.findall(
+            r'(\d{4}[.\-]\d{2}[.\-]\d{2})',
+            html
+        )
+        for i, title in enumerate(title_matches[:8]):
+            clean_title = re.sub(r"<[^>]+>", "", title).strip()
+            if not clean_title or len(clean_title) < 3:
+                continue
+            if search_name.lower() not in clean_title.lower():
+                continue
+            date = date_matches[i].replace(".", "-") if i < len(date_matches) else ""
+            events.append({
+                "title": clean_title,
+                "date": date,
+                "venue": "",
+                "city": "首爾",
+                "url": f"https://ticket.interpark.com/webzine/paper/TPNoticeList_Calendar.asp?SearchWord={urllib.parse.quote(search_name)}",
+            })
+    except Exception as e:
+        print(f"[scraper] Interpark error: {e}")
+    return events
 
 
 def _scrape_bandsintown(artist: str) -> list:
