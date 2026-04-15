@@ -88,39 +88,47 @@ def _ask_days(user_id: str) -> list:
 
 
 def _find_options(user_id: str, days: int) -> list:
-    """根據天數找 3 個便宜選項"""
+    """根據天數找 3 個便宜選項（「再找3個」會跳過已顯示過的目的地）"""
     origin = get_user_origin(user_id)
 
-    # 計算出發日期：找最近的週末或最近 3-14 天
+    # 讀取本輪已顯示過的目的地
+    session = get_session(user_id) or {}
+    shown_dests = set(session.get("quick_trip_shown", []))
+
     today = datetime.date.today()
-    # 預設下個週五出發（如果今天還沒到週五）
     days_to_friday = (4 - today.weekday()) % 7
     if days_to_friday < 3:
-        days_to_friday += 7  # 至少 3 天後出發
+        days_to_friday += 7
     depart_date = today + datetime.timedelta(days=days_to_friday)
     return_date = depart_date + datetime.timedelta(days=days - 1)
 
-    # 搜尋最近兩個月的便宜機票
     flights = None
     if TRAVELPAYOUTS_TOKEN:
         flights = search_cheapest_any(origin, limit=80)
-
     if not flights:
         flights = mock_explore_data(depart_date.strftime("%Y-%m"), origin)
-
     if not flights:
-        return [{"type": "text", "text": "\u66ab\u6642\u627e\u4e0d\u5230\u8db3\u5920\u4fbf\u5b9c\u7684\u65b9\u6848\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66 \U0001f64f"}]
+        return [{"type": "text", "text": "暫時找不到便宜方案，請稍後再試 🙏"}]
 
-    # 按目的地去重，留最低價（排除台灣國內線）
-    seen = {}
-    for f in flights:
-        dest = f.get("destination", "")
-        if not dest or dest in TW_ALL_AIRPORTS:
-            continue
-        if dest not in seen or f.get("price", 99999) < seen[dest].get("price", 99999):
-            seen[dest] = f
+    def _build_seen(skip: set) -> dict:
+        s = {}
+        for f in flights:
+            dest = f.get("destination", "")
+            if not dest or dest in TW_ALL_AIRPORTS or dest in skip:
+                continue
+            if dest not in s or f.get("price", 99999) < s[dest].get("price", 99999):
+                s[dest] = f
+        return s
 
-    # 過濾：只留合理的天數差（如果 API 有回程日期）
+    # 按目的地去重（跳過已顯示）
+    seen = _build_seen(shown_dests)
+
+    # 如果跳過後沒剩，清空 shown_dests 重來
+    if not seen:
+        shown_dests = set()
+        seen = _build_seen(shown_dests)
+
+    # 過濾合理天數（±2 天），未來日期
     candidates = []
     for dest, f in seen.items():
         dep = f.get("departure_at", "")
@@ -130,22 +138,23 @@ def _find_options(user_id: str, days: int) -> list:
                 d1 = datetime.date.fromisoformat(dep[:10])
                 d2 = datetime.date.fromisoformat(ret[:10])
                 actual_days = (d2 - d1).days + 1
-                # 允許 ±2 天彈性
                 if abs(actual_days - days) <= 2 and d1 >= today:
                     f["_days"] = actual_days
                     candidates.append(f)
             except ValueError:
                 continue
 
-    # 如果沒找到合適的，就退而求其次用最便宜的前 3 個
     if not candidates:
         candidates = sorted(seen.values(), key=lambda x: x.get("price", 99999))[:8]
         for c in candidates:
             c["_days"] = days
 
-    # 排序取前 3
     candidates.sort(key=lambda x: x.get("price", 99999))
     top3 = candidates[:3]
+
+    # 更新已顯示目的地
+    new_shown = list(shown_dests | {f.get("destination", "") for f in top3})
+    update_session(user_id, {"quick_trip_shown": new_shown})
 
     # 儲存到 session（使用者點選後用）
     quick_options = []
