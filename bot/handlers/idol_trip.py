@@ -326,8 +326,8 @@ def _show_artist_info(artist: dict, data: dict, country: str = "", is_actor: boo
                  "action": {"type": "uri", "label": "🎟 Interpark 粉絲見面會",
                             "uri": f"https://ticket.interpark.com/webzine/paper/TPNoticeList_Calendar.asp?SearchWord={enc_search}"}},
                 {"type": "button", "style": "link", "height": "sm",
-                 "action": {"type": "uri", "label": "🎵 Melon Ticket",
-                            "uri": f"https://ticket.melon.com/search/index.htm?searchKeyword={enc_search}"}},
+                 "action": {"type": "uri", "label": "🎟 YES24 Ticket",
+                            "uri": f"https://ticket.yes24.com/Category/SearchList?q={enc_search}"}},
             ]
         else:
             slug = urllib.parse.quote((search_name if search_name else name).lower().replace(" ", "-"))
