@@ -200,6 +200,55 @@ def _prompt_destination(user_id: str) -> list:
     }]
 
 
+def _parse_hints_from_text(text: str) -> dict:
+    """從自然語言中萃取預算、天數、人數，回傳 dict（可能為空）。"""
+    import re
+    hints = {}
+
+    # 預算：「一萬」「2萬」「30000」「10000台幣」
+    cn_num = {"一": 1, "兩": 2, "二": 2, "三": 3, "四": 4, "五": 5,
+              "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
+    m = re.search(r"([一兩二三四五六七八九十\d]+)[萬]", text)
+    if m:
+        raw = m.group(1)
+        val = cn_num.get(raw, None)
+        if val is None:
+            try:
+                val = int(raw)
+            except ValueError:
+                val = None
+        if val:
+            hints["budget"] = val * 10000
+    if "budget" not in hints:
+        m = re.search(r"(\d{4,})\s*(?:台幣|元|TWD)?", text)
+        if m:
+            hints["budget"] = int(m.group(1))
+
+    # 天數：「14天」「7天」「兩週」「一週」
+    m = re.search(r"(\d+)\s*[天日]", text)
+    if m:
+        hints["duration_days"] = int(m.group(1))
+    elif "兩週" in text or "两週" in text:
+        hints["duration_days"] = 14
+    elif "一週" in text or "1週" in text:
+        hints["duration_days"] = 7
+
+    # 人數：「4人」「三人」「2個人」
+    m = re.search(r"([一兩二三四五六七八九\d]+)\s*[人個]", text)
+    if m:
+        raw = m.group(1)
+        val = cn_num.get(raw, None)
+        if val is None:
+            try:
+                val = int(raw)
+            except ValueError:
+                val = None
+        if val and 1 <= val <= 20:
+            hints["adults"] = val
+
+    return hints
+
+
 def _step1_destination(user_id: str, text: str) -> list:
     from bot.utils.date_parser import parse_destination
     from bot.constants.cities import IATA_TO_NAME, IATA_TO_COUNTRY
@@ -222,10 +271,14 @@ def _step1_destination(user_id: str, text: str) -> list:
     city_name = IATA_TO_NAME.get(dest_code, dest_code)
     country_code = IATA_TO_COUNTRY.get(dest_code, "")
 
+    # 同時萃取預算、天數、人數
+    hints = _parse_hints_from_text(text)
+
     update_session(user_id, {
         "destination_code": dest_code,
         "destination_name": city_name,
         "country_code": country_code,
+        **hints,
     }, step=2)
 
     return [{
@@ -306,6 +359,14 @@ def _step2_dates(user_id: str, text: str) -> list:
     # 嘗試解析日期範圍
     depart, ret = parse_date_range(text)
     if depart:
+        # 若只有出發日但 session 有天數，自動算回程
+        if not ret:
+            session = get_session(user_id) or {}
+            days = session.get("duration_days")
+            if days:
+                import datetime
+                d = datetime.date.fromisoformat(depart)
+                ret = (d + datetime.timedelta(days=days - 1)).isoformat()
         update_session(user_id, {
             "flexibility": "specific",
             "depart_date": depart,
@@ -365,6 +426,11 @@ def _step3_travelers(user_id: str, text: str) -> list:
     # 如果還沒問預算，先存人數再問預算
     if not session.get("budget"):
         update_session(user_id, {"adults": adults, "children": 0})
+        # 若人數已從第一句話萃取，此處 adults 從 text 再確認
+        hint_budget = session.get("budget")
+        if hint_budget:
+            # 預算已在 session，直接跳進票務搜尋
+            return _prompt_budget_response(user_id, str(hint_budget))
         return [{
             "type": "text", "text":
                 f"\u597d\u7684\uff0c{adults} \u4eba\u51fa\u767c\uff01\n\n"
