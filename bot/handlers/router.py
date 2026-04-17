@@ -230,6 +230,11 @@ def route_text(text: str, user_id: str) -> list:
     if "熱門國家" in text or text in ("熱門", "熱門目的地", "國家"):
         return handle_popular_countries(origin)
 
+    # ── 體驗關鍵字 → 直接推薦目的地（不需要 LLM）──
+    experience = _match_experience(text)
+    if experience:
+        return experience
+
     # ── Fallback：先用 LLM 理解意圖，失敗才給指令清單 ──
     return _llm_intent_fallback(text, user_id)
 
@@ -345,6 +350,61 @@ def build_help_message() -> list:
         "\u2022 \u6240\u6709\u50f9\u683c\u90fd\u662f\u300c\u542b\u7a05\u7e3d\u50f9\u300d\n"
         "\u2022 \u9ede\u300c\u67e5\u770b\u8a73\u60c5\u300d\u76f4\u63a5\u8df3\u8f49\u8a02\u7968\u9801"
     }]
+
+
+_EXPERIENCE_MAP = [
+    (("極光", "北極光", "aurora"),
+     "🌌 極光通常在冰島、挪威、芬蘭才看得到！\n要幫你規劃去看極光嗎？",
+     [("🇮🇸 冰島", "冰島"), ("🇳🇴 挪威", "挪威特羅姆瑟"), ("🇫🇮 芬蘭", "芬蘭羅瓦涅米")]),
+
+    (("富士山", "賞楓", "賞櫻", "溫泉旅行", "和風"),
+     "🗻 聽起來你想要道地的日本體驗！",
+     [("🇯🇵 東京", "東京"), ("🇯🇵 京都", "京都"), ("🇯🇵 大阪", "大阪")]),
+
+    (("海島", "潛水", "浮潛", "沙灘", "海灘", "度假村"),
+     "🏖️ 想去海島放鬆！推薦幾個熱門選擇：",
+     [("🇮🇩 峇里島", "峇里島"), ("🇵🇭 宿霧", "宿霧"), ("🇹🇭 普吉島", "普吉島")]),
+
+    (("賭場", "賭博", "澳門"),
+     "🎰 想去賭場玩？這幾個地方可以考慮：",
+     [("🇲🇴 澳門", "澳門"), ("🇸🇬 新加坡", "新加坡")]),
+
+    (("購物", "血拼", "名牌", "outlet"),
+     "🛍️ 想購物血拼！這幾個城市最適合：",
+     [("🇰🇷 首爾", "首爾"), ("🇯🇵 東京", "東京"), ("🇸🇬 新加坡", "新加坡")]),
+
+    (("美食", "吃貨", "必吃", "街頭小吃"),
+     "🍜 想吃遍當地美食！推薦美食天堂：",
+     [("🇹🇭 曼谷", "曼谷"), ("🇯🇵 大阪", "大阪"), ("🇹🇼 台南", "台南")]),
+
+    (("蜜月", "求婚", "情侶", "浪漫"),
+     "💑 規劃浪漫旅程！這幾個地方很適合：",
+     [("🇫🇷 巴黎", "巴黎"), ("🇮🇩 峇里島", "峇里島"), ("🇯🇵 京都", "京都")]),
+
+    (("親子", "帶小孩", "迪士尼", "樂園", "遊樂園"),
+     "👨‍👩‍👧 親子旅遊首選：",
+     [("🇯🇵 東京", "東京"), ("🇭🇰 香港", "香港"), ("🇸🇬 新加坡", "新加坡")]),
+
+    (("滑雪", "雪地", "看雪"),
+     "⛷️ 想去玩雪！這幾個地方雪況最好：",
+     [("🇯🇵 北海道", "北海道"), ("🇰🇷 首爾", "首爾"), ("🇨🇭 瑞士", "蘇黎世")]),
+]
+
+
+def _match_experience(text: str) -> list | None:
+    """偵測體驗型關鍵字，直接推薦目的地，不需要 LLM。"""
+    for keywords, reply_text, destinations in _EXPERIENCE_MAP:
+        if any(kw in text for kw in keywords):
+            quick_items = [
+                {"type": "action", "action": {
+                    "type": "message", "label": label, "text": dest}}
+                for label, dest in destinations
+            ]
+            quick_items.append({"type": "action", "action": {
+                "type": "message", "label": "✏️ 自己輸入", "text": "開始規劃"}})
+            return [{"type": "text", "text": reply_text,
+                     "quickReply": {"items": quick_items[:13]}}]
+    return None
 
 
 def _llm_intent_fallback(text: str, user_id: str) -> list:
