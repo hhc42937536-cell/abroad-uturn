@@ -422,7 +422,12 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
     prompt = f"""你是台灣出國旅遊 LINE Bot「出國優轉」的意圖分類器。
 使用者輸入：「{text}」
 
-請判斷最符合的意圖，只回傳以下其中一個代碼（不要其他文字）：
+判斷規則：
+- 只要輸入含有「出國」「國外」「出發」「旅行」「旅遊」「去哪」「想去」「飛」等字，優先判斷為 PLAN_TRIP
+- 模糊或不確定時，傾向判斷為 PLAN_TRIP，不要輕易判斷 UNKNOWN
+- 只有完全和旅遊無關（如問天氣、數學題、生活瑣事）才判斷 UNKNOWN
+
+只回傳以下其中一個代碼（不要其他文字）：
 - PLAN_TRIP      想規劃出國旅程（有目的地或泛泛想出國）
 - FIND_CHEAP     想找便宜目的地或比價
 - PRE_TRIP       想查簽證、海關、匯率、行前準備
@@ -431,7 +436,7 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
 - HOTEL          住宿、飯店
 - SOUVENIR       伴手禮、必買
 - HELP           詢問怎麼使用這個 Bot
-- UNKNOWN        完全無關旅遊"""
+- UNKNOWN        完全與旅遊無關（例如：問天氣、數學、健康問題）"""
 
     try:
         client = anthropic.Anthropic(api_key=api_key)
@@ -469,6 +474,17 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
         return handle_souvenirs(text, user_id)
     elif intent == "HELP":
         return build_help_message()
+    elif intent == "UNKNOWN":
+        return [{
+            "type": "text",
+            "text": "我是專門幫台灣人規劃出國旅遊的 Bot 🌍\n\n"
+                    "這個問題我幫不上忙，但如果你有出國旅遊的需求，我很擅長！\n\n"
+                    "例如：「我想去日本」「幫我找便宜的出國地點」",
+            "quickReply": {"items": [
+                {"type": "action", "action": {"type": "message", "label": "✨ 開始規劃旅程", "text": "開始規劃"}},
+                {"type": "action", "action": {"type": "message", "label": "🌍 找便宜目的地", "text": "探索最便宜"}},
+            ]},
+        }]
     else:
         return _static_fallback()
 
