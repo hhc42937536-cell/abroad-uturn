@@ -263,9 +263,17 @@ def _step1_destination(user_id: str, text: str) -> list:
 
     dest_code = parse_destination(text)
     if not dest_code:
-        return [{"type": "text", "text":
-            "\u6211\u627e\u4e0d\u5230\u9019\u500b\u76ee\u7684\u5730\uff0c\u8acb\u8a66\u8a66\u8f38\u5165\u57ce\u5e02\u540d\u7a31\uff0c\u4f8b\u5982\uff1a\n"
-            "\u300c\u6771\u4eac\u300d\u300c\u66fc\u8c37\u300d\u300c\u9996\u723e\u300d"
+        print(f"[dest_unknown] text={repr(text[:60])}")
+        return [{
+            "type": "text",
+            "text": "你想去哪個城市呢？\n\n直接輸入城市名稱就可以，例如：",
+            "quickReply": {"items": [
+                {"type": "action", "action": {"type": "message", "label": "🇯🇵 東京", "text": "東京"}},
+                {"type": "action", "action": {"type": "message", "label": "🇰🇷 首爾", "text": "首爾"}},
+                {"type": "action", "action": {"type": "message", "label": "🇺🇸 洛杉磯", "text": "洛杉磯"}},
+                {"type": "action", "action": {"type": "message", "label": "🇹🇭 曼谷", "text": "曼谷"}},
+                {"type": "action", "action": {"type": "message", "label": "🌍 幫我推薦", "text": "探索最便宜"}},
+            ]},
         }]
 
     city_name = IATA_TO_NAME.get(dest_code, dest_code)
