@@ -98,13 +98,21 @@ def route_text(text: str, user_id: str) -> list:
     # ── 2. 檢查是否有進行中的規劃 session ──
     step = get_step(user_id)
     if step > 0:
-        # 在規劃流程中，處理預算相關輸入
-        session = get_session(user_id) or {}
-        if step == 3 and session.get("adults") and not session.get("budget"):
-            # 已輸入人數但還沒輸入預算 → 所有輸入都當作預算
-            return trip_flow._prompt_budget_response(user_id, text)
-
-        return trip_flow.handle_step(user_id, text, step)
+        # 偵測「新規劃意圖」：若輸入明顯是全新旅程，清掉舊 session 重來
+        _NEW_TRIP_SIGNALS = ("規劃", "幫我", "想去", "帶我去", "出國", "行程", "旅行")
+        from bot.utils.date_parser import parse_destination
+        from bot.session.manager import clear_session as _clear
+        has_dest = bool(parse_destination(text))
+        has_signal = any(kw in text for kw in _NEW_TRIP_SIGNALS)
+        if has_dest and has_signal:
+            _clear(user_id)
+            step = 0  # 當作無 session 繼續往下處理
+        else:
+            # 在規劃流程中，處理預算相關輸入
+            session = get_session(user_id) or {}
+            if step == 3 and session.get("adults") and not session.get("budget"):
+                return trip_flow._prompt_budget_response(user_id, text)
+            return trip_flow.handle_step(user_id, text, step)
 
     # ── 3. 無 session → 進入規劃或獨立功能 ──
     if text in ("開始規劃", "我要規劃旅行", "完整出國規劃", "規劃旅程", "旅行規劃"):

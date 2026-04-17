@@ -179,7 +179,8 @@ def parse_date_range(text: str) -> tuple:
 
 
 def parse_destination(text: str) -> str:
-    """從文字中解析目的地 IATA 碼"""
+    """從文字中解析目的地 IATA 碼；關鍵字失敗時用 LLM 補救。"""
+    import os
     text_lower = text.lower().strip()
     for name, code in CITY_CODES.items():
         if name in text_lower:
@@ -187,7 +188,48 @@ def parse_destination(text: str) -> str:
     m = re.search(r"\b([A-Z]{3})\b", text)
     if m:
         return m.group(1)
-    return ""
+
+    # 關鍵字全部失敗 → 用 LLM 推斷（大谷翔平、極光、名人等）
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return ""
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=20,
+            messages=[{"role": "user", "content":
+                f"用戶說：「{text}」\n"
+                "請判斷他最可能想去的城市，只回傳英文城市名（如 Tokyo、Los Angeles、Seoul），"
+                "完全無法判斷才回傳 UNKNOWN。不要其他文字。"}],
+        )
+        city_en = msg.content[0].text.strip()
+        if city_en.upper() == "UNKNOWN":
+            return ""
+        # 對照英文城市名
+        _EN_MAP = {
+            "tokyo": "TYO", "osaka": "OSA", "seoul": "SEL", "busan": "PUS",
+            "bangkok": "BKK", "singapore": "SIN", "kuala lumpur": "KUL",
+            "hong kong": "HKG", "taipei": "TPE",
+            "los angeles": "LAX", "new york": "NYC", "san francisco": "SFO",
+            "london": "LON", "paris": "PAR", "rome": "ROM", "milan": "MIL",
+            "sydney": "SYD", "melbourne": "MEL", "dubai": "DXB",
+            "bali": "DPS", "manila": "MNL", "ho chi minh": "SGN",
+            "hanoi": "HAN", "jakarta": "JKT", "fukuoka": "FUK",
+            "sapporo": "CTS", "okinawa": "OKA",
+            "reykjavik": "REK", "reykjavík": "REK",
+            "tromsø": "TOS", "tromso": "TOS",
+            "helsinki": "HEL", "rovaniemi": "RVN",
+            "toronto": "YTO", "vancouver": "YVR",
+            "vienna": "VIE", "prague": "PRG", "zurich": "ZRH",
+            "istanbul": "IST", "barcelona": "BCN", "amsterdam": "AMS",
+        }
+        print(f"[dest_llm] text={repr(text[:40])} → {city_en}")
+        return _EN_MAP.get(city_en.lower(), "")
+    except Exception as e:
+        print(f"[dest_llm] error: {e}")
+        return ""
 
 
 def parse_month(text: str) -> str:

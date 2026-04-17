@@ -6,7 +6,7 @@ import time
 
 from bot.services.redis_store import redis_get, redis_set, redis_del
 
-SESSION_TTL = 86400  # 24 小時
+SESSION_TTL = 1800  # 30 分鐘無操作自動過期
 
 
 def get_session(user_id: str) -> dict | None:
