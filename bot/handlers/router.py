@@ -11,6 +11,12 @@ def route_text(text: str, user_id: str) -> list:
     origin = get_user_origin(user_id)
 
     # ── 1. 全域指令（不管在不在規劃中都能用）──
+    if text == "我的ID":
+        return [{"type": "text", "text":
+            f"你的 LINE User ID：\n{user_id}\n\n"
+            "複製後貼到 Vercel → Settings → Environment Variables\n"
+            "變數名稱：ADMIN_USER_ID"}]
+
     if text in ("取消規劃", "重新開始"):
         clear_session(user_id)
         return [{"type": "text", "text": "\u2705 \u5df2\u53d6\u6d88\u898f\u5283\uff0c\u96a8\u6642\u53ef\u4ee5\u91cd\u65b0\u958b\u59cb\uff01"}]
@@ -120,7 +126,11 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("便宜", "最便宜", "探索", "便宜國外探索"):
         return handle_quick_explore(origin)
 
-    if text in ("探索最便宜", "便宜探索", "選月份"):
+    if text in ("探索最便宜", "便宜探索"):
+        from bot.handlers.explore import handle_explore_cheapest
+        return handle_explore_cheapest(origin)
+
+    if text in ("選月份",):
         return month_picker_flex()
 
     if text.startswith("探索|"):
@@ -138,7 +148,16 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("\u4ea4\u901a\u653b\u7565", "\u4ea4\u901a") or any(kw in text for kw in ("\u4ea4\u901a\u653b\u7565", "\u4ea4\u901a\u5361", "\u5730\u9435\u5361", "\u767c\u5361", "\u897f\u74dc\u5361", "\u516b\u9054\u901a", "T-money", "Suica", "EZ-Link", "Octopus", "\u5154\u5b50\u5361")):
         return handle_transport(text, user_id)
 
-    # ── 我的旅行計畫（格3）──
+    # ── 行前必知（格6，取代我的旅行計畫）──
+    if text in ("行前必知", "行前準備", "出發準備", "簽證匯率"):
+        from bot.handlers.pre_trip import handle_pre_trip_menu
+        return handle_pre_trip_menu()
+
+    if text.startswith("行前 ") or text.startswith("行前|"):
+        from bot.handlers.pre_trip import handle_pre_trip_country
+        return handle_pre_trip_country(text, user_id)
+
+    # ── 我的旅行計畫（保留文字觸發，Rich Menu 已移除）──
     from bot.handlers.my_plans import handle_my_plans
     if text in ("我的旅行計畫", "我的計畫", "旅行計畫"):
         return handle_my_plans(user_id)
@@ -184,11 +203,8 @@ def route_text(text: str, user_id: str) -> list:
         if depart:
             return handle_compare(text, origin)
         else:
-            city_name = IATA_TO_NAME.get(dest, dest)
-            return [{"type": "text", "text":
-                f"\u76ee\u7684\u5730\uff1a{city_name} ({dest}) \u2705\n\n"
-                f"\u8acb\u518d\u52a0\u4e0a\u65e5\u671f\uff0c\u4f8b\u5982\uff1a\n\u300c{city_name} 6/15-6/20\u300d"
-            }]
+            # 有目的地但無日期 → 直接啟動規劃 session，下一句就能接日期
+            return trip_flow.start_with_destination(user_id, text)
 
     # ── 旅行工具箱 ──
     if text in ("旅行工具", "工具箱", "工具", "設定"):

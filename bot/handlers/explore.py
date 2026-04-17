@@ -1,11 +1,51 @@
 """快速探索最便宜目的地（保留的獨立功能）"""
 
+import datetime
+
 from bot.config import TRAVELPAYOUTS_TOKEN
 from bot.constants.cities import IATA_TO_NAME, TW_AIRPORTS, TW_ALL_AIRPORTS
-from bot.services.travelpayouts import search_cheapest_by_month, search_cheapest_any, mock_explore_data
+from bot.services.travelpayouts import search_cheapest_by_month, search_cheapest_any
 from bot.flex.flight_bubble import flight_bubble
 from bot.flex.month_picker import month_picker_flex
-from bot.utils.url_builder import google_explore_url
+from bot.utils.url_builder import google_explore_url, skyscanner_url, google_flights_url
+
+
+def _no_flights_fallback(origin: str, dest_code: str = None, depart: str = None, ret: str = None) -> list:
+    """即時票價無法取得時的替代訊息，附 affiliate 導流連結"""
+    if dest_code and depart:
+        sky_uri = skyscanner_url(origin, dest_code, depart, ret or "")
+        gf_uri = google_flights_url(origin, dest_code, depart, ret or "")
+    else:
+        sky_uri = f"https://www.skyscanner.com.tw/transport/flights/{origin.lower()}/anywhere/?adultsv2=1&currency=TWD&locale=zh-TW"
+        gf_uri = google_explore_url(origin)
+
+    return [{
+        "type": "flex",
+        "altText": "\u5373\u6642\u7968\u50f9\u66ab\u6642\u7121\u6cd5\u53d6\u5f97\uff0c\u8acb\u524d\u5f80\u8a02\u7968\u5e73\u53f0\u641c\u5c0b",
+        "contents": {
+            "type": "bubble", "size": "kilo",
+            "body": {
+                "type": "box", "layout": "vertical",
+                "paddingAll": "18px", "spacing": "md",
+                "contents": [
+                    {"type": "text", "text": "\u2708\ufe0f \u5373\u6642\u7968\u50f9\u66ab\u6642\u7121\u6cd5\u53d6\u5f97",
+                     "weight": "bold", "size": "md", "color": "#333333"},
+                    {"type": "text",
+                     "text": "API \u66ab\u6642\u7121\u56de\u61c9\uff0c\u8acb\u76f4\u63a5\u524d\u5f80\u8a02\u7968\u5e73\u53f0\u641c\u5c0b\u6700\u65b0\u7968\u50f9 \U0001f447",
+                     "size": "sm", "color": "#888888", "wrap": True, "margin": "sm"},
+                ],
+            },
+            "footer": {
+                "type": "box", "layout": "vertical", "paddingAll": "10px", "spacing": "sm",
+                "contents": [
+                    {"type": "button", "style": "primary", "color": "#0770E3",
+                     "action": {"type": "uri", "label": "\U0001f50d Skyscanner \u641c\u5c0b", "uri": sky_uri}},
+                    {"type": "button", "style": "secondary",
+                     "action": {"type": "uri", "label": "\u2708\ufe0f Google Flights / Explore", "uri": gf_uri}},
+                ],
+            },
+        },
+    }]
 
 
 def _dedupe_flights(flights: list, limit: int = 10) -> list:
@@ -48,16 +88,89 @@ def _google_explore_bubble() -> dict:
     }
 
 
+def handle_explore_cheapest(origin: str = "TPE") -> list:
+    """Google Explore 風格：直接顯示熱門航線最低參考價 + 月份/目的地搜尋入口"""
+    flights = None
+    if TRAVELPAYOUTS_TOKEN:
+        flights = search_cheapest_any(origin)
+    if not flights:
+        return _no_flights_fallback(origin)
+
+    unique = _dedupe_flights(flights, limit=8)
+    origin_name = {v: k for k, v in TW_AIRPORTS.items()}.get(origin, origin)
+    explore_url = google_explore_url(origin)
+
+    # 各目的地卡片
+    bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
+
+    # 尾端：更多探索選單 bubble
+    action_bubble = {
+        "type": "bubble", "size": "kilo",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#4285F4", "paddingAll": "15px",
+            "contents": [
+                {"type": "text", "text": "🗺️ 更多探索", "color": "#FFFFFF",
+                 "weight": "bold", "size": "lg"},
+                {"type": "text", "text": "Google 全球地圖・選月份・熱門國家",
+                 "color": "#FFFFFF99", "size": "xs", "margin": "xs"},
+            ],
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "spacing": "sm", "paddingAll": "12px",
+            "contents": [
+                {"type": "button", "style": "primary", "color": "#4285F4", "height": "sm",
+                 "action": {"type": "uri",
+                            "label": "🌐 Google Explore 全球價格地圖",
+                            "uri": explore_url}},
+                {"type": "button", "style": "secondary", "height": "sm",
+                 "action": {"type": "message",
+                            "label": "📅 選月份精選（指定月份最低價）",
+                            "text": "選月份"}},
+                {"type": "button", "style": "secondary", "height": "sm",
+                 "action": {"type": "message",
+                            "label": "🌍 熱門國家快選",
+                            "text": "熱門國家"}},
+            ],
+        },
+        "footer": {
+            "type": "box", "layout": "vertical",
+            "paddingAll": "10px", "spacing": "xs",
+            "contents": [
+                {"type": "text",
+                 "text": "💡 直接輸入城市名＋日期也能查",
+                 "size": "xs", "color": "#888888", "align": "center", "wrap": True},
+                {"type": "text",
+                 "text": "例：「東京 6/15-6/20」",
+                 "size": "xs", "color": "#AAAAAA", "align": "center"},
+            ],
+        },
+    }
+    bubbles.append(action_bubble)
+
+    return [
+        {"type": "text",
+         "text": (
+             f"✈️ {origin_name} 出發・熱門航線最低參考價\n"
+             "⚠️ 為歷史含稅低價參考，實際以訂票網站為準\n"
+             "👉 滑動看更多目的地，最後一張可直連 Google Explore"
+         )},
+        {
+            "type": "flex",
+            "altText": f"✈️ {origin_name} 出發最便宜目的地",
+            "contents": {"type": "carousel", "contents": bubbles},
+        },
+    ]
+
+
 def handle_quick_explore(origin: str = "TPE") -> list:
     flights = None
     if TRAVELPAYOUTS_TOKEN:
         flights = search_cheapest_any(origin)
 
     if not flights:
-        flights = mock_explore_data("2026-05", origin)
-
-    if not flights:
-        return [{"type": "text", "text": "\u627e\u4e0d\u5230\u4fbf\u5b9c\u822a\u73ed\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66 \U0001f64f"}]
+        return _no_flights_fallback(origin)
 
     unique = _dedupe_flights(flights)
     bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
@@ -79,10 +192,7 @@ def handle_explore(month: str, origin: str = "TPE") -> list:
     if TRAVELPAYOUTS_TOKEN:
         flights = search_cheapest_by_month(origin, month)
     if not flights:
-        flights = mock_explore_data(month, origin)
-        print(f"[explore] Using MOCK data for {month}")
-    if not flights:
-        return [{"type": "text", "text": f"\u627e\u4e0d\u5230 {month} \u7684\u4fbf\u5b9c\u822a\u73ed\uff0c\u8acb\u8a66\u8a66\u5176\u4ed6\u6708\u4efd \U0001f64f"}]
+        return _no_flights_fallback(origin)
 
     unique = _dedupe_flights(flights)
     bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
@@ -122,9 +232,7 @@ def handle_direct_flights(origin: str = "TPE") -> list:
     if TRAVELPAYOUTS_TOKEN:
         flights = search_cheapest_any(origin, direct="true")
     if not flights:
-        flights = [f for f in mock_explore_data("2026-05", origin) if f.get("transfers", 0) == 0]
-    if not flights:
-        return [{"type": "text", "text": "\u76ee\u524d\u627e\u4e0d\u5230\u76f4\u98db\u822a\u73ed \U0001f64f"}]
+        return _no_flights_fallback(origin)
 
     unique = _dedupe_flights(flights)
     bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
@@ -140,9 +248,7 @@ def handle_transfer_cheapest(origin: str = "TPE") -> list:
     if TRAVELPAYOUTS_TOKEN:
         flights = search_cheapest_any(origin)
     if not flights:
-        flights = mock_explore_data("2026-05", origin)
-    if not flights:
-        return [{"type": "text", "text": "\u627e\u4e0d\u5230\u822a\u73ed\u8cc7\u6599 \U0001f64f"}]
+        return _no_flights_fallback(origin)
 
     transfer_flights = [f for f in flights if f.get("transfers", 0) > 0]
     if not transfer_flights:
@@ -203,7 +309,7 @@ def handle_flexible_dates(text: str, origin: str = "TPE") -> list:
 
 def handle_compare(text: str, origin: str = "TPE") -> list:
     from bot.utils.date_parser import parse_destination, parse_date_range
-    from bot.services.travelpayouts import search_flights, mock_flight_data
+    from bot.services.travelpayouts import search_flights
 
     dest_code = parse_destination(text)
     if not dest_code:
@@ -226,10 +332,7 @@ def handle_compare(text: str, origin: str = "TPE") -> list:
     if TRAVELPAYOUTS_TOKEN:
         flights = search_flights(origin, dest_code, depart, ret)
     if not flights:
-        flights = mock_flight_data(origin, dest_code, depart, ret)
-        print(f"[compare] Using MOCK data for {origin}-{dest_code}")
-    if not flights:
-        return [{"type": "text", "text": f"\u627e\u4e0d\u5230 {IATA_TO_NAME.get(dest_code, dest_code)} \u7684\u822a\u73ed\uff0c\u8acb\u8a66\u5176\u4ed6\u65e5\u671f \U0001f64f"}]
+        return _no_flights_fallback(origin, dest_code, depart, ret)
 
     flights.sort(key=lambda x: x.get("price", 99999))
     top = flights[:6]
@@ -249,7 +352,7 @@ def handle_compare(text: str, origin: str = "TPE") -> list:
 
 def handle_package(text: str, origin: str = "TPE") -> list:
     from bot.utils.date_parser import parse_destination, parse_date_range
-    from bot.services.travelpayouts import search_flights, mock_flight_data
+    from bot.services.travelpayouts import search_flights
     from bot.constants.cities import AGODA_CITY_KEYWORDS
     from bot.utils.url_builder import agoda_url, booking_url
 
@@ -271,9 +374,6 @@ def handle_package(text: str, origin: str = "TPE") -> list:
     flights = None
     if TRAVELPAYOUTS_TOKEN and depart:
         flights = search_flights(origin, dest_code, depart, ret)
-    if not flights and depart:
-        flights = mock_flight_data(origin, dest_code, depart, ret)
-
     agoda = agoda_url(city_kw, depart, ret)
     booking = booking_url(city_kw)
 

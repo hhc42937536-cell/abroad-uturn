@@ -40,8 +40,33 @@ class handler(BaseHTTPRequestHandler):
             from bot.services.trending import refresh_all
             result = refresh_all()
             self._json_response(200, result)
+        elif parsed.path == "/api/warm_exchange":
+            # Cron: 每天 08:00 台灣時間 — 預熱熱門匯率到 Redis
+            from bot.services.exchange_api import warm_popular_currencies
+            result = warm_popular_currencies()
+            self._json_response(200, result)
+        elif parsed.path == "/api/warm_flights":
+            # Cron: 每天 09:00 台灣時間 — 預取熱門航線到 Redis
+            from bot.services.travelpayouts import warm_popular_routes
+            result = warm_popular_routes()
+            self._json_response(200, result)
+        elif parsed.path == "/api/visa_reminder":
+            # Cron: 每週一 11:00 台灣時間 — push 簽證核對提醒給開發者
+            from bot.utils.visa_reminder import send_visa_reminder
+            result = send_visa_reminder()
+            self._json_response(200, result)
+        elif parsed.path == "/api/check_policies":
+            # Cron: 每週一 11:30 台灣時間 — 爬官網偵測簽證/海關政策異動
+            from bot.services.policy_checker import run_all_checks
+            result = run_all_checks()
+            self._json_response(200, result)
+        elif parsed.path == "/api/check_feedback":
+            # Cron: 每天 09:00 台灣時間 — 推送回程隔天的滿意度問卷
+            from bot.utils.feedback import check_and_send_feedback
+            result = check_and_send_feedback()
+            self._json_response(200, result)
         else:
-            self._json_response(200, {"status": "ok", "bot": "AbroadUturn", "version": "2.4", "build": "fix-8fd8b2c"})
+            self._json_response(200, {"status": "ok", "bot": "AbroadUturn", "version": "2.5", "build": "auto-cron-3x"})
 
     def do_POST(self):
         """LINE Webhook"""
@@ -73,7 +98,12 @@ class handler(BaseHTTPRequestHandler):
 
                 # Follow 事件（加好友）
                 if event_type == "follow":
-                    reply_message(reply_token, build_welcome_message())
+                    from bot.services.redis_store import redis_get
+                    is_new = not redis_get(f"user:origin:{user_id}")
+                    msgs = build_welcome_message()
+                    if is_new:
+                        msgs = msgs + [_build_onboarding_origin_msg()]
+                    reply_message(reply_token, msgs[:5])
                     log_usage(user_id, "follow")
                     continue
 
@@ -89,9 +119,15 @@ class handler(BaseHTTPRequestHandler):
                 if event_type == "postback":
                     data = event.get("postback", {}).get("data", "")
                     if data:
-                        messages = route_postback(data, user_id)
+                        if data.startswith("feedback:"):
+                            from bot.utils.feedback import handle_feedback_postback
+                            score = int(data.split(":")[1])
+                            messages = handle_feedback_postback(score, user_id)
+                            log_usage(user_id, "feedback")
+                        else:
+                            messages = route_postback(data, user_id)
+                            log_usage(user_id, "trip_flow")
                         reply_message(reply_token, messages)
-                        log_usage(user_id, "trip_flow")
                     continue
 
             except Exception as e:
@@ -118,3 +154,50 @@ def _classify_feature(text: str) -> str:
     if "追蹤" in text:
         return "track"
     return "other"
+
+
+def _build_onboarding_origin_msg() -> dict:
+    """首次加好友：詢問出發機場（onboarding）"""
+    return {
+        "type": "flex",
+        "altText": "✈️ 請問你通常從哪個機場出發？",
+        "contents": {
+            "type": "bubble", "size": "kilo",
+            "header": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#FF6B35", "paddingAll": "14px",
+                "contents": [
+                    {"type": "text", "text": "✈️ 設定出發地",
+                     "color": "#FFFFFF", "weight": "bold", "size": "lg"},
+                    {"type": "text", "text": "讓我更準確找到你的最便宜航班",
+                     "color": "#FFE0CC", "size": "xs", "margin": "xs"},
+                ],
+            },
+            "body": {
+                "type": "box", "layout": "vertical",
+                "paddingAll": "14px", "spacing": "sm",
+                "contents": [
+                    {"type": "text",
+                     "text": "你通常從哪個機場出發？",
+                     "weight": "bold", "size": "md"},
+                    {"type": "text",
+                     "text": "可以之後在「設定」裡隨時更改",
+                     "size": "xs", "color": "#999999", "margin": "xs"},
+                ],
+            },
+            "footer": {
+                "type": "box", "layout": "vertical",
+                "paddingAll": "10px", "spacing": "sm",
+                "contents": [
+                    {"type": "button", "style": "primary", "color": "#FF6B35", "height": "sm",
+                     "action": {"type": "message", "label": "🛫 台北桃園 (TPE)", "text": "出發地 台北"}},
+                    {"type": "button", "style": "secondary", "height": "sm",
+                     "action": {"type": "message", "label": "🛫 高雄小港 (KHH)", "text": "出發地 高雄"}},
+                    {"type": "button", "style": "secondary", "height": "sm",
+                     "action": {"type": "message", "label": "🛫 台中清泉崗 (RMQ)", "text": "出發地 台中"}},
+                    {"type": "button", "style": "secondary", "height": "sm",
+                     "action": {"type": "message", "label": "🛫 台南 (TNN)", "text": "出發地 台南"}},
+                ],
+            },
+        },
+    }

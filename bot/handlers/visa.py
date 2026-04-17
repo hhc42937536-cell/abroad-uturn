@@ -269,7 +269,10 @@ def _visa_bubble(country_code: str, info: dict, flag: str) -> dict:
             "type": "box", "layout": "vertical", "paddingAll": "10px",
             "contents": [
                 {"type": "text",
-                 "text": "\u26a0\ufe0f \u4ec5\u4f9b\u53c3\u8003\uff0c\u8acb\u4ee5\u5404\u570b\u5b98\u65b9\u516c\u544a\u70ba\u6e96",
+                 "text": (
+                     "\u26a0\ufe0f \u4ec5\u4f9b\u53c3\u8003\uff0c\u8acb\u4ee5\u5404\u570b\u5b98\u65b9\u516c\u544a\u70ba\u6e96\n"
+                     + ("\U0001f4c5 \u8cc7\u6599\u66f4\u65b0\uff1a" + _load_visa().get("_meta", {}).get("last_updated", "") if _load_visa().get("_meta", {}).get("last_updated") else "")
+                 ).strip(),
                  "size": "xxs", "color": "#999999", "wrap": True},
             ],
         },

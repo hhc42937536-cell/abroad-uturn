@@ -66,6 +66,13 @@ def start(user_id: str) -> list:
     ]
 
 
+def start_with_destination(user_id: str, text: str) -> list:
+    """從智慧偵測直接啟動規劃，跳過歡迎頁，直接到步驟 1（確認目的地）"""
+    origin = get_user_origin(user_id)
+    start_session(user_id, origin)
+    return _step1_destination(user_id, text)
+
+
 def handle_step(user_id: str, text: str, step: int) -> list:
     """根據目前步驟處理使用者輸入"""
     handlers = {
@@ -208,8 +215,9 @@ def _step1_destination(user_id: str, text: str) -> list:
             f"\u2022 \u6216\u8f38\u5165\u6708\u4efd\uff0c\u4f8b\u5982\u300c6\u6708\u300d",
         "quickReply": {
             "items": [
-                {"type": "action", "action": {"type": "message", "label": "\u6700\u8fd1\u6709\u5047\u5c31\u8d70", "text": "\u5f48\u6027"}},
+                {"type": "action", "action": {"type": "message", "label": "\u4e0b\u9031", "text": "\u4e0b\u9031"}},
                 {"type": "action", "action": {"type": "message", "label": "\u4e0b\u500b\u6708", "text": "\u4e0b\u500b\u6708"}},
+                {"type": "action", "action": {"type": "message", "label": "\u6700\u8fd1\u6709\u5047\u5c31\u8d70", "text": "\u5f48\u6027"}},
                 {"type": "action", "action": {"type": "message", "label": "\u6691\u5047", "text": "7\u6708"}},
                 {"type": "action", "action": {"type": "message", "label": "\u5e74\u5e95", "text": "12\u6708"}},
             ],
@@ -310,10 +318,11 @@ def _prompt_travelers(user_id: str) -> list:
             f"\u7b2c\u4e09\u6b65\uff1a\u9019\u6b21\u7e3d\u5171\u6709\u5e7e\u500b\u4eba\u8981\u53bb\u5462\uff1f",
         "quickReply": {
             "items": [
-                {"type": "action", "action": {"type": "message", "label": "1 \u4eba", "text": "1\u4eba"}},
-                {"type": "action", "action": {"type": "message", "label": "2 \u4eba", "text": "2\u4eba"}},
-                {"type": "action", "action": {"type": "message", "label": "3-4 \u4eba", "text": "4\u4eba"}},
-                {"type": "action", "action": {"type": "message", "label": "5 \u4eba\u4ee5\u4e0a", "text": "5\u4eba"}},
+                {"type": "action", "action": {"type": "message", "label": "1 人獨旅", "text": "1人"}},
+                {"type": "action", "action": {"type": "message", "label": "2 人同行", "text": "2人"}},
+                {"type": "action", "action": {"type": "message", "label": "3 人", "text": "3人"}},
+                {"type": "action", "action": {"type": "message", "label": "4 人", "text": "4人"}},
+                {"type": "action", "action": {"type": "message", "label": "5人以上", "text": "5人"}},
             ],
         },
     }]
@@ -339,10 +348,11 @@ def _step3_travelers(user_id: str, text: str) -> list:
                 f"\u9019\u8ddf\u65c5\u884c\u7684\u7e3d\u9810\u7b97\u5927\u7d04\u662f\u591a\u5c11\uff1f\uff08\u53f0\u5e63\uff09",
             "quickReply": {
                 "items": [
-                    {"type": "action", "action": {"type": "message", "label": "5\u842c\u4ee5\u4e0b", "text": "\u9810\u7b975\u842c"}},
-                    {"type": "action", "action": {"type": "message", "label": "5-10\u842c", "text": "\u9810\u7b9710\u842c"}},
-                    {"type": "action", "action": {"type": "message", "label": "10-15\u842c", "text": "\u9810\u7b9715\u842c"}},
-                    {"type": "action", "action": {"type": "message", "label": "15\u842c\u4ee5\u4e0a", "text": "\u9810\u7b9720\u842c"}},
+                    {"type": "action", "action": {"type": "message", "label": "3萬以下", "text": "預算3萬"}},
+                    {"type": "action", "action": {"type": "message", "label": "3~6萬", "text": "預算6萬"}},
+                    {"type": "action", "action": {"type": "message", "label": "6~10萬", "text": "預算10萬"}},
+                    {"type": "action", "action": {"type": "message", "label": "10~20萬", "text": "預算15萬"}},
+                    {"type": "action", "action": {"type": "message", "label": "20萬以上", "text": "預算25萬"}},
                 ],
             },
         }]
@@ -355,10 +365,17 @@ def _prompt_budget_response(user_id: str, text: str) -> list:
     import re
 
     budget_map = {
-        "5\u842c\u4ee5\u4e0b": 50000, "\u9810\u7b975\u842c": 50000,
-        "5-10\u842c": 100000, "\u9810\u7b9710\u842c": 100000,
-        "10-15\u842c": 150000, "\u9810\u7b9715\u842c": 150000,
-        "15\u842c\u4ee5\u4e0a": 200000, "\u9810\u7b9720\u842c": 200000,
+        # 舊格式（向下相容）
+        "5萬以下": 50000, "預算5萬": 50000,
+        "5-10萬": 100000, "預算10萬": 100000,
+        "10-15萬": 150000, "預算15萬": 150000,
+        "15萬以上": 200000, "預算20萬": 200000,
+        # 新格式
+        "預算3萬": 30000, "3萬以下": 30000,
+        "預算6萬": 60000, "3~6萬": 60000,
+        "6~10萬": 100000,
+        "10~20萬": 150000,
+        "預算25萬": 250000, "20萬以上": 250000,
     }
 
     budget = budget_map.get(text)
@@ -382,7 +399,8 @@ def _prompt_flights(user_id: str) -> list:
     """根據 session 資料搜尋機票並顯示推薦"""
     from bot.config import TRAVELPAYOUTS_TOKEN
     from bot.constants.cities import IATA_TO_NAME, TW_AIRPORTS
-    from bot.services.travelpayouts import search_flights, search_cheapest_by_month, mock_flight_data
+    from bot.services.travelpayouts import search_flights, search_cheapest_by_month
+    from bot.utils.url_builder import skyscanner_url, google_flights_url
     from bot.flex.flight_bubble import flight_bubble
     from bot.flex.progress_bar import build_progress_bar
 
@@ -410,15 +428,14 @@ def _prompt_flights(user_id: str) -> list:
             flights = search_flights(origin, dest, depart, ret)
 
     if not flights:
-        flights = mock_flight_data(origin, dest, depart or "2026-07-01", ret or "2026-07-07")
-        print(f"[trip_flow] Using MOCK flight data for {origin}-{dest}")
-
-    if not flights:
         update_session(user_id, {}, step=5)
+        sky = skyscanner_url(origin, dest, depart or "", ret or "")
+        gf = google_flights_url(origin, dest, depart or "", ret or "")
         return [{"type": "text", "text":
             f"[4/8] \u6a5f\u7968\u63a8\u85a6\n\n"
-            f"\u627e\u4e0d\u5230 {city_name} \u7684\u822a\u73ed\u8cc7\u6599\uff0c\u8df3\u904e\u6a5f\u7968\u6b65\u9a5f\u3002\n"
-            f"\u4f60\u53ef\u4ee5\u7a0d\u5f8c\u81ea\u884c\u5728 Skyscanner \u6216 Google Flights \u641c\u5c0b\u3002"
+            f"\u2708\ufe0f \u5373\u6642\u7968\u50f9\u66ab\u6642\u7121\u6cd5\u53d6\u5f97\uff0c\u8df3\u904e\u6a5f\u7968\u6b65\u9a5f\u3002\n"
+            f"\U0001f50d Skyscanner\uff1a{sky}\n"
+            f"\U0001f50d Google Flights\uff1a{gf}"
         }] + _prompt_hotels(user_id)
 
     # 排序：價格低到高
@@ -530,6 +547,7 @@ def _prompt_hotels(user_id: str) -> list:
     from bot.constants.cities import IATA_TO_NAME, AGODA_CITY_KEYWORDS
     from bot.utils.url_builder import agoda_url, booking_url
     from bot.flex.progress_bar import build_progress_bar
+    from bot.handlers.hotels import _get_estimate
 
     session = get_session(user_id) or {}
     dest = session.get("destination_code", "")
@@ -538,6 +556,7 @@ def _prompt_hotels(user_id: str) -> list:
     ret = session.get("return_date", "")
     city_kw = AGODA_CITY_KEYWORDS.get(dest, city_name)
     date_display = _format_dates(session)
+    est = _get_estimate(dest)
 
     agoda = agoda_url(city_kw, depart, ret)
     booking = booking_url(city_kw)
@@ -568,10 +587,32 @@ def _prompt_hotels(user_id: str) -> list:
                     "contents": [
                         {"type": "text", "text": "\u4f60\u504f\u597d\u4f4f\u5728\u54ea\u500b\u5340\u57df\uff1f",
                          "weight": "bold", "size": "md"},
-                        {"type": "text", "text":
-                            "\u9078\u64c7\u5340\u57df\u504f\u597d\u5f8c\uff0c\u6211\u6703\u5e6b\u4f60\u9023\u7d50\u5230\u4e09\u500b\u8a02\u623f\u5e73\u53f0\uff0c"
-                            "\u8b93\u4f60\u6bd4\u50f9\u5f8c\u518d\u8a02\u3002",
-                         "size": "sm", "color": "#666666", "wrap": True},
+                        # 估算資訊卡
+                        {
+                            "type": "box", "layout": "horizontal",
+                            "backgroundColor": "#FFF0F5", "paddingAll": "10px",
+                            "cornerRadius": "8px", "margin": "sm",
+                            "contents": [
+                                {"type": "box", "layout": "vertical", "flex": 1, "contents": [
+                                    {"type": "text", "text": "\U0001f4b0 \u4f30\u7b97\u5468\u5747",
+                                     "size": "xxs", "color": "#C2185B", "weight": "bold"},
+                                    {"type": "text", "text": f"NT$ {est['price']}/\u6674",
+                                     "size": "xs", "color": "#333333", "weight": "bold"},
+                                ]},
+                                {"type": "box", "layout": "vertical", "flex": 1, "contents": [
+                                    {"type": "text", "text": "\u2b50 \u8a55\u5206",
+                                     "size": "xxs", "color": "#C2185B", "weight": "bold"},
+                                    {"type": "text", "text": est["rating"],
+                                     "size": "xs", "color": "#333333", "weight": "bold"},
+                                ]},
+                                {"type": "box", "layout": "vertical", "flex": 2, "contents": [
+                                    {"type": "text", "text": "\U0001f4cd \u63a8\u85a6\u5340\u57df",
+                                     "size": "xxs", "color": "#C2185B", "weight": "bold"},
+                                    {"type": "text", "text": est["area"],
+                                     "size": "xxs", "color": "#555555", "wrap": True},
+                                ]},
+                            ],
+                        },
                         {"type": "separator"},
                         {"type": "text", "text": "\U0001f4b0 \u53f0\u7063\u4eba\u6700\u611b\u7528\u7684\u8a02\u623f\u5e73\u53f0",
                          "size": "sm", "color": "#999999", "margin": "md"},
@@ -838,7 +879,10 @@ def _step7_travel_info(user_id: str, text: str) -> list:
     city = session.get("destination_name", "")
     depart = session.get("depart_date", "")
     ret = session.get("return_date", "")
-    itinerary_msgs = build_itinerary_flex(dest, depart, ret, city) if dest and depart else []
+    _budget_num = session.get("budget", 0)
+    budget = f"NT${_budget_num//10000}萬" if _budget_num else ""
+    adults = session.get("adults", 1)
+    itinerary_msgs = build_itinerary_flex(dest, depart, ret, city, budget=budget, adults=adults) if dest and depart else []
     summary_msgs = _prompt_summary(user_id)
     return (itinerary_msgs + summary_msgs)[:5]
 
@@ -1003,10 +1047,31 @@ def _prompt_summary(user_id: str) -> list:
          "action": {"type": "message", "label": "🌍 探索其他目的地", "text": "便宜"}},
     ])
 
+    # ── 預估支出 Bubble ──
+    from bot.utils.budget_estimator import build_budget_bubble
+    flight_price = 0
+    if flight_choice:
+        flight_price = flight_choice.get("price", 0)
+    elif session.get("flight_results"):
+        flight_price = session["flight_results"][0].get("price", 0)
+    budget_bubble = None
+    if dest and days > 0 and flight_price > 0:
+        budget_bubble = build_budget_bubble(dest, city, days, adults, flight_price, flag)
+
+    # 儲存回饋排程（回程後 D+1 push 滿意度問卷）
+    if ret and dest:
+        try:
+            import json as _json
+            from bot.services.redis_store import redis_set
+            _feedback_data = _json.dumps({"city": city, "dest": dest, "return_date": ret, "days": days, "adults": adults})
+            redis_set(f"feedback:{user_id}", _feedback_data, ttl=60 * 60 * 24 * 30)
+        except Exception:
+            pass
+
     # 清除 session（規劃完成）
     clear_session(user_id)
 
-    return [
+    msgs = [
         {
             "type": "flex",
             "altText": f"\u2705 {city} {days_text} \u51fa\u570b\u8a08\u756b\u66f8",
@@ -1036,6 +1101,15 @@ def _prompt_summary(user_id: str) -> list:
             },
         },
     ]
+
+    if budget_bubble:
+        msgs.append({
+            "type": "flex",
+            "altText": f"💰 {city} 預估旅遊支出",
+            "contents": budget_bubble,
+        })
+
+    return msgs
 
 
 def _get_must_eat(dest_code: str) -> list:

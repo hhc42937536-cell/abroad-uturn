@@ -1,4 +1,4 @@
-"""行程大綱生成器（靜態範本）
+"""行程大綱生成器（LLM 優先 + 靜態範本 fallback + 季節性標籤）
 
 根據目的地 + 天數，自動組合 Day 1 ~ Day N 的行程大綱，
 輸出為 LINE Flex Bubble（可放進 Carousel 或單獨回覆）。
@@ -7,6 +7,66 @@
 import json
 import os
 import datetime
+
+_SEASONAL_EVENTS = {
+    "JP": [
+        ((3, 4),   "🌸 櫻花季", "賞花推薦：上野公園・目黒川・圓山公園"),
+        ((11, 12), "🍁 楓葉季", "賞楓推薦：嵐山・日光・高尾山"),
+        ((7, 8),   "🎆 夏祭",   "祭典推薦：淺草三社祭・住吉大社夏祭"),
+        ((12, 1),  "❄️ 雪景",   "賞雪推薦：北海道・白川鄉合掌村"),
+    ],
+    "KR": [
+        ((3, 4),   "🌸 櫻花季", "賞花推薦：鎮海軍港節・慶州"),
+        ((10, 11), "🍁 楓葉季", "賞楓推薦：雪嶽山・北漢山"),
+        ((1, 2),   "⛷️ 滑雪季", "滑雪推薦：洪川・龍平・鳳凰城"),
+    ],
+    "TH": [
+        ((4, 4),   "💦 潑水節",     "宋干節潑水節（4月中旬），全泰國最熱鬧"),
+        ((11, 11), "🏮 水燈節",     "萬人放水燈・清邁最美"),
+        ((11, 2),  "☀️ 涼季旺季",   "溫度宜人，最適合戶外活動"),
+    ],
+    "JP_OKA": [
+        ((5, 9),   "🌺 海灘旺季",   "水溫最佳，珊瑚礁浮潛・海水浴推薦"),
+    ],
+    "ID": [
+        ((7, 9),   "☀️ 乾季旺季",   "巴里島最適合海灘活動的季節"),
+        ((6, 7),   "🎭 巴里藝術節", "傳統舞蹈・手工藝展覽"),
+    ],
+    "VN": [
+        ((2, 4),   "🌸 春季旅遊",   "天氣涼爽，節慶氛圍濃厚"),
+        ((9, 11),  "🏖️ 中越旺季",   "會安・峴港天氣最好"),
+    ],
+    "SG": [
+        ((12, 2),  "🎉 聖誕跨年",   "烏節路燈飾・跨年倒數活動"),
+        ((6, 9),   "✈️ 旅遊旺季",   "晴天為主，適合戶外景點"),
+    ],
+}
+
+_IATA_COUNTRY_SEASON = {
+    "NRT": "JP", "HND": "JP", "TYO": "JP", "KIX": "JP", "OSA": "JP",
+    "FUK": "JP", "NGO": "JP", "CTS": "JP",
+    "OKA": "JP_OKA",
+    "ICN": "KR", "SEL": "KR", "GMP": "KR", "PUS": "KR",
+    "BKK": "TH", "DMK": "TH",
+    "DPS": "ID",
+    "SGN": "VN", "HAN": "VN",
+    "SIN": "SG",
+}
+
+
+def _get_seasonal_tag(dest_code: str, travel_month: int):
+    """返回 (tag_str, activity_str) 或 None"""
+    country = _IATA_COUNTRY_SEASON.get(dest_code)
+    if not country:
+        return None
+    for (start_m, end_m), tag, activity in _SEASONAL_EVENTS.get(country, []):
+        if start_m <= end_m:
+            hit = start_m <= travel_month <= end_m
+        else:
+            hit = travel_month >= start_m or travel_month <= end_m
+        if hit:
+            return tag, activity
+    return None
 
 _data_dir = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -126,38 +186,142 @@ def _time_row(time_label: str, content: str) -> dict:
     }
 
 
+def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
+                   budget: str = "", adults: int = 1) -> list | None:
+    """
+    呼叫 Claude Haiku 生成每日行程 JSON。
+    回傳 list[{"theme":..., "am":..., "pm":..., "eve":...}] 或 None（失敗時）。
+    結果以 Redis 快取 24 小時，避免重複呼叫。
+    """
+    try:
+        import anthropic
+        from bot.services.redis_store import redis_get, redis_set
+    except ImportError:
+        return None
+
+    cache_key = f"llm_itinerary:{city_name}:{days}:{budget}"
+    cached = redis_get(cache_key)
+    if cached:
+        try:
+            return json.loads(cached)
+        except Exception:
+            pass
+
+    season_hint = f"（出發時正值{seasonal_tag}）" if seasonal_tag else ""
+    budget_hint = f"預算約 {budget}" if budget else ""
+    adults_hint = f"{adults}人同行" if adults > 1 else "獨自旅行"
+
+    prompt = (
+        f"請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。\n"
+        f"只需回傳第 2 天到第 {days-1} 天（不含抵達/返台日）的中間天，共 {max(days-2,1)} 天。\n"
+        f"回傳 JSON array，每個元素格式：\n"
+        f'  {{"theme":"主題","am":"上午行程（1~2句）","pm":"下午行程（1~2句）","eve":"晚上行程（1~2句）"}}\n'
+        f"只回傳 JSON array，不要其他文字。景點需具體，符合當地特色。"
+    )
+
+    try:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            return None
+        client = anthropic.Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = message.content[0].text.strip()
+        # 擷取 JSON array（防止 LLM 回傳多餘文字）
+        start = raw.find("[")
+        end = raw.rfind("]") + 1
+        if start == -1 or end == 0:
+            return None
+        plans = json.loads(raw[start:end])
+        if isinstance(plans, list) and plans:
+            redis_set(cache_key, json.dumps(plans, ensure_ascii=False), ttl=60 * 60 * 24)
+            return plans
+    except Exception as e:
+        print(f"[itinerary] LLM error: {e}")
+    return None
+
+
 def build_itinerary_flex(dest_code: str, depart_date: str, return_date: str,
-                         city_name: str = "", custom_requests: str = "") -> list:
+                         city_name: str = "", custom_requests: str = "",
+                         budget: str = "", adults: int = 1) -> list:
     """
     生成行程大綱 Flex Carousel（1 則訊息）
+    優先使用 Claude Haiku 生成個人化行程，失敗時 fallback 靜態範本。
     回傳 list[dict]，可直接 append 到 messages。
     """
     tmpl = _get_template(dest_code)
-    if not tmpl:
-        return []
-
     days = _calc_days(depart_date, return_date)
-    display_city = city_name or tmpl.get("city_name", dest_code)
-    must_eat = tmpl.get("must_eat", [])
-    full_day_templates = tmpl.get("full_days", [])
+    display_city = city_name or (tmpl.get("city_name", dest_code) if tmpl else dest_code)
+    must_eat = tmpl.get("must_eat", []) if tmpl else []
+    full_day_templates = tmpl.get("full_days", []) if tmpl else []
+
+    # 取出行程月份，用於季節偵測
+    try:
+        travel_month = datetime.date.fromisoformat(depart_date[:10]).month
+    except Exception:
+        travel_month = datetime.date.today().month
+    seasonal = _get_seasonal_tag(dest_code, travel_month)
+    seasonal_tag = seasonal[0] if seasonal else ""
+
+    # 嘗試 LLM 生成中間天行程（Day 2 ~ Day N-1）
+    llm_plans = None
+    if days >= 3:
+        llm_plans = _llm_day_plans(display_city, days, seasonal_tag, budget, adults)
 
     bubbles = []
+    llm_idx = 0
 
     for day_num in range(1, days + 1):
         if day_num == 1:
-            plan = tmpl.get("arrival", {})
+            plan = tmpl.get("arrival", {}) if tmpl else {}
             label = f"抵達 {display_city}"
         elif day_num == days:
-            plan = tmpl.get("departure", {})
+            plan = tmpl.get("departure", {}) if tmpl else {}
             label = "歸途 · 返台"
         else:
-            idx = (day_num - 2) % max(len(full_day_templates), 1)
-            plan = full_day_templates[idx] if full_day_templates else {}
-            label = plan.get("theme", f"深度探索")
+            if llm_plans and llm_idx < len(llm_plans):
+                plan = llm_plans[llm_idx]
+                llm_idx += 1
+                label = plan.get("theme", "深度探索")
+            else:
+                idx = (day_num - 2) % max(len(full_day_templates), 1)
+                plan = full_day_templates[idx] if full_day_templates else {}
+                label = plan.get("theme", "深度探索")
 
         bubbles.append(_day_bubble(day_num, label, plan, depart_date))
 
-    # 最後加一張「必吃清單」bubble
+    # 季節活動 bubble（有季節事件才顯示）
+    if seasonal:
+        tag, activity = seasonal
+        bubbles.append({
+            "type": "bubble", "size": "kilo",
+            "header": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#E65100", "paddingAll": "12px",
+                "contents": [
+                    {"type": "text", "text": tag,
+                     "color": "#FFFFFF", "weight": "bold", "size": "md"},
+                    {"type": "text", "text": "你出發的時間剛好遇到！",
+                     "color": "#FFFFFF99", "size": "xs"},
+                ],
+            },
+            "body": {
+                "type": "box", "layout": "vertical",
+                "paddingAll": "12px", "spacing": "sm",
+                "contents": [
+                    {"type": "text", "text": activity,
+                     "size": "sm", "color": "#333333", "wrap": True},
+                    {"type": "text",
+                     "text": "⚡ 建議提前預約熱門景點或場地",
+                     "size": "xs", "color": "#888888", "margin": "sm", "wrap": True},
+                ],
+            },
+        })
+
+    # 必吃清單 bubble
     if must_eat:
         eat_lines = [{"type": "text", "text": f"• {item}",
                       "size": "sm", "color": "#555555", "wrap": True}
@@ -184,9 +348,11 @@ def build_itinerary_flex(dest_code: str, depart_date: str, return_date: str,
     if not bubbles:
         return []
 
+    seasonal_hint = f"  {seasonal[0]}" if seasonal else ""
+    ai_hint = "  ✨ AI 個人化" if llm_plans else ""
     return [
         {"type": "text",
-         "text": f"📅 {display_city} {days}天行程大綱\n← 左右滑動看每天安排"},
+         "text": f"📅 {display_city} {days}天行程大綱{seasonal_hint}{ai_hint}\n← 左右滑動看每天安排"},
         {
             "type": "flex",
             "altText": f"{display_city} {days}天行程大綱",

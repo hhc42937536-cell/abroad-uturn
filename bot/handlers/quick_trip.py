@@ -15,7 +15,7 @@ import json
 from bot.config import TRAVELPAYOUTS_TOKEN
 from bot.constants.cities import IATA_TO_NAME, CITY_FLAG, IATA_TO_COUNTRY, TW_AIRPORTS, TW_ALL_AIRPORTS
 from bot.constants.airlines import airline_name
-from bot.services.travelpayouts import search_cheapest_any, mock_explore_data
+from bot.services.travelpayouts import search_cheapest_any
 from bot.session.manager import set_session, get_session, update_session
 from bot.handlers.settings import get_user_origin
 
@@ -90,49 +90,6 @@ def _ask_days(user_id: str) -> list:
     }]
 
 
-def _mock_with_dates(origin: str, depart: datetime.date, ret: datetime.date) -> list:
-    """生成 mock 航班資料，日期完全符合 depart/ret，不用固定月份日期"""
-    dep_str = depart.isoformat()
-    ret_str = ret.isoformat()
-    return [
-        {"origin": origin, "destination": "NRT", "price": 4280,
-         "airline": "MM", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 210},
-        {"origin": origin, "destination": "ICN", "price": 3650,
-         "airline": "7C", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 165},
-        {"origin": origin, "destination": "BKK", "price": 5120,
-         "airline": "TG", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 225},
-        {"origin": origin, "destination": "DPS", "price": 6800,
-         "airline": "CI", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 1, "duration": 420},
-        {"origin": origin, "destination": "SIN", "price": 5580,
-         "airline": "TR", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 270},
-        {"origin": origin, "destination": "OSA", "price": 4950,
-         "airline": "MM", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 195},
-        {"origin": origin, "destination": "HKG", "price": 3280,
-         "airline": "CX", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 105},
-        {"origin": origin, "destination": "SGN", "price": 4150,
-         "airline": "VJ", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 195},
-        {"origin": origin, "destination": "OKA", "price": 3980,
-         "airline": "MM", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 180},
-        {"origin": origin, "destination": "FUK", "price": 4100,
-         "airline": "JX", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 175},
-        {"origin": origin, "destination": "CTS", "price": 5200,
-         "airline": "MM", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 240},
-        {"origin": origin, "destination": "KUL", "price": 4500,
-         "airline": "AK", "departure_at": dep_str, "return_at": ret_str,
-         "transfers": 0, "duration": 270},
-    ]
-
 
 def _find_options(user_id: str, days: int) -> list:
     """根據天數找 3 個便宜選項（「再找3個」會跳過已顯示過的目的地）"""
@@ -153,10 +110,33 @@ def _find_options(user_id: str, days: int) -> list:
     if TRAVELPAYOUTS_TOKEN:
         flights = search_cheapest_any(origin, limit=80)
     if not flights:
-        # mock 資料：用實際的出發/回程日期，確保天數符合使用者選擇
-        flights = _mock_with_dates(origin, depart_date, return_date)
-    if not flights:
-        return [{"type": "text", "text": "暫時找不到便宜方案，請稍後再試 🙏"}]
+        from bot.utils.url_builder import google_explore_url
+        return [{
+            "type": "flex",
+            "altText": "\u5373\u6642\u7968\u50f9\u66ab\u6642\u7121\u6cd5\u53d6\u5f97\uff0c\u8acb\u524d\u5f80\u8a02\u7968\u5e73\u53f0\u641c\u5c0b",
+            "contents": {
+                "type": "bubble", "size": "kilo",
+                "body": {
+                    "type": "box", "layout": "vertical",
+                    "paddingAll": "18px", "spacing": "md",
+                    "contents": [
+                        {"type": "text", "text": "\u2708\ufe0f \u5373\u6642\u7968\u50f9\u66ab\u6642\u7121\u6cd5\u53d6\u5f97",
+                         "weight": "bold", "size": "md", "color": "#333333"},
+                        {"type": "text",
+                         "text": "API \u66ab\u6642\u7121\u56de\u61c9\uff0c\u8acb\u524d\u5f80 Google Explore \u641c\u5c0b\u9644\u8fd1\u65e5\u671f\u7684\u4fbf\u5b9c\u76ee\u7684\u5730 \U0001f447",
+                         "size": "sm", "color": "#888888", "wrap": True, "margin": "sm"},
+                    ],
+                },
+                "footer": {
+                    "type": "box", "layout": "vertical", "paddingAll": "10px",
+                    "contents": [
+                        {"type": "button", "style": "primary", "color": "#4285F4",
+                         "action": {"type": "uri", "label": "\U0001f310 Google Explore \u5168\u7403\u63a2\u7d22",
+                                    "uri": google_explore_url(origin)}},
+                    ],
+                },
+            },
+        }]
 
     def _build_seen(skip: set) -> dict:
         s = {}
@@ -367,19 +347,34 @@ def handle_quick_pick(user_id: str, idx: int) -> list:
 
     from bot.handlers.trip_flow import _prompt_travel_info, _prompt_summary
     from bot.utils.itinerary_builder import build_itinerary_flex
+    from bot.utils.budget_estimator import build_budget_bubble
 
     depart_date = chosen["departure_at"][:10]
     return_date = chosen["return_at"][:10]
+    actual_days = chosen.get("days", 3)
 
     # ── 1. 行程大綱（Day 1~N 卡片 + 必吃清單）──
     itinerary_msgs = build_itinerary_flex(dest, depart_date, return_date, city_name)
 
-    # ── 2. 行前須知（只取 Flex Carousel，不要前後文字框，省則數）──
+    # ── 2. 行前須知（只取 Flex Carousel）──
     travel_msgs = _prompt_travel_info(user_id)
     flex_travel = [m for m in travel_msgs if m.get("type") == "flex"]
 
     # ── 3. 計畫摘要（機票/住宿/簽證/天氣/匯率，會清除 session）──
     summary_msgs = _prompt_summary(user_id)
 
-    # LINE 最多 5 則：行程文字(1) + 行程Flex(1) + 行前須知Flex(1) + 計畫書(1) = 4 則
-    return (itinerary_msgs + flex_travel + summary_msgs)[:5]
+    # ── 4. 預估支出 ──
+    budget_bubble = build_budget_bubble(
+        dest, city_name, actual_days, 1,
+        chosen["price"],
+        CITY_FLAG.get(dest, "✈️"),
+    )
+    budget_msg = {
+        "type": "flex",
+        "altText": f"💰 {city_name} 預估旅遊支出",
+        "contents": budget_bubble,
+    }
+
+    # LINE 最多 5 則
+    all_msgs = itinerary_msgs + flex_travel + summary_msgs + [budget_msg]
+    return all_msgs[:5]
