@@ -230,16 +230,8 @@ def route_text(text: str, user_id: str) -> list:
     if "熱門國家" in text or text in ("熱門", "熱門目的地", "國家"):
         return handle_popular_countries(origin)
 
-    # ── Fallback ──
-    return [{"type": "text", "text":
-        "\U0001f914 \u6211\u4e0d\u592a\u78ba\u5b9a\u4f60\u7684\u610f\u601d...\n\n"
-        "\u8a66\u8a66\u9019\u6a23\u8f38\u5165\uff1a\n"
-        "\u2022 \u300c\u958b\u59cb\u898f\u5283\u300d \u2192 \u5b8c\u6574\u65c5\u7a0b\u898f\u5283\n"
-        "\u2022 \u300c\u63a2\u7d22\u6700\u4fbf\u5b9c\u300d \u2192 \u770b\u54ea\u88e1\u6700\u4fbf\u5b9c\n"
-        "\u2022 \u300c\u6771\u4eac 6/15-6/20\u300d \u2192 \u6a5f\u7968\u6bd4\u50f9\n"
-        "\u2022 \u300c\u6211\u7684\u8ffd\u8e64\u300d \u2192 \u67e5\u770b\u8ffd\u8e64\u6e05\u55ae\n\n"
-        "\u8f38\u5165\u300c\u4f7f\u7528\u6559\u5b78\u300d\u770b\u5b8c\u6574\u8aaa\u660e \U0001f4d6"
-    }]
+    # ── Fallback：先用 LLM 理解意圖，失敗才給指令清單 ──
+    return _llm_intent_fallback(text, user_id)
 
 
 def route_postback(data: str, user_id: str) -> list:
@@ -352,4 +344,82 @@ def build_help_message() -> list:
         "\U0001f4a1 \u5c0f\u6280\u5de7\n"
         "\u2022 \u6240\u6709\u50f9\u683c\u90fd\u662f\u300c\u542b\u7a05\u7e3d\u50f9\u300d\n"
         "\u2022 \u9ede\u300c\u67e5\u770b\u8a73\u60c5\u300d\u76f4\u63a5\u8df3\u8f49\u8a02\u7968\u9801"
+    }]
+
+
+def _llm_intent_fallback(text: str, user_id: str) -> list:
+    """用 Claude Haiku 理解意圖，引導到正確功能；LLM 失敗才降回靜態提示。"""
+    import os
+    try:
+        import anthropic
+    except ImportError:
+        return _static_fallback()
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return _static_fallback()
+
+    prompt = f"""你是台灣出國旅遊 LINE Bot「出國優轉」的意圖分類器。
+使用者輸入：「{text}」
+
+請判斷最符合的意圖，只回傳以下其中一個代碼（不要其他文字）：
+- PLAN_TRIP      想規劃出國旅程（有目的地或泛泛想出國）
+- FIND_CHEAP     想找便宜目的地或比價
+- PRE_TRIP       想查簽證、海關、匯率、行前準備
+- IDOL           追星、看演唱會、見面會
+- TRANSPORT      交通卡、當地交通
+- HOTEL          住宿、飯店
+- SOUVENIR       伴手禮、必買
+- HELP           詢問怎麼使用這個 Bot
+- UNKNOWN        完全無關旅遊"""
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=20,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        intent = msg.content[0].text.strip().upper()
+    except Exception as e:
+        print(f"[intent] LLM error: {e}")
+        return _static_fallback()
+
+    if intent == "PLAN_TRIP":
+        from bot.handlers import trip_flow
+        return trip_flow.start(user_id)
+    elif intent == "FIND_CHEAP":
+        from bot.handlers.explore import handle_quick_explore
+        from bot.handlers.settings import get_user_origin
+        return handle_quick_explore(get_user_origin(user_id))
+    elif intent == "PRE_TRIP":
+        from bot.handlers.pre_trip import handle_pre_trip_menu
+        return handle_pre_trip_menu()
+    elif intent == "IDOL":
+        from bot.handlers.idol_trip import handle_idol_trip
+        return handle_idol_trip(text, user_id)
+    elif intent == "TRANSPORT":
+        from bot.handlers.transport import handle_transport
+        return handle_transport(text, user_id)
+    elif intent == "HOTEL":
+        from bot.handlers.hotels import handle_hotels
+        return handle_hotels(text, user_id)
+    elif intent == "SOUVENIR":
+        from bot.handlers.souvenirs import handle_souvenirs
+        return handle_souvenirs(text, user_id)
+    elif intent == "HELP":
+        return build_help_message()
+    else:
+        return _static_fallback()
+
+
+def _static_fallback() -> list:
+    return [{"type": "text", "text":
+        "🤔 我不太確定你的意思...\n\n"
+        "試試這樣輸入：\n"
+        "• 「開始規劃」→ 完整旅程規劃\n"
+        "• 「探索最便宜」→ 看哪裡最便宜\n"
+        "• 「東京 6/15-6/20」→ 機票比價\n"
+        "• 「我的追蹤」→ 查看追蹤清單\n\n"
+        "輸入「使用教學」看完整說明 📖"
     }]

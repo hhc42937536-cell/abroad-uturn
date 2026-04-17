@@ -93,19 +93,49 @@ def _show_idol_menu() -> list:
          "size": "xs", "color": "#FFFFFF99", "margin": "xs"},
     ]
 
-    # ── J-POP bubble ──
+    # ── J-POP：偶像 / 歌手 分類 ──
     jp_groups = data.get("groups", {}).get("JP", [])
-    jp_buttons = []
-    for g in jp_groups[:6]:
-        jp_buttons.append({
+    jp_idols = [g for g in jp_groups if g.get("category") == "偶像"]
+    jp_singers = [g for g in jp_groups if g.get("category") == "歌手"]
+
+    jp_idol_buttons = []
+    for g in jp_idols[:6]:
+        jp_idol_buttons.append({
             "type": "button", "style": "secondary", "height": "sm",
-            "action": {"type": "message", "label": g["name"][:12], "text": f"\u8ffd\u661f {g['name']}"},
+            "action": {"type": "message", "label": g["name"][:12], "text": f"追星 {g['name']}"},
         })
 
-    # ── 韓劇演員 bubble ──
+    jp_singer_buttons = []
+    for g in jp_singers[:6]:
+        jp_singer_buttons.append({
+            "type": "button", "style": "secondary", "height": "sm",
+            "action": {"type": "message", "label": g["name"][:12], "text": f"追星 {g['name']}"},
+        })
+
+    # ── 日本演員 bubble ──
+    jp_actors = data.get("actors", {}).get("JP", [])
+    jp_male_actors = [a for a in jp_actors if "女" not in a.get("type", "")]
+    jp_female_actors = [a for a in jp_actors if "女" in a.get("type", "")]
+    jp_pick = jp_male_actors[:3] + jp_female_actors[:3]
+    if len(jp_pick) < 6:
+        jp_pick += [a for a in jp_actors if a not in jp_pick][:6 - len(jp_pick)]
+    jp_actor_buttons = []
+    for a in jp_pick:
+        jp_actor_buttons.append({
+            "type": "button", "style": "secondary", "height": "sm",
+            "action": {"type": "message", "label": a["name"][:12], "text": f"追星 {a['name']}"},
+        })
+
+    # ── 韓劇演員 bubble：男女各 3，避免全男星 ──
     kr_actors = data.get("actors", {}).get("KR", [])
+    male_actors = [a for a in kr_actors if a.get("type", "") in ("演員", "演員/偶像")]
+    female_actors = [a for a in kr_actors if "女" in a.get("type", "")]
+    # 男 3 女 3，不足補對方
+    pick = male_actors[:3] + female_actors[:3]
+    if len(pick) < 6:
+        pick += [a for a in kr_actors if a not in pick][:6 - len(pick)]
     actor_buttons = []
-    for a in kr_actors[:6]:
+    for a in pick:
         actor_buttons.append({
             "type": "button", "style": "secondary", "height": "sm",
             "action": {"type": "message", "label": a["name"][:8], "text": f"追星 {a['name']}"},
@@ -152,7 +182,7 @@ def _show_idol_menu() -> list:
                 "contents": [
                     {"type": "text", "text": "🎬 韓劇／韓星 演員",
                      "color": "#FFFFFF", "weight": "bold", "size": "md"},
-                    {"type": "text", "text": "粉絲見面會・來台活動",
+                    {"type": "text", "text": "粉絲見面會・來台活動・男女星皆有",
                      "color": "#FFFFFF88", "size": "xs"},
                 ],
             },
@@ -165,23 +195,70 @@ def _show_idol_menu() -> list:
                 ],
             },
         },
-        # J-POP
+        # J-POP 偶像
         {
             "type": "bubble", "size": "kilo",
             "header": {
                 "type": "box", "layout": "vertical",
-                "backgroundColor": "#FF5722", "paddingAll": "12px",
+                "backgroundColor": "#E64A19", "paddingAll": "12px",
                 "contents": [
-                    {"type": "text", "text": "🇯🇵 J-POP 日本偶像",
+                    {"type": "text", "text": "🇯🇵 日本偶像",
                      "color": "#FFFFFF", "weight": "bold", "size": "md"},
-                    {"type": "text", "text": "點選你喜歡的藝人",
+                    {"type": "text", "text": "Johnny's・坂道系・BE:FIRST",
                      "color": "#FFFFFF88", "size": "xs"},
                 ],
             },
             "body": {
                 "type": "box", "layout": "vertical",
                 "spacing": "sm", "paddingAll": "12px",
-                "contents": jp_buttons,
+                "contents": jp_idol_buttons if jp_idol_buttons else [
+                    {"type": "text", "text": "輸入「追星 Snow Man」查詢",
+                     "size": "sm", "color": "#888888"},
+                ],
+            },
+        },
+        # 日本歌手/樂團
+        {
+            "type": "bubble", "size": "kilo",
+            "header": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#37474F", "paddingAll": "12px",
+                "contents": [
+                    {"type": "text", "text": "🎵 日本歌手／樂團",
+                     "color": "#FFFFFF", "weight": "bold", "size": "md"},
+                    {"type": "text", "text": "YOASOBI・Ado・米津玄師・King Gnu",
+                     "color": "#FFFFFF88", "size": "xs"},
+                ],
+            },
+            "body": {
+                "type": "box", "layout": "vertical",
+                "spacing": "sm", "paddingAll": "12px",
+                "contents": jp_singer_buttons if jp_singer_buttons else [
+                    {"type": "text", "text": "輸入「追星 YOASOBI」查詢",
+                     "size": "sm", "color": "#888888"},
+                ],
+            },
+        },
+        # 日本影視演員
+        {
+            "type": "bubble", "size": "kilo",
+            "header": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#880E4F", "paddingAll": "12px",
+                "contents": [
+                    {"type": "text", "text": "🎬 日本影視演員",
+                     "color": "#FFFFFF", "weight": "bold", "size": "md"},
+                    {"type": "text", "text": "男女星皆有・舞台・見面會",
+                     "color": "#FFFFFF88", "size": "xs"},
+                ],
+            },
+            "body": {
+                "type": "box", "layout": "vertical",
+                "spacing": "sm", "paddingAll": "12px",
+                "contents": jp_actor_buttons if jp_actor_buttons else [
+                    {"type": "text", "text": "輸入「追星 新垣結衣」查詢",
+                     "size": "sm", "color": "#888888"},
+                ],
             },
         },
         # 追星小知識

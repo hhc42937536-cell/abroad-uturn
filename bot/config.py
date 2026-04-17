@@ -18,3 +18,6 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 # Upstash Redis
 UPSTASH_REDIS_URL = os.environ.get("UPSTASH_REDIS_URL", "")
 UPSTASH_REDIS_TOKEN = os.environ.get("UPSTASH_REDIS_TOKEN", "")
+
+# 管理者 LINE userId（Vercel env var 設定一次，用於接收系統通知）
+ADMIN_USER_ID = os.environ.get("ADMIN_USER_ID", "")

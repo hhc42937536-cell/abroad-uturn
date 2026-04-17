@@ -1011,7 +1011,6 @@ def _prompt_summary(user_id: str) -> list:
     # 產生下載 token，存行程資料到 Redis（72 小時）
     import uuid
     from bot.services.redis_store import redis_set
-    from bot.config import LINE_CHANNEL_ACCESS_TOKEN
     import json as _json
 
     download_token = uuid.uuid4().hex

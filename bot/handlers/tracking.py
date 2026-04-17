@@ -111,7 +111,7 @@ def handle_my_tracks(user_id: str) -> list:
 
 
 def check_all_prices():
-    """Cron: 遍歷所有追蹤，檢查價格變化並推播通知"""
+    """Cron: 遍歷所有追蹤，檢查價格變化並推播通知（每人合併成一則）"""
     if not UPSTASH_REDIS_URL:
         return {"status": "redis_not_configured"}
 
@@ -120,7 +120,8 @@ def check_all_prices():
         return {"status": "no_tracks", "count": 0}
 
     checked = 0
-    notified = 0
+    # 先蒐集每位使用者的所有降價資訊，最後一次送出
+    user_drops: dict[str, list[str]] = {}
 
     for key in keys:
         try:
@@ -156,19 +157,33 @@ def check_all_prices():
                 savings = old_price - new_price
                 dest_name = IATA_TO_NAME.get(info["destination"], info["destination"])
                 origin_name = IATA_TO_NAME.get(info["origin"], info["origin"])
+                date_str = info["depart"] + (f" ~ {info['return']}" if info.get("return") else "")
+                link = skyscanner_url(info["origin"], info["destination"], info["depart"], info.get("return", ""))
 
-                push_message(user_id, [{"type": "text", "text":
-                    f"\U0001f514 \u964d\u50f9\u901a\u77e5\uff01\n\n"
-                    f"\u2708\ufe0f {origin_name} \u2192 {dest_name}\n"
-                    f"\U0001f4c5 {info['depart']}" +
-                    (f" ~ {info.get('return', '')}" if info.get("return") else "") + "\n\n"
-                    f"\U0001f4b0 NT${old_price:,} \u2192 NT${new_price:,}\n"
-                    f"\U0001f389 \u7701 NT${savings:,}\uff01\n\n"
-                    f"\u9ede\u6211\u67e5\u770b\u2192 {skyscanner_url(info['origin'], info['destination'], info['depart'], info.get('return', ''))}"
-                }])
-                notified += 1
+                block = (
+                    f"✈️ {origin_name} → {dest_name}\n"
+                    f"📅 {date_str}\n"
+                    f"💰 NT${old_price:,} → NT${new_price:,}（省 NT${savings:,}）\n"
+                    f"👉 {link}"
+                )
+                user_drops.setdefault(user_id, []).append(block)
 
         except Exception as e:
             print(f"[check_prices] Error for {key}: {e}")
 
+    # 每位使用者只發一則合併通知
+    notified = 0
+    for user_id, drops in user_drops.items():
+        try:
+            header = f"🔔 降價通知！共 {len(drops)} 條路線\n" + "─" * 20 + "\n\n"
+            combined = header + "\n\n".join(drops)
+            # LINE 單則文字上限 5000 字，超過就截斷
+            if len(combined) > 4800:
+                combined = combined[:4750] + "\n\n（更多路線請開啟 App 查看）"
+            push_message(user_id, [{"type": "text", "text": combined}])
+            notified += 1
+        except Exception as e:
+            print(f"[check_prices] push error for {user_id}: {e}")
+
+    print(f"[check_prices] checked={checked}, users_notified={notified}, total_drops={sum(len(v) for v in user_drops.values())}")
     return {"status": "ok", "checked": checked, "notified": notified}

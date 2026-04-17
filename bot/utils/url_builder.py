@@ -2,6 +2,13 @@
 
 import urllib.parse
 
+# ── Google Travel Explore：台灣出發 → 全球（已驗證可用的 tfs protobuf）──
+# 來源：TPE/KHH → 全球，來回，Google Travel Explore 實際 URL 截取
+_EXPLORE_TFS_TW = (
+    "CBwQAxocagwIAhIIL20vMDRibnhyDAgEEggvbS8wMmo3MRocagwIBBIIL20vMDJqNzFy"
+    "DAgCEggvbS8wNGJueEABSAFwAoIBCwj___________8BmAEBsgEEGAEgAQ"
+)
+
 
 def skyscanner_url(origin: str, dest: str, depart: str, ret: str = "") -> str:
     dep_d = depart.replace("-", "")[:8] if len(depart) >= 8 else ""
@@ -15,17 +22,24 @@ def skyscanner_url(origin: str, dest: str, depart: str, ret: str = "") -> str:
 
 
 def google_flights_url(origin: str, dest: str, depart: str, ret: str = "") -> str:
-    q = f"flights from {origin} to {dest}"
+    """Google Flights 特定航線連結（城市名搜尋，相容性最佳）"""
+    try:
+        from bot.constants.cities import IATA_TO_NAME
+        dest_city = IATA_TO_NAME.get(dest, dest)
+    except Exception:
+        dest_city = dest
+    q = f"flights from {origin} to {dest_city}"
     if depart:
-        q += f" {depart}"
+        q += f" on {depart}"
     if ret:
-        q += f" to {ret}"
+        q += f" return {ret}"
     params = urllib.parse.urlencode({"q": q, "hl": "zh-TW", "curr": "TWD"})
     return f"https://www.google.com/travel/flights?{params}"
 
 
 def google_explore_url(origin: str = "TPE") -> str:
-    return f"https://www.google.com/travel/explore?hl=zh-TW&curr=TWD"
+    """Google Travel Explore 全球探索（含正確 tfs，可直接開啟價格地圖）"""
+    return f"https://www.google.com/travel/explore?tfs={_EXPLORE_TFS_TW}&tfu=GgA&hl=zh-TW"
 
 
 def agoda_url(city_keyword: str, checkin: str = "", checkout: str = "") -> str:

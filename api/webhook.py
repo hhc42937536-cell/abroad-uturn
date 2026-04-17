@@ -134,7 +134,7 @@ class handler(BaseHTTPRequestHandler):
                 tb = traceback.format_exc()
                 print(f"[webhook] Error: {e}\n{tb}")
                 reply_message(reply_token, [{"type": "text", "text":
-                    f"\u7cfb\u7d71\u767c\u751f\u932f\u8aa4\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66 \U0001f64f\n[debug] {type(e).__name__}: {str(e)[:100]}"}])
+                    "系統暫時有點忙，請稍後再試一次 🙏\n\n或重新輸入你的目的地，例如「突然想去東京」"}])
                 log_usage(user_id, "error", is_success=False)
 
     def _json_response(self, status: int, data: dict):

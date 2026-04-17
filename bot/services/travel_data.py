@@ -1,4 +1,9 @@
-"""靜態旅遊資料讀取（簽證、海關、文化、打包清單）"""
+"""靜態旅遊資料讀取（簽證、海關、文化、打包清單）
+
+資料優先順序：
+  1. Redis 即時資料（policy_checker 爬蟲更新 / 開發者手動覆寫）
+  2. 本地 JSON 檔案（部署時的基準值，不會自動更新）
+"""
 from __future__ import annotations
 
 import json
@@ -23,16 +28,35 @@ def _load_json(filename: str) -> dict:
 
 
 def get_visa_info(country_code: str) -> dict | None:
-    data = _load_json("visa_info.json")
-    return data.get(country_code)
+    # Redis 優先（policy_checker cron 每週自動更新）
+    try:
+        from bot.services.policy_checker import get_live_visa
+        live = get_live_visa(country_code)
+        if live:
+            return live
+    except Exception:
+        pass
+    # fallback JSON
+    return _load_json("visa_info.json").get(country_code)
 
 
 def get_customs_info(country_code: str) -> dict | None:
+    # Redis 優先
+    try:
+        from bot.services.policy_checker import get_live_customs
+        live = get_live_customs(country_code)
+        if live:
+            taiwan_return = _load_json("customs_info.json").get("_taiwan_return")
+            if taiwan_return:
+                live["taiwan_return"] = taiwan_return
+            return live
+    except Exception:
+        pass
+    # fallback JSON
     data = _load_json("customs_info.json")
     info = data.get(country_code)
-    taiwan_return = data.get("_taiwan_return")
-    if info and taiwan_return:
-        info["taiwan_return"] = taiwan_return
+    if info:
+        info["taiwan_return"] = data.get("_taiwan_return")
     return info
 
 

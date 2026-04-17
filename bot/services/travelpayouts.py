@@ -66,6 +66,19 @@ def search_flights(origin: str, destination: str, depart: str, ret: str = "") ->
 
 
 def search_cheapest_any(origin: str, **kwargs) -> list | None:
+    from bot.services.redis_store import redis_get, redis_set
+
+    # 只有不帶額外篩選條件的基本查詢才使用 Redis（warm_flights 預熱的格式）
+    redis_key = f"explore:routes:{origin}" if not kwargs else None
+
+    if redis_key:
+        cached = redis_get(redis_key)
+        if cached:
+            try:
+                return json.loads(cached)
+            except Exception:
+                pass
+
     params = {
         "origin": origin,
         "sorting": "price",
@@ -73,7 +86,52 @@ def search_cheapest_any(origin: str, **kwargs) -> list | None:
         "one_way": "false",
         **kwargs,
     }
-    return _tp_api("prices_for_dates", params)
+    result = _tp_api("prices_for_dates", params)
+
+    # 寫回 Redis，下次 Lambda 冷啟動也能命中
+    if result and redis_key:
+        redis_set(redis_key, json.dumps(result, ensure_ascii=False), ttl=21600)
+
+    return result
+
+
+def warm_popular_routes() -> dict:
+    """
+    預熱熱門出發地航線資料到 Redis（Cron Job 呼叫）
+    讓使用者打開「探索最便宜」時秒開，不等 API
+    """
+    from bot.services.redis_store import redis_set
+
+    ORIGINS = ["TPE", "KHH"]
+    results: dict = {"refreshed": [], "failed": []}
+
+    for origin in ORIGINS:
+        try:
+            params = {
+                "origin": origin,
+                "sorting": "price",
+                "limit": 50,
+                "one_way": "false",
+            }
+            data = _tp_api("prices_for_dates", params)
+
+            if data:
+                redis_set(
+                    f"explore:routes:{origin}",
+                    json.dumps(data, ensure_ascii=False),
+                    ttl=21600,  # 6 小時
+                )
+                results["refreshed"].append(f"{origin}({len(data)}筆)")
+                print(f"[warm_flights] {origin}: {len(data)} 筆航班已快取")
+            else:
+                results["failed"].append(origin)
+                print(f"[warm_flights] {origin}: 無資料（可能 token 未設定）")
+
+        except Exception as e:
+            results["failed"].append(f"{origin}:{e}")
+            print(f"[warm_flights] {origin} ERROR: {e}")
+
+    return results
 
 
 # ─── Mock 資料 ──────────────────────────────────────

@@ -6,19 +6,22 @@
   },
   "groups": {
     "JP": [
-      {"name": "乃木坂46", "search_name": "Nogizaka46", "agency": "Sony Music", "genre": "J-POP/偶像"},
-      {"name": "櫻坂46", "search_name": "Sakurazaka46", "agency": "Sony Music", "genre": "J-POP/偶像"},
-      {"name": "日向坂46", "search_name": "Hinatazaka46", "agency": "Sony Music", "genre": "J-POP/偶像"},
-      {"name": "Snow Man", "search_name": "Snow Man", "agency": "Johnny's", "genre": "J-POP/偶像"},
-      {"name": "SixTONES", "search_name": "SixTONES", "agency": "Johnny's", "genre": "J-POP/偶像"},
-      {"name": "なにわ男子", "search_name": "Naniwa Danshi", "agency": "Johnny's", "genre": "J-POP/偶像"},
-      {"name": "Travis Japan", "search_name": "Travis Japan", "agency": "Johnny's", "genre": "J-POP/偶像"},
-      {"name": "YOASOBI", "search_name": "YOASOBI", "agency": "Sony Music", "genre": "J-POP"},
-      {"name": "Official髭男dism", "search_name": "Official Hige Dandism", "agency": "IRORI Records", "genre": "J-POP/樂團"},
-      {"name": "Ado", "search_name": "Ado", "agency": "Universal Music", "genre": "J-POP"},
-      {"name": "BE:FIRST", "search_name": "BE:FIRST", "agency": "BMSG", "genre": "J-POP/偶像"},
-      {"name": "imase", "search_name": "imase", "agency": "Universal Music", "genre": "J-POP"},
-      {"name": "優里", "search_name": "Yuri", "agency": "Warner Music", "genre": "J-POP"}
+      {"name": "乃木坂46", "search_name": "Nogizaka46", "agency": "Sony Music", "genre": "J-POP/偶像", "category": "偶像"},
+      {"name": "櫻坂46", "search_name": "Sakurazaka46", "agency": "Sony Music", "genre": "J-POP/偶像", "category": "偶像"},
+      {"name": "日向坂46", "search_name": "Hinatazaka46", "agency": "Sony Music", "genre": "J-POP/偶像", "category": "偶像"},
+      {"name": "Snow Man", "search_name": "Snow Man", "agency": "Johnny's", "genre": "J-POP/偶像", "category": "偶像"},
+      {"name": "SixTONES", "search_name": "SixTONES", "agency": "Johnny's", "genre": "J-POP/偶像", "category": "偶像"},
+      {"name": "なにわ男子", "search_name": "Naniwa Danshi", "agency": "Johnny's", "genre": "J-POP/偶像", "category": "偶像"},
+      {"name": "Travis Japan", "search_name": "Travis Japan", "agency": "Johnny's", "genre": "J-POP/偶像", "category": "偶像"},
+      {"name": "BE:FIRST", "search_name": "BE:FIRST", "agency": "BMSG", "genre": "J-POP/偶像", "category": "偶像"},
+      {"name": "YOASOBI", "search_name": "YOASOBI", "agency": "Sony Music", "genre": "J-POP", "category": "歌手"},
+      {"name": "Official髭男dism", "search_name": "Official Hige Dandism", "agency": "IRORI Records", "genre": "J-POP/樂團", "category": "歌手"},
+      {"name": "Ado", "search_name": "Ado", "agency": "Universal Music", "genre": "J-POP", "category": "歌手"},
+      {"name": "imase", "search_name": "imase", "agency": "Universal Music", "genre": "J-POP", "category": "歌手"},
+      {"name": "優里", "search_name": "Yuri", "agency": "Warner Music", "genre": "J-POP", "category": "歌手"},
+      {"name": "米津玄師", "search_name": "Kenshi Yonezu", "agency": "Sony Music", "genre": "J-POP", "category": "歌手"},
+      {"name": "King Gnu", "search_name": "King Gnu", "agency": "Ariola Japan", "genre": "J-POP/樂團", "category": "歌手"},
+      {"name": "藤井風", "search_name": "Fujii Kaze", "agency": "hehn records", "genre": "J-POP", "category": "歌手"}
     ],
     "KR": [
       {"name": "BTS", "search_name": "BTS", "agency": "HYBE", "genre": "K-POP"},
@@ -64,7 +67,16 @@
       {"name": "車銀優", "search_name": "Cha Eun-woo", "known_for": "真的不想努力・花遊記", "agency": "Fantagio", "type": "演員/偶像"},
       {"name": "李準基", "search_name": "Lee Joon-gi", "known_for": "月之戀人・軍主的假面", "agency": "SidusHQ", "type": "演員"},
       {"name": "崔宇植", "search_name": "Choi Woo-shik", "known_for": "寄生上流・我的出走日記", "agency": "Management SOOP", "type": "演員"},
-      {"name": "劉亞仁", "search_name": "Yoo Ah-in", "known_for": "六龍飛天・燃燒", "agency": "UAA", "type": "演員"}
+      {"name": "劉亞仁", "search_name": "Yoo Ah-in", "known_for": "六龍飛天・燃燒", "agency": "UAA", "type": "演員"},
+      {"name": "孫藝真", "search_name": "Son Ye-jin", "known_for": "愛的迫降・我的野蠻女友", "agency": "MSteam Entertainment", "type": "女演員"},
+      {"name": "全智賢", "search_name": "Jun Ji-hyun", "known_for": "來自星星的你・我的野蠻女友", "agency": "HB Entertainment", "type": "女演員"},
+      {"name": "金高銀", "search_name": "Kim Go-eun", "known_for": "鬼怪・甜蜜家園", "agency": "BH Entertainment", "type": "女演員"},
+      {"name": "韓素希", "search_name": "Han So-hee", "known_for": "夫婦的世界・我的名字", "agency": "9ATO Entertainment", "type": "女演員"},
+      {"name": "金泰梨", "search_name": "Kim Tae-ri", "known_for": "二十五 二十一・外星人", "agency": "Management SOOP", "type": "女演員"},
+      {"name": "裴秀智", "search_name": "Bae Suzy", "known_for": "雲畫的月光・Start-Up", "agency": "Management SOOP", "type": "女演員/偶像"},
+      {"name": "IU", "search_name": "IU Lee Ji-eun", "known_for": "我的大叔・德魯納酒店", "agency": "EDAM Entertainment", "type": "女演員/歌手"},
+      {"name": "宋慧喬", "search_name": "Song Hye-kyo", "known_for": "太陽的後裔・那年我們", "agency": "UAA", "type": "女演員"},
+      {"name": "申惠善", "search_name": "Shin Hye-sun", "known_for": "三十九・明天", "agency": "Artist Company", "type": "女演員"}
     ],
     "JP": [
       {"name": "山崎賢人", "search_name": "Kento Yamazaki", "known_for": "Alice in Borderland・醫龍", "agency": "Stardust Promotion", "type": "演員"},
@@ -72,8 +84,12 @@
       {"name": "吉澤亮", "search_name": "Ryo Yoshizawa", "known_for": "初戀・進擊的巨人", "agency": "Stardust Promotion", "type": "演員"},
       {"name": "坂口健太郎", "search_name": "Kentaro Ito", "known_for": "東京女子圖鑑・MIU404", "agency": "Stardust Promotion", "type": "演員"},
       {"name": "横浜流星", "search_name": "Ryusei Yokohama", "known_for": "日本沉沒・天堂與地獄", "agency": "Stardust Promotion", "type": "演員"},
-      {"name": "浜辺美波", "search_name": "Minami Hamabe", "known_for": "哥吉拉・排球少年劇場版", "agency": "Grick", "type": "演員"},
-      {"name": "永野芽郁", "search_name": "Mei Nagano", "known_for": "半澤直樹・ひなたが丘", "agency": "Horipro", "type": "演員"}
+      {"name": "浜辺美波", "search_name": "Minami Hamabe", "known_for": "哥吉拉-1.0・排球少年劇場版", "agency": "Grick", "type": "女演員"},
+      {"name": "永野芽郁", "search_name": "Mei Nagano", "known_for": "半澤直樹・君は放課後インソムニア", "agency": "Horipro", "type": "女演員"},
+      {"name": "新垣結衣", "search_name": "Yui Aragaki", "known_for": "逃避雖可恥・戀愛可以繼續到宇宙盡頭", "agency": "Amuse", "type": "女演員"},
+      {"name": "石原里美", "search_name": "Satomi Ishihara", "known_for": "非自然死亡・MIU404", "agency": "Grick", "type": "女演員"},
+      {"name": "長澤まさみ", "search_name": "Masami Nagasawa", "known_for": "戀愛・HERO・俗女養成記日版", "agency": "Horipro", "type": "女演員"},
+      {"name": "綾瀨遙", "search_name": "Haruka Ayase", "known_for": "海街日記・仁醫", "agency": "Horipro", "type": "女演員"}
     ]
   },
   "fan_shops": {
