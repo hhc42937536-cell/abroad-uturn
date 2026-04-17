@@ -110,6 +110,13 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("開始規劃", "我要規劃旅行", "完整出國規劃", "規劃旅程", "旅行規劃"):
         return trip_flow.start(user_id)
 
+    # ── 含「規劃」且有目的地線索 → 直接啟動規劃 ──
+    if "規劃" in text and any(kw in text for kw in (
+        "行程", "旅程", "旅行", "出國", "天", "美國", "日本", "韓國",
+        "泰國", "歐洲", "英國", "法國", "澳洲", "加拿大", "東南亞",
+    )):
+        return trip_flow.start_with_destination(user_id, text)
+
     # ── 說走就走（極速模式）──
     if text in ("說走就走", "說走就飛", "馬上飛", "快速規劃"):
         from bot.handlers.quick_trip import handle_quick_trip
