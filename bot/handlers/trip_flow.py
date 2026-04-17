@@ -75,6 +75,30 @@ def start_with_destination(user_id: str, text: str) -> list:
 
 def handle_step(user_id: str, text: str, step: int) -> list:
     """根據目前步驟處理使用者輸入"""
+    # ── 全域跳脫：在規劃中途想做其他事 ──
+    _REDIRECT_HINTS = {
+        ("追星", "演唱會", "見面會"): "追星",
+        ("行前", "簽證", "海關", "匯率"): "行前必知",
+        ("便宜", "探索", "比價"): "便宜",
+        ("住宿", "飯店", "旅館"): "住宿",
+        ("交通", "地鐵卡", "交通卡"): "交通攻略",
+    }
+    for kws, redirect in _REDIRECT_HINTS.items():
+        if any(kw in text for kw in kws):
+            return [{
+                "type": "text",
+                "text": f"你目前有一個規劃進行到第 {step}/8 步喔！\n\n"
+                        f"要繼續規劃嗎？還是先查「{redirect}」？\n\n"
+                        "• 輸入「繼續規劃」回到剛才\n"
+                        "• 輸入「取消規劃」結束此次規劃",
+                "quickReply": {"items": [
+                    {"type": "action", "action": {"type": "message",
+                        "label": "繼續規劃", "text": "繼續規劃"}},
+                    {"type": "action", "action": {"type": "message",
+                        "label": "取消規劃", "text": "取消規劃"}},
+                ]},
+            }]
+
     handlers = {
         1: _step1_destination,
         2: _step2_dates,
@@ -90,8 +114,7 @@ def handle_step(user_id: str, text: str, step: int) -> list:
     if handler:
         return handler(user_id, text)
 
-    # 預設：顯示目前步驟提示
-    return [{"type": "text", "text": f"{progress_text(step)}\n\n\u8acb\u7e7c\u7e8c\u8f38\u5165\u8cc7\u6599\uff0c\u6216\u8f38\u5165\u300c\u53d6\u6d88\u898f\u5283\u300d\u4e2d\u6b62\u3002"}]
+    return [{"type": "text", "text": f"{progress_text(step)}\n\n請繼續輸入資料，或輸入「取消規劃」中止。"}]
 
 
 def handle_postback(user_id: str, data: str) -> list:
