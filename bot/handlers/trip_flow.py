@@ -486,8 +486,61 @@ def _prompt_budget_response(user_id: str, text: str) -> list:
 
     update_session(user_id, {"budget": budget}, step=4)
 
-    # 自動進入步驟 4：搜尋機票
+    # 預算合理性檢查
+    warning = _check_budget_warning(user_id, budget)
+    if warning:
+        return [warning]   # 先給警告，等用戶確認後繼續
+
     return _prompt_flights(user_id)
+
+
+# 目的地 → 每人最低合理預算（台幣）
+_MIN_BUDGET_PER_PERSON = {
+    "LAX": 80000, "NYC": 90000, "SFO": 85000, "SEA": 80000,
+    "YVR": 75000, "YTO": 80000,
+    "LON": 80000, "PAR": 85000, "ROM": 80000, "FRA": 75000,
+    "AMS": 75000, "VIE": 75000, "PRG": 70000, "ZRH": 90000,
+    "IST": 55000, "BCN": 75000,
+    "SYD": 75000, "MEL": 75000, "AKL": 80000,
+    "DXB": 60000,
+    "TYO": 40000, "OSA": 38000, "SEL": 30000,
+    "BKK": 25000, "SIN": 35000, "KUL": 20000,
+    "DPS": 22000, "MNL": 20000, "SGN": 20000,
+    "HKG": 28000, "MFM": 28000,
+}
+
+
+def _check_budget_warning(user_id: str, budget: int) -> dict | None:
+    """若預算明顯不足，回傳警告訊息，否則回傳 None。"""
+    session = get_session(user_id) or {}
+    dest = session.get("destination_code", "")
+    adults = session.get("adults", 1)
+    min_per_person = _MIN_BUDGET_PER_PERSON.get(dest, 0)
+    if not min_per_person:
+        return None
+
+    min_total = min_per_person * adults
+    if budget >= min_total * 0.7:   # 留 30% 容錯
+        return None
+
+    city = session.get("destination_name", dest)
+    return {
+        "type": "text",
+        "text": (
+            f"⚠️ 預算提醒\n\n"
+            f"{adults} 人去 {city}，預算 NT${budget:,} 可能不夠——\n"
+            f"光機票來回每人就約 NT${min_per_person // 10000 * 10000:,} 起。\n\n"
+            f"建議至少準備 NT${min_total:,} 以上。\n\n"
+            f"要調整預算，還是就這樣繼續？"
+        ),
+        "quickReply": {"items": [
+            {"type": "action", "action": {"type": "message",
+                "label": f"調整為 {min_total // 10000}萬",
+                "text": f"預算{min_total // 10000}萬"}},
+            {"type": "action", "action": {"type": "message",
+                "label": "就這樣繼續", "text": "繼續規劃"}},
+        ]},
+    }
 
 
 # ─── 步驟 4：機票推薦 ────────────────────────────────
@@ -516,24 +569,31 @@ def _prompt_flights(user_id: str) -> list:
 
     # 搜尋機票
     flights = None
-    if TRAVELPAYOUTS_TOKEN:
-        if flex == "month":
-            flights = search_cheapest_by_month(origin, depart)
-            if flights:
-                flights = [f for f in flights if f.get("destination") == dest]
-        elif depart:
-            flights = search_flights(origin, dest, depart, ret)
+    try:
+        if TRAVELPAYOUTS_TOKEN:
+            if flex == "month":
+                flights = search_cheapest_by_month(origin, depart)
+                if flights:
+                    flights = [f for f in flights if f.get("destination") == dest]
+            elif depart:
+                flights = search_flights(origin, dest, depart, ret)
+    except Exception as e:
+        print(f"[flights] search error dest={dest}: {e}")
+        flights = None
 
     if not flights:
         update_session(user_id, {}, step=5)
         sky = skyscanner_url(origin, dest, depart or "", ret or "")
         gf = google_flights_url(origin, dest, depart or "", ret or "")
-        return [{"type": "text", "text":
-            f"[4/8] \u6a5f\u7968\u63a8\u85a6\n\n"
-            f"\u2708\ufe0f \u5373\u6642\u7968\u50f9\u66ab\u6642\u7121\u6cd5\u53d6\u5f97\uff0c\u8df3\u904e\u6a5f\u7968\u6b65\u9a5f\u3002\n"
-            f"\U0001f50d Skyscanner\uff1a{sky}\n"
-            f"\U0001f50d Google Flights\uff1a{gf}"
-        }] + _prompt_hotels(user_id)
+        msgs = [{"type": "text", "text":
+            f"[4/8] 機票推薦\n\n"
+            f"✈️ 即時票價暫時無法取得，跳過機票步驟。\n"
+            f"🔍 Skyscanner：{sky}\n"
+            f"🔍 Google Flights：{gf}"
+        }]
+        # LINE 上限 5 則，hotels 最多 3 則，合計控制在 4 則以內
+        hotel_msgs = _prompt_hotels(user_id)
+        return (msgs + hotel_msgs)[:4]
 
     # 排序：價格低到高
     flights.sort(key=lambda x: x.get("price", 99999))

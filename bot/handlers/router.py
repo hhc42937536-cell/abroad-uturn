@@ -23,9 +23,11 @@ def route_text(text: str, user_id: str) -> list:
 
     if text in ("繼續規劃", "繼續"):
         step = get_step(user_id)
+        if step == 4:
+            return trip_flow._prompt_flights(user_id)
         if step > 0:
             return trip_flow._show_step_prompt(user_id, step)
-        return [{"type": "text", "text": "\u4f60\u76ee\u524d\u6c92\u6709\u9032\u884c\u4e2d\u7684\u898f\u5283\u3002\u8f38\u5165\u300c\u958b\u59cb\u898f\u5283\u300d\u958b\u59cb\u5427\uff01"}]
+        return [{"type": "text", "text": "你目前沒有進行中的規劃。輸入「開始規劃」開始吧！"}]
 
     # ── 出發地設定 ──
     if "出發地" in text or text in ("設定出發地", "出發機場", "改出發地"):
