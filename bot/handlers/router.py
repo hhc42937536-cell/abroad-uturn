@@ -417,13 +417,18 @@ def _match_experience(text: str) -> list | None:
 def _llm_intent_fallback(text: str, user_id: str) -> list:
     """用 Claude Haiku 理解意圖，引導到正確功能；LLM 失敗才降回靜態提示。"""
     import os
+    # 記錄所有進入 fallback 的輸入，方便日後批量檢視
+    print(f"[fallback] user={user_id[:8]} text={repr(text[:80])}")
+
     try:
         import anthropic
     except ImportError:
+        print(f"[fallback] no_anthropic → static")
         return _static_fallback()
 
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
+        print(f"[fallback] no_api_key → static")
         return _static_fallback()
 
     prompt = f"""你是台灣出國旅遊 LINE Bot「出國優轉」的意圖分類器。
@@ -453,8 +458,9 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
             messages=[{"role": "user", "content": prompt}],
         )
         intent = msg.content[0].text.strip().upper()
+        print(f"[fallback] intent={intent} text={repr(text[:60])}")
     except Exception as e:
-        print(f"[intent] LLM error: {e}")
+        print(f"[fallback] llm_error={e} text={repr(text[:60])}")
         return _static_fallback()
 
     if intent == "PLAN_TRIP":
