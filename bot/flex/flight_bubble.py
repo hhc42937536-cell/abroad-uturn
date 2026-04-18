@@ -111,12 +111,10 @@ def flight_bubble(
             "action": {"type": "uri", "label": "\U0001f310 Google Flights \u6bd4\u50f9", "uri": google_url},
         },
     ]
-    if show_track_btn:
-        track_data = f"\u8ffd\u8e64|{origin}|{dest}|{depart}|{ret}"
-        footer_contents.append({
-            "type": "button", "style": "secondary", "height": "sm",
-            "action": {"type": "message", "label": "\U0001f4e2 \u8ffd\u8e64\u964d\u50f9\u901a\u77e5", "text": track_data},
-        })
+    # 追蹤功能暫停開放（每周一三五調整價格，推播額度控管中）
+    # if show_track_btn:
+    #     track_data = f"追蹤|{origin}|{dest}|{depart}|{ret}"
+    #     footer_contents.append({...})
     footer_contents.append({
         "type": "button", "style": "primary", "color": "#E91E63", "height": "sm",
         "action": {"type": "message", "label": "\U0001f680 說走就走", "text": "說走就走"},
