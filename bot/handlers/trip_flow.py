@@ -862,12 +862,13 @@ def _step6_itinerary(user_id: str, text: str) -> list:
 # ─── 步驟 7：行前須知 ────────────────────────────────
 
 def _prompt_travel_info(user_id: str) -> list:
-    """產出完整行前須知（簽證+海關+文化+天氣+匯率+打包）"""
+    """產出完整行前須知（旅遊警示+簽證+海關+文化+天氣+匯率+打包）"""
     from bot.services.travel_data import get_visa_info, get_customs_info, get_cultural_notes, get_packing_list
     from bot.services.weather_api import get_weather
     from bot.services.exchange_api import get_exchange_rate
     from bot.constants.countries import COUNTRY_CURRENCY, COUNTRY_NAME
     from bot.flex.progress_bar import build_progress_bar
+    from bot.services.policy_checker import get_live_advisory
 
     session = get_session(user_id) or {}
     country = session.get("country_code", "")
@@ -878,6 +879,29 @@ def _prompt_travel_info(user_id: str) -> list:
     country_name = COUNTRY_NAME.get(country, city)
 
     bubbles = []
+
+    # ── Bubble 0: 旅遊警示（Level 3/4 才顯示，置頂）──
+    if country:
+        advisory = get_live_advisory(country)
+        if advisory and advisory.get("level", 0) >= 3:
+            level = advisory["level"]
+            level_text = advisory.get("level_text", f"第{level}級")
+            summary = advisory.get("summary", "")
+            bg_color = "#D32F2F" if level >= 4 else "#E65100"
+            icon = "🔴" if level >= 4 else "🟠"
+            warning_lines = [
+                f"{icon} 外交部旅遊警示：{level_text}",
+                "",
+                f"⚠️ 台灣外交部對 {advisory.get('country', country_name)} 發布旅遊警示",
+            ]
+            if summary:
+                warning_lines.append(f"\n{summary[:80]}")
+            warning_lines.append("\n🔗 詳情請查詢外交部領事事務局")
+            bubbles.append(_info_bubble(
+                f"⚠️ 旅遊警示 {level_text}",
+                "\n".join(warning_lines),
+                bg_color,
+            ))
 
     # ── Bubble 1: 簽證 ──
     visa = get_visa_info(country)

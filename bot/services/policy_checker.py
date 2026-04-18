@@ -1,15 +1,17 @@
 """
-政策自動更新服務 — 簽證 & 海關
+政策自動更新服務 — 簽證 & 海關 & 旅遊警示
 
 架構：
-  data/visa_info.json     ← 部署時的基準值（fallback）
-  Redis visa:live:{code}  ← 爬蟲抓到的最新值，TTL 8 天
-  data/customs_info.json  ← 部署時的基準值（fallback）
+  data/visa_info.json       ← 部署時的基準值（fallback）
+  Redis visa:live:{code}    ← 爬蟲抓到的最新值，TTL 8 天
+  data/customs_info.json    ← 部署時的基準值（fallback）
   Redis customs:live:{code} ← 爬蟲抓到的最新值，TTL 8 天
+  Redis advisory:live:{code}← BOCA RSS 旅遊警示，TTL 8 天
 
 Cron /api/check_policies 每週一執行：
-  爬外交部 BOCA → 解析 → 存 Redis
+  爬外交部 BOCA 簽證 → 解析 → 存 Redis
   爬各國海關頁面 → 解析 → 存 Redis
+  爬外交部 BOCA 旅遊警示 RSS → 解析 → 存 Redis
   完全靜默，不需要人工介入
 """
 from __future__ import annotations
@@ -46,6 +48,37 @@ _ZH_TO_ISO = {
     "澳洲": "AU", "紐西蘭": "NZ", "阿聯酋": "AE",
     "帛琉": "PW", "關島": "GU", "柬埔寨": "KH",
     "緬甸": "MM",
+    # 旅遊警示常見國家（補充）
+    "以色列": "IL", "巴勒斯坦": "PS", "伊朗": "IR", "伊拉克": "IQ",
+    "阿富汗": "AF", "敘利亞": "SY", "葉門": "YE", "利比亞": "LY",
+    "索馬利亞": "SO", "蘇丹": "SD", "南蘇丹": "SS", "剛果": "CD",
+    "烏克蘭": "UA", "俄羅斯": "RU", "白俄羅斯": "BY",
+    "朝鮮": "KP", "北韓": "KP", "緬甸": "MM", "海地": "HT",
+    "委內瑞拉": "VE", "尼加拉瓜": "NI", "薩爾瓦多": "SV",
+    "巴基斯坦": "PK", "孟加拉": "BD", "斯里蘭卡": "LK",
+    "尼泊爾": "NP", "不丹": "BT", "印度": "IN",
+    "埃及": "EG", "突尼西亞": "TN", "摩洛哥": "MA", "阿爾及利亞": "DZ",
+    "奈及利亞": "NG", "肯亞": "KE", "衣索比亞": "ET", "坦尚尼亞": "TZ",
+    "墨西哥": "MX", "哥倫比亞": "CO", "秘魯": "PE", "巴西": "BR",
+    "阿根廷": "AR", "智利": "CL", "厄瓜多": "EC",
+    "沙烏地阿拉伯": "SA", "科威特": "KW", "卡達": "QA", "巴林": "BH",
+    "約旦": "JO", "黎巴嫩": "LB", "以色列": "IL",
+    "哈薩克": "KZ", "烏茲別克": "UZ", "吉爾吉斯": "KG",
+    "蒙古": "MN", "台灣": "TW",
+    "波蘭": "PL", "羅馬尼亞": "RO", "保加利亞": "BG", "匈牙利": "HU",
+    "葡萄牙": "PT", "比利時": "BE", "瑞典": "SE", "挪威": "NO",
+    "丹麥": "DK", "芬蘭": "FI", "愛爾蘭": "IE", "希臘": "GR",
+    "克羅埃西亞": "HR", "塞爾維亞": "RS", "斯洛維尼亞": "SI",
+    "赤道幾內亞": "GQ", "馬達加斯加": "MG", "莫三比克": "MZ",
+    "辛巴威": "ZW", "尚比亞": "ZM", "安哥拉": "AO",
+    "厄利垂亞": "ER", "吉布地": "DJ", "盧安達": "RW",
+    "中非共和國": "CF", "查德": "TD", "馬利": "ML",
+    "尼日": "NE", "布吉納法索": "BF", "幾內亞": "GN",
+    "獅子山": "SL", "賴比瑞亞": "LR", "象牙海岸": "CI",
+    "迦納": "GH", "多哥": "TG", "貝南": "BJ",
+    "模里西斯": "MU", "塞席爾": "SC", "馬爾地夫": "MV",
+    "斐濟": "FJ", "萬那杜": "VU", "巴布亞紐幾內亞": "PG",
+    "東帝汶": "TL", "汶萊": "BN", "寮國": "LA",
 }
 
 
@@ -85,6 +118,91 @@ def _parse_visa_type(text: str) -> str:
 def _parse_stay_days(text: str) -> str:
     m = re.search(r'(\d+)\s*天', text)
     return f"{m.group(1)}天" if m else ""
+
+
+# ── 旅遊警示爬蟲（外交部 BOCA RSS）──────────────────
+
+_ADVISORY_RSS = "https://www.boca.gov.tw/sp-trwa-rss-1.xml"
+
+# 標題格式：第X級（說明文字）國名
+_ADVISORY_LEVEL_RE = re.compile(r'第([一二三四])級[（(]([^）)]+)[）)](.+)')
+_LEVEL_MAP = {"一": 1, "二": 2, "三": 3, "四": 4}
+
+
+def scrape_travel_advisories() -> dict:
+    """
+    爬外交部 BOCA 旅遊警示 RSS，解析後存入 Redis advisory:live:{code}
+    回傳: {"updated": [codes], "unchanged": [codes], "failed": [codes]}
+    """
+    xml = _fetch(_ADVISORY_RSS)
+    if not xml:
+        return {"updated": [], "unchanged": [], "failed": ["RSS_FETCH"]}
+
+    today = datetime.date.today().isoformat()
+    updated, unchanged, failed = [], [], []
+
+    # 解析 RSS <item> 區塊
+    items = re.findall(r'<item>(.*?)</item>', xml, re.DOTALL | re.IGNORECASE)
+    print(f"[policy] advisory RSS 解析到 {len(items)} 個 item")
+
+    for item in items:
+        title_m = re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>|<title>(.*?)</title>', item, re.DOTALL)
+        if not title_m:
+            continue
+        title = (title_m.group(1) or title_m.group(2) or "").strip()
+
+        desc_m = re.search(r'<description><!\[CDATA\[(.*?)\]\]></description>|<description>(.*?)</description>', item, re.DOTALL)
+        summary = ""
+        if desc_m:
+            raw_desc = (desc_m.group(1) or desc_m.group(2) or "").strip()
+            summary = re.sub(r'<[^>]+>', '', raw_desc).strip()[:120]
+
+        m = _ADVISORY_LEVEL_RE.match(title)
+        if not m:
+            continue
+
+        level_zh, level_text, country_zh = m.group(1), m.group(2), m.group(3).strip()
+        level = _LEVEL_MAP.get(level_zh, 0)
+        if not level:
+            continue
+
+        # 找 ISO code
+        iso = _ZH_TO_ISO.get(country_zh)
+        if not iso:
+            for zh, code in _ZH_TO_ISO.items():
+                if zh in country_zh or country_zh in zh:
+                    iso = code
+                    break
+        if not iso:
+            continue
+
+        new_data = {
+            "level": level,
+            "level_text": f"第{level_zh}級（{level_text}）",
+            "country": country_zh,
+            "summary": summary,
+            "updated": today,
+        }
+
+        # 比對舊值，有異動才算更新
+        existing = redis_get(f"advisory:live:{iso}")
+        if existing:
+            try:
+                old = json.loads(existing)
+                if old.get("level") == level:
+                    unchanged.append(iso)
+                    # 延長 TTL
+                    redis_set(f"advisory:live:{iso}", existing, ttl=86400 * 8)
+                    continue
+            except Exception:
+                pass
+
+        redis_set(f"advisory:live:{iso}", json.dumps(new_data, ensure_ascii=False), ttl=86400 * 8)
+        updated.append(iso)
+        print(f"[policy] advisory {iso}({country_zh}) 更新為 Level {level}")
+
+    print(f"[policy] advisory: 更新 {len(updated)}, 未變 {len(unchanged)}, 失敗 {len(failed)}")
+    return {"updated": updated, "unchanged": unchanged, "failed": failed}
 
 
 # ── 簽證爬蟲（外交部 BOCA）──────────────────────────
@@ -263,11 +381,13 @@ def run_all_checks() -> dict:
 
     visa_result = scrape_and_update_visa()
     customs_result = scrape_and_update_customs()
+    advisory_result = scrape_travel_advisories()
 
     result = {
         "date": today,
         "visa": visa_result,
         "customs": customs_result,
+        "advisory": advisory_result,
     }
 
     # 把本次結果存 Redis，供 visa_reminder 讀取（TTL 8 天，覆蓋上週）
@@ -293,6 +413,21 @@ def get_live_visa(country_code: str) -> dict | None:
 def get_live_customs(country_code: str) -> dict | None:
     """讀取 Redis 即時海關資料"""
     cached = redis_get(f"customs:live:{country_code}")
+    if cached:
+        try:
+            return json.loads(cached)
+        except Exception:
+            pass
+    return None
+
+
+def get_live_advisory(country_code: str) -> dict | None:
+    """
+    讀取 Redis 旅遊警示資料
+    回傳 {"level": 1-4, "level_text": "第X級...", "country": "...", "summary": "...", "updated": "date"}
+    Level 3/4 需在行前須知顯示警告
+    """
+    cached = redis_get(f"advisory:live:{country_code}")
     if cached:
         try:
             return json.loads(cached)
