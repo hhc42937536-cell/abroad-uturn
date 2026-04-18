@@ -102,7 +102,7 @@ def warm_popular_routes() -> dict:
     """
     from bot.services.redis_store import redis_set
 
-    ORIGINS = ["TPE", "KHH"]
+    ORIGINS = ["TPE", "TSA", "KHH", "RMQ", "TNN"]
     results: dict = {"refreshed": [], "failed": []}
 
     for origin in ORIGINS:
