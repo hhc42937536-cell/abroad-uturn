@@ -309,7 +309,7 @@ def _show_detail(city_key: str) -> list:
                 "type": "box", "layout": "vertical",
                 "backgroundColor": "#1565C0", "paddingAll": "14px",
                 "contents": [
-                    {"type": "text", "text": f"\u2728 {city} \u4ea4\u901a\u5c0f\u6492\u7a43",
+                    {"type": "text", "text": f"\u2728 {city} 交通小撇步",
                      "color": "#FFFFFF", "weight": "bold", "size": "md"},
                 ],
             },
