@@ -49,7 +49,7 @@ def flight_bubble(flight: dict, rank: int = 0, show_track_btn: bool = True) -> d
     body_contents = [
         {
             "type": "text",
-            "text": f"NT$ {price:,} \u542b\u7a05\u8d77",
+            "text": f"NT$ {price:,} 含稅起參考",
             "size": "xl", "weight": "bold", "color": "#E53935",
         },
         {

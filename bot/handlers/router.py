@@ -64,7 +64,7 @@ def route_text(text: str, user_id: str) -> list:
 
     if text in ("\u8a2d\u5b9a",):
         current = get_user_origin(user_id)
-        name_map = {"TPE": "\u53f0\u5317\u6241\u5712", "KHH": "\u9ad8\u96c4\u5c0f\u6e2f", "RMQ": "\u53f0\u4e2d\u6e05\u6cc9\u5c97", "TNN": "\u53f0\u5357"}
+        name_map = {"TPE": "桃園國際", "TSA": "台北松山", "KHH": "高雄國際", "RMQ": "台中清泉崗", "TNN": "台南"}
         current_name = name_map.get(current, current)
         return [{
             "type": "flex",

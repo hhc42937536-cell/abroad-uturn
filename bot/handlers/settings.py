@@ -21,14 +21,21 @@ def handle_set_origin(user_id: str, text: str) -> list:
     if not city:
         current = get_user_origin(user_id)
         current_name = {v: k for k, v in TW_AIRPORTS.items()}.get(current, current)
+        options = [
+            ("桃園國際機場 TPE", "TPE", "桃園"),
+            ("台北松山機場 TSA", "TSA", "松山"),
+            ("高雄國際機場 KHH", "KHH", "高雄"),
+            ("台中清泉崗機場 RMQ", "RMQ", "台中"),
+            ("台南機場 TNN", "TNN", "台南"),
+        ]
         buttons = []
-        for name, code in [("台北 桃園", "TPE"), ("高雄 小港", "KHH"), ("台中 清泉崗", "RMQ"), ("台南", "TNN")]:
-            marker = " \u2705" if code == current else ""
+        for label, code, trigger in options:
+            marker = " ✅" if code == current else ""
             buttons.append({
                 "type": "button",
                 "style": "primary" if code == current else "secondary",
                 "height": "sm",
-                "action": {"type": "message", "label": f"{name}{marker}", "text": f"\u51fa\u767c\u5730 {name.split()[0]}"},
+                "action": {"type": "message", "label": f"{label}{marker}", "text": f"出發地 {trigger}"},
             })
         return [{
             "type": "flex",
@@ -56,9 +63,9 @@ def handle_set_origin(user_id: str, text: str) -> list:
     code = TW_AIRPORTS.get(city)
     if not code:
         return [{"type": "text", "text":
-            f"\u627e\u4e0d\u5230\u300c{city}\u300d\u7684\u6a5f\u5834\n\n"
-            f"\u652f\u63f4\u7684\u51fa\u767c\u5730\uff1a\u53f0\u5317\u3001\u9ad8\u96c4\u3001\u53f0\u4e2d\u3001\u53f0\u5357\n"
-            f"\u4f8b\u5982\uff1a\u300c\u51fa\u767c\u5730 \u9ad8\u96c4\u300d"
+            f"找不到「{city}」的機場\n\n"
+            f"支援的出發地：桃園、松山、高雄、台中、台南\n"
+            f"例如：「出發地 高雄」"
         }]
 
     if UPSTASH_REDIS_URL and user_id:
