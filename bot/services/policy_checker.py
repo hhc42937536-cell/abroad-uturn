@@ -264,12 +264,17 @@ def run_all_checks() -> dict:
     visa_result = scrape_and_update_visa()
     customs_result = scrape_and_update_customs()
 
-    print(f"[policy] 完成 {today}")
-    return {
+    result = {
         "date": today,
         "visa": visa_result,
         "customs": customs_result,
     }
+
+    # 把本次結果存 Redis，供 visa_reminder 讀取（TTL 8 天，覆蓋上週）
+    redis_set("policy:last_run", json.dumps(result, ensure_ascii=False), ttl=86400 * 8)
+
+    print(f"[policy] 完成 {today}")
+    return result
 
 
 # ── Handler 讀取介面 ──────────────────────────────────
