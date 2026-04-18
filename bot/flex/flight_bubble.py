@@ -117,7 +117,7 @@ def flight_bubble(
     #     footer_contents.append({...})
     footer_contents.append({
         "type": "button", "style": "primary", "color": "#E91E63", "height": "sm",
-        "action": {"type": "message", "label": "\U0001f680 說走就走", "text": "說走就走"},
+        "action": {"type": "message", "label": "🚀 立刻規劃行程", "text": f"規劃行程 {dest}"},
     })
 
     return {

@@ -127,6 +127,13 @@ def route_text(text: str, user_id: str) -> list:
     )):
         return trip_flow.start_with_destination(user_id, text)
 
+    # ── 機票卡片「立刻規劃行程」帶目的地直接進規劃 ──
+    if text.startswith("規劃行程 "):
+        from bot.constants.cities import IATA_TO_NAME
+        dest_code = text.split(" ", 1)[1].strip()
+        city = IATA_TO_NAME.get(dest_code, dest_code)
+        return trip_flow.start_with_destination(user_id, city)
+
     # ── 說走就走（極速模式）──
     if text in ("說走就走", "說走就飛", "馬上飛", "快速規劃"):
         from bot.handlers.quick_trip import handle_quick_trip
