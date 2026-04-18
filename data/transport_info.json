@@ -29,7 +29,13 @@
       "深夜 12 點後末班車，要注意時間"
     ],
     "grab_available": false,
-    "taxi_app": "GO App（日本計程車）"
+    "taxi_app": "GO App（日本計程車）",
+    "apps": [
+      {"name": "Google Maps", "icon": "🗺️", "desc": "日本地鐵規劃超準，直接規劃到月台"},
+      {"name": "Suica App", "icon": "💳", "desc": "手機綁 Suica，無押金限制"},
+      {"name": "GO App", "icon": "🚕", "desc": "日本最主要叫車 App"},
+      {"name": "Jorudan", "icon": "🚃", "desc": "複雜路線查詢，含票價比較"}
+    ]
   },
 
   "OSA": {
@@ -65,7 +71,12 @@
       "難波與心齋橋步行距離，不需搭車"
     ],
     "grab_available": false,
-    "taxi_app": "GO App"
+    "taxi_app": "GO App",
+    "apps": [
+      {"name": "Google Maps", "icon": "🗺️", "desc": "大阪地鐵路線規劃"},
+      {"name": "GO App", "icon": "🚕", "desc": "日本計程車叫車"},
+      {"name": "ICOCA App", "icon": "💳", "desc": "電子 ICOCA 儲值管理"}
+    ]
   },
 
   "SEL": {
@@ -95,7 +106,13 @@
       "計程車 Kakao T App 叫車方便又安全"
     ],
     "grab_available": false,
-    "taxi_app": "Kakao T（韓國 Uber）"
+    "taxi_app": "Kakao T（韓國 Uber）",
+    "apps": [
+      {"name": "Kakao Map", "icon": "🗺️", "desc": "韓國最準的地圖，比 Google Maps 更準確"},
+      {"name": "Kakao T", "icon": "🚕", "desc": "韓國叫車首選，安全又方便"},
+      {"name": "Naver Map", "icon": "📍", "desc": "路線規劃備選，含大眾運輸"},
+      {"name": "T-money App", "icon": "💳", "desc": "T-money 手機版，免帶實體卡"}
+    ]
   },
 
   "BKK": {
@@ -131,7 +148,13 @@
       "去大皇宮建議搭船（昭披耶河快船），省錢又有趣"
     ],
     "grab_available": true,
-    "taxi_app": "Grab（首選）"
+    "taxi_app": "Grab（首選）",
+    "apps": [
+      {"name": "Grab", "icon": "🚗", "desc": "曼谷必裝，叫車不被坑價"},
+      {"name": "Google Maps", "icon": "🗺️", "desc": "BTS/MRT 路線規劃"},
+      {"name": "12Go Asia", "icon": "🚌", "desc": "購買火車/巴士/渡輪票"},
+      {"name": "Agoda", "icon": "🏨", "desc": "泰國訂房優惠多"}
+    ]
   },
 
   "SIN": {
@@ -160,7 +183,13 @@
       "週末 Orchard 一帶人很多，建議避開尖峰時段"
     ],
     "grab_available": true,
-    "taxi_app": "Grab"
+    "taxi_app": "Grab",
+    "apps": [
+      {"name": "Grab", "icon": "🚗", "desc": "機場進市區或跨區移動首選"},
+      {"name": "Google Maps", "icon": "🗺️", "desc": "MRT/公車路線規劃"},
+      {"name": "MyTransport.SG", "icon": "🚌", "desc": "官方公車到站時間查詢"},
+      {"name": "Klook", "icon": "🎡", "desc": "景點門票優惠（環球/聖淘沙）"}
+    ]
   },
 
   "HKG": {
@@ -189,7 +218,13 @@
       "Uber/Grab 在香港較少，建議搭地鐵"
     ],
     "grab_available": false,
-    "taxi_app": "HKTaxi App"
+    "taxi_app": "HKTaxi App",
+    "apps": [
+      {"name": "Google Maps", "icon": "🗺️", "desc": "港鐵 MTR 路線規劃"},
+      {"name": "MTR Mobile", "icon": "🚇", "desc": "官方 App，即時班次與票價"},
+      {"name": "HKTaxi", "icon": "🚕", "desc": "香港叫的士 App"},
+      {"name": "Klook", "icon": "🎡", "desc": "景點票券優惠"}
+    ]
   },
 
   "KUL": {
@@ -218,7 +253,13 @@
       "Bukit Bintang 商圈可以步行逛，不需搭車"
     ],
     "grab_available": true,
-    "taxi_app": "Grab（強烈推薦）"
+    "taxi_app": "Grab（強烈推薦）",
+    "apps": [
+      {"name": "Grab", "icon": "🚗", "desc": "吉隆坡必裝，計程車別搭！"},
+      {"name": "Google Maps", "icon": "🗺️", "desc": "LRT/MRT 路線規劃"},
+      {"name": "Touch 'n Go eWallet", "icon": "💳", "desc": "手機版 TnG，掃碼搭車付費"},
+      {"name": "Klook", "icon": "🎡", "desc": "景點票券優惠"}
+    ]
   },
 
   "SGN": {
@@ -235,6 +276,11 @@
       "市區景點集中，很多地方可以步行"
     ],
     "grab_available": true,
-    "taxi_app": "Grab（必裝）"
+    "taxi_app": "Grab（必裝）",
+    "apps": [
+      {"name": "Grab", "icon": "🚗", "desc": "胡志明必裝，含 Grab Bike 摩托車"},
+      {"name": "Google Maps", "icon": "🗺️", "desc": "路線規劃，離線地圖先下載"},
+      {"name": "Grab Bike", "icon": "🛵", "desc": "塞車時騎摩托車超快，省時省錢"}
+    ]
   }
 }

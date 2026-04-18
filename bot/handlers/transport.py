@@ -204,6 +204,7 @@ def _show_detail(city_key: str) -> list:
     grab = info.get("grab_available", False)
     taxi_app = info.get("taxi_app", "")
     key_stations = info.get("key_stations", [])
+    apps = info.get("apps", [])
 
     bubbles = []
 
@@ -315,6 +316,43 @@ def _show_detail(city_key: str) -> list:
             "body": {"type": "box", "layout": "vertical",
                      "paddingAll": "12px",
                      "contents": tip_contents},
+        })
+
+    # Bubble 4: 必用 APP
+    if apps:
+        app_contents = []
+        for a in apps:
+            app_contents.append({
+                "type": "box", "layout": "horizontal",
+                "margin": "sm", "spacing": "sm",
+                "contents": [
+                    {"type": "text", "text": a.get("icon", "📱"),
+                     "size": "lg", "flex": 0},
+                    {"type": "box", "layout": "vertical", "flex": 1,
+                     "contents": [
+                         {"type": "text", "text": a["name"],
+                          "size": "sm", "weight": "bold", "color": "#1A237E"},
+                         {"type": "text", "text": a.get("desc", ""),
+                          "size": "xs", "color": "#666666", "wrap": True},
+                     ]},
+                ],
+            })
+            app_contents.append({"type": "separator", "margin": "sm"})
+        bubbles.append({
+            "type": "bubble", "size": "kilo",
+            "header": {
+                "type": "box", "layout": "vertical",
+                "backgroundColor": "#00695C", "paddingAll": "14px",
+                "contents": [
+                    {"type": "text", "text": f"📱 {city} 必用 APP",
+                     "color": "#FFFFFF", "weight": "bold", "size": "md"},
+                    {"type": "text", "text": "出發前先裝好，到當地直接用",
+                     "color": "#B2DFDB", "size": "xs", "margin": "xs"},
+                ],
+            },
+            "body": {"type": "box", "layout": "vertical",
+                     "paddingAll": "12px", "spacing": "xs",
+                     "contents": app_contents},
         })
 
     return [
