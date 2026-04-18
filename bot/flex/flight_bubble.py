@@ -6,7 +6,12 @@ from bot.utils.date_parser import duration_str
 from bot.utils.url_builder import skyscanner_url, google_flights_url
 
 
-def flight_bubble(flight: dict, rank: int = 0, show_track_btn: bool = True) -> dict:
+def flight_bubble(
+    flight: dict,
+    rank: int = 0,
+    show_track_btn: bool = True,
+    price_hint: str = "",
+) -> dict:
     """建立單張航班 Flex Bubble"""
     dest = flight.get("destination", "")
     city_name = IATA_TO_NAME.get(dest, dest)
@@ -57,6 +62,14 @@ def flight_bubble(flight: dict, rank: int = 0, show_track_btn: bool = True) -> d
             "text": "\u6b77\u53f2\u53c3\u8003\u4f4e\u50f9\u30fb\u5be6\u969b\u4ee5\u8a02\u7968\u7db2\u7ad9\u70ba\u6e96",
             "size": "xxs", "color": "#999999", "margin": "xs",
         },
+        *(
+            [{
+                "type": "text", "text": price_hint,
+                "size": "xs", "color": "#2E7D32" if price_hint.startswith("💚") else "#888888",
+                "margin": "xs", "weight": "bold",
+            }]
+            if price_hint else []
+        ),
         {"type": "separator", "margin": "md"},
     ]
     if date_display:
@@ -104,6 +117,10 @@ def flight_bubble(flight: dict, rank: int = 0, show_track_btn: bool = True) -> d
             "type": "button", "style": "secondary", "height": "sm",
             "action": {"type": "message", "label": "\U0001f4e2 \u8ffd\u8e64\u964d\u50f9\u901a\u77e5", "text": track_data},
         })
+    footer_contents.append({
+        "type": "button", "style": "primary", "color": "#E91E63", "height": "sm",
+        "action": {"type": "message", "label": "\U0001f680 說走就走", "text": "說走就走"},
+    })
 
     return {
         "type": "bubble",

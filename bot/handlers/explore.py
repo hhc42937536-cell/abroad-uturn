@@ -10,6 +10,25 @@ from bot.flex.month_picker import month_picker_flex
 from bot.utils.url_builder import google_explore_url, skyscanner_url, google_flights_url
 
 
+def _price_hint(price: int, min_price: int, rank: int) -> str:
+    if rank == 0:
+        return "💚 近期難得低點！把握機會"
+    diff = price - min_price
+    return f"比最低多 NT${diff:,}" if diff > 0 else ""
+
+
+def _make_bubbles(flights: list, show_track_rank0: bool = True) -> list:
+    min_price = flights[0]["price"] if flights else 0
+    return [
+        flight_bubble(
+            f, i,
+            show_track_btn=(i == 0 and show_track_rank0),
+            price_hint=_price_hint(f["price"], min_price, i),
+        )
+        for i, f in enumerate(flights)
+    ]
+
+
 def _no_flights_fallback(origin: str, dest_code: str = None, depart: str = None, ret: str = None) -> list:
     """即時票價無法取得時的替代訊息，附 affiliate 導流連結"""
     if dest_code and depart:
@@ -101,7 +120,7 @@ def handle_explore_cheapest(origin: str = "TPE") -> list:
     explore_url = google_explore_url(origin)
 
     # 各目的地卡片
-    bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
+    bubbles = _make_bubbles(unique)
 
     # 尾端：更多探索選單 bubble
     action_bubble = {
@@ -173,7 +192,7 @@ def handle_quick_explore(origin: str = "TPE") -> list:
         return _no_flights_fallback(origin)
 
     unique = _dedupe_flights(flights)
-    bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
+    bubbles = _make_bubbles(unique)
     bubbles.append(_google_explore_bubble())
 
     origin_name = {v: k for k, v in TW_AIRPORTS.items()}.get(origin, origin)
@@ -195,7 +214,7 @@ def handle_explore(month: str, origin: str = "TPE") -> list:
         return _no_flights_fallback(origin)
 
     unique = _dedupe_flights(flights)
-    bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
+    bubbles = _make_bubbles(unique)
     bubbles.append({
         "type": "bubble", "size": "kilo",
         "body": {
@@ -235,7 +254,7 @@ def handle_direct_flights(origin: str = "TPE") -> list:
         return _no_flights_fallback(origin)
 
     unique = _dedupe_flights(flights)
-    bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
+    bubbles = _make_bubbles(unique)
     origin_name = {v: k for k, v in TW_AIRPORTS.items()}.get(origin, origin)
     return [
         {"type": "text", "text": f"\u2708\ufe0f {origin_name}\u51fa\u767c\uff0c\u76f4\u98db\u76ee\u7684\u5730\u6700\u4f4e\u50f9\uff1a"},
@@ -255,7 +274,7 @@ def handle_transfer_cheapest(origin: str = "TPE") -> list:
         return [{"type": "text", "text": "\u76ee\u524d\u6240\u6709\u822a\u73ed\u90fd\u662f\u76f4\u98db\uff0c\u6c92\u6709\u66f4\u4fbf\u5b9c\u7684\u8f49\u6a5f\u9078\u9805 \u2708\ufe0f"}]
 
     unique = _dedupe_flights(transfer_flights)
-    bubbles = [flight_bubble(f, i) for i, f in enumerate(unique)]
+    bubbles = _make_bubbles(unique)
     origin_name = {v: k for k, v in TW_AIRPORTS.items()}.get(origin, origin)
     return [
         {"type": "text", "text": f"\U0001f504 {origin_name}\u51fa\u767c\uff0c\u8f49\u6a5f\u8d85\u503c\u7968\uff08\u542b\u8f49\u6a5f\u66f4\u4fbf\u5b9c\uff09\uff1a"},
@@ -300,7 +319,7 @@ def handle_flexible_dates(text: str, origin: str = "TPE") -> list:
 
     city_name = IATA_TO_NAME.get(dest_code, dest_code)
     origin_name = {v: k for k, v in TW_AIRPORTS.items()}.get(origin, origin)
-    bubbles = [flight_bubble(f, i) for i, f in enumerate(sorted_flights)]
+    bubbles = _make_bubbles(sorted_flights)
     return [
         {"type": "text", "text": f"\U0001f4c5 {origin_name}\u2192{city_name} {month[5:]}\u6708\uff0c\u6700\u4fbf\u5b9c\u51fa\u767c\u65e5\uff1a"},
         {"type": "flex", "altText": f"{city_name} \u5f48\u6027\u65e5\u671f", "contents": {"type": "carousel", "contents": bubbles}},
@@ -336,7 +355,7 @@ def handle_compare(text: str, origin: str = "TPE") -> list:
 
     flights.sort(key=lambda x: x.get("price", 99999))
     top = flights[:6]
-    bubbles = [flight_bubble(f, i) for i, f in enumerate(top)]
+    bubbles = _make_bubbles(top)
 
     city_name = IATA_TO_NAME.get(dest_code, dest_code)
     d_short = depart[5:].replace("-", "/") if len(depart) >= 10 else depart
@@ -380,7 +399,7 @@ def handle_package(text: str, origin: str = "TPE") -> list:
     messages = []
     if flights:
         flights.sort(key=lambda x: x.get("price", 99999))
-        bubbles = [flight_bubble(f, i, show_track_btn=False) for i, f in enumerate(flights[:5])]
+        bubbles = _make_bubbles(flights[:5], show_track_rank0=False)
         origin_name = {v: k for k, v in TW_AIRPORTS.items()}.get(origin, origin)
         messages += [
             {"type": "text", "text": f"\u2708\ufe0f {origin_name}\u2192{city_name} \u6a5f\u7968\uff1a"},
