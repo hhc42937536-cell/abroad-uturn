@@ -293,7 +293,8 @@ def _parse_hints_from_text(text: str) -> dict:
     # 行程風格關鍵字 → 預填 custom_requests
     _STYLE_HINTS = [
         (("最夯", "熱門玩法", "夯玩法"), "請加入當地最熱門玩法、打卡景點與特色體驗"),
-        (("追星", "K-POP", "KPOP", "kpop", "演唱會"), "追星行程：請安排 K-POP 聖地、偶像相關景點"),
+        (("追星", "K-POP", "KPOP", "kpop", "演唱會", "見面會", "fan meeting", "fanmeet"),
+         "追星行程：請安排演唱會/見面會場地附近景點、偶像相關聖地"),
         (("美食", "必吃", "吃吃喝喝"), "美食為主：請以必吃餐廳和在地小吃為行程重點"),
         (("購物", "掃貨", "逛街"), "購物為主：請安排購物中心、藥妝、免稅店"),
         (("自然", "健行", "爬山"), "親近自然：請安排山岳健行、自然風景景點"),
@@ -305,6 +306,22 @@ def _parse_hints_from_text(text: str) -> dict:
         if any(kw in text for kw in kws):
             hints["custom_requests"] = hint_text
             break
+
+    # 日期 → 預填 depart_date / return_date，讓 Step 2 可跳過
+    from bot.utils.date_parser import parse_date_range, parse_month
+    depart, ret = parse_date_range(text)
+    if depart:
+        hints["depart_date"] = depart
+        if ret:
+            hints["return_date"] = ret
+            hints["flexibility"] = "specific"
+        else:
+            hints["flexibility"] = "specific"
+    elif not depart:
+        month = parse_month(text)
+        if month:
+            hints["depart_date"] = month
+            hints["flexibility"] = "month"
 
     return hints
 
@@ -374,15 +391,41 @@ def _step1_destination(user_id: str, text: str) -> list:
 def _prompt_dates(user_id: str) -> list:
     session = get_session(user_id) or {}
     city = session.get("destination_name", "")
+    pre_depart = session.get("depart_date", "")
+    pre_ret = session.get("return_date", "")
+
+    # 日期已從初始訊息預填 → 直接確認並跳到 Step 3
+    if pre_depart:
+        flex = session.get("flexibility", "specific")
+        if flex == "month":
+            date_str = f"{pre_depart}（月份）"
+        elif pre_ret:
+            date_str = f"{pre_depart} → {pre_ret}"
+        else:
+            date_str = pre_depart
+        update_session(user_id, {}, step=3)
+        return [{"type": "text", "text":
+            f"[2/8] 日期\n\n"
+            f"目的地：{city} ✅\n"
+            f"日期：{date_str} ✅（從你的訊息自動帶入）\n\n"
+            f"如需修改，請直接輸入新日期；否則繼續下一步：",
+            "quickReply": {
+                "items": [
+                    {"type": "action", "action": {"type": "message", "label": "✅ 日期正確，繼續", "text": "繼續"}},
+                    {"type": "action", "action": {"type": "message", "label": "修改日期", "text": "修改日期"}},
+                ],
+            },
+        }] + _prompt_travelers(user_id)
+
     return [{"type": "text", "text":
-        f"[2/8] \u65e5\u671f\n\n"
-        f"\u76ee\u7684\u5730\uff1a{city}\n\n"
-        f"\u4f60\u9810\u8a08\u4ec0\u9ebc\u6642\u5019\u51fa\u767c\uff1f\n"
-        f"\u4f8b\u5982\uff1a\u300c6/15-6/22\u300d\u6216\u300c6\u6708\u300d",
+        f"[2/8] 日期\n\n"
+        f"目的地：{city}\n\n"
+        f"你預計什麼時候出發？\n"
+        f"例如：「6/15-6/22」或「6月」",
         "quickReply": {
             "items": [
-                {"type": "action", "action": {"type": "message", "label": "\u5f48\u6027\u65e5\u671f", "text": "\u5f48\u6027"}},
-                {"type": "action", "action": {"type": "message", "label": "\u4e0b\u500b\u6708", "text": "\u4e0b\u500b\u6708"}},
+                {"type": "action", "action": {"type": "message", "label": "彈性日期", "text": "彈性"}},
+                {"type": "action", "action": {"type": "message", "label": "下個月", "text": "下個月"}},
             ],
         },
     }]
