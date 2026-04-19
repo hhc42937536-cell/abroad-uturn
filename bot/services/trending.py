@@ -101,7 +101,7 @@ def scrape_kpopmap_events(limit: int = 15) -> list:
 
 # ─── Olive Young 韓國美妝排行 ────────────────────────
 
-def scrape_oliveyoung_ranking(limit: int = 10) -> list:
+def scrape_oliveyoung_ranking(limit: int = 10, cache_only: bool = False) -> list:
     """爬 Olive Young Best Ranking"""
     cache_key = "trending:oliveyoung_ranking"
     cached = redis_get(cache_key)
@@ -110,6 +110,8 @@ def scrape_oliveyoung_ranking(limit: int = 10) -> list:
             return json.loads(cached)
         except (json.JSONDecodeError, TypeError):
             pass
+    if cache_only:
+        return []
 
     items = []
     # Olive Young 全球版（有英文介面）
@@ -150,7 +152,7 @@ def scrape_oliveyoung_ranking(limit: int = 10) -> list:
 
 # ─── Cosme 日本美妝排行 ──────────────────────────────
 
-def scrape_cosme_ranking(limit: int = 10) -> list:
+def scrape_cosme_ranking(limit: int = 10, cache_only: bool = False) -> list:
     """爬 @cosme 日本美妝排行榜"""
     cache_key = "trending:cosme_ranking"
     cached = redis_get(cache_key)
@@ -159,6 +161,8 @@ def scrape_cosme_ranking(limit: int = 10) -> list:
             return json.loads(cached)
         except (json.JSONDecodeError, TypeError):
             pass
+    if cache_only:
+        return []
 
     items = []
     url = "https://www.cosme.net/ranking/"
@@ -192,7 +196,7 @@ def scrape_cosme_ranking(limit: int = 10) -> list:
 
 # ─── Dcard 旅遊版熱門貼文 ────────────────────────────
 
-def scrape_dcard_travel(category: str = "travel", limit: int = 10) -> list:
+def scrape_dcard_travel(category: str = "travel", limit: int = 10, cache_only: bool = False) -> list:
     """
     爬 Dcard 看板熱門貼文
     category: "travel"（旅遊）/ "japan_travel" / "korea_travel" / "makeup"
@@ -204,6 +208,8 @@ def scrape_dcard_travel(category: str = "travel", limit: int = 10) -> list:
             return json.loads(cached)
         except (json.JSONDecodeError, TypeError):
             pass
+    if cache_only:
+        return []
 
     items = []
     # Dcard 有公開 API
@@ -243,7 +249,7 @@ def scrape_dcard_travel(category: str = "travel", limit: int = 10) -> list:
 
 # ─── Bic Camera 日本家電排行 ─────────────────────────
 
-def scrape_bic_camera_ranking(category: str = "beauty", limit: int = 10) -> list:
+def scrape_bic_camera_ranking(category: str = "beauty", limit: int = 10, cache_only: bool = False) -> list:
     """爬 Bic Camera 熱銷排行"""
     cache_key = f"trending:bic_camera:{category}"
     cached = redis_get(cache_key)
@@ -252,6 +258,8 @@ def scrape_bic_camera_ranking(category: str = "beauty", limit: int = 10) -> list
             return json.loads(cached)
         except (json.JSONDecodeError, TypeError):
             pass
+    if cache_only:
+        return []
 
     items = []
     category_map = {
@@ -290,26 +298,26 @@ def scrape_bic_camera_ranking(category: str = "beauty", limit: int = 10) -> list
 
 # ─── 統一接口 ────────────────────────────────────────
 
-def get_trending_souvenirs(country_code: str) -> dict:
+def get_trending_souvenirs(country_code: str, cache_only: bool = False) -> dict:
     """取得指定國家的熱門伴手禮資料（整合多個來源）"""
     result = {"country": country_code, "sources": []}
 
     if country_code == "KR":
-        oy = scrape_oliveyoung_ranking()
+        oy = scrape_oliveyoung_ranking(cache_only=cache_only)
         if oy:
             result["sources"].append({"name": "Olive Young 排行", "items": oy})
-        dc = scrape_dcard_travel("korea_travel")
+        dc = scrape_dcard_travel("korea_travel", cache_only=cache_only)
         if dc:
             result["sources"].append({"name": "Dcard 韓國旅遊熱門", "items": dc})
 
     elif country_code == "JP":
-        cm = scrape_cosme_ranking()
+        cm = scrape_cosme_ranking(cache_only=cache_only)
         if cm:
             result["sources"].append({"name": "@cosme 排行", "items": cm})
-        bc = scrape_bic_camera_ranking("beauty")
+        bc = scrape_bic_camera_ranking("beauty", cache_only=cache_only)
         if bc:
             result["sources"].append({"name": "Bic Camera 美容家電", "items": bc})
-        dc = scrape_dcard_travel("japan_travel")
+        dc = scrape_dcard_travel("japan_travel", cache_only=cache_only)
         if dc:
             result["sources"].append({"name": "Dcard 日本旅遊熱門", "items": dc})
 
@@ -339,7 +347,7 @@ _KKDAY_COUNTRY = {
 }
 
 
-def scrape_kkday_hot(country_code: str, limit: int = 6) -> list:
+def scrape_kkday_hot(country_code: str, limit: int = 6, cache_only: bool = False) -> list:
     """爬 KKday 指定國家熱門活動"""
     cc = _KKDAY_COUNTRY.get(country_code.upper())
     if not cc:
@@ -352,6 +360,8 @@ def scrape_kkday_hot(country_code: str, limit: int = 6) -> list:
             return json.loads(cached)
         except Exception:
             pass
+    if cache_only:
+        return []
 
     url = f"https://www.kkday.com/zh-tw/country/{cc}"
     html = _fetch(url, timeout=15)

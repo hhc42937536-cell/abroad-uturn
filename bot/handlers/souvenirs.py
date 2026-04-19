@@ -170,10 +170,10 @@ def _show_souvenirs(country_code: str) -> list:
             },
         })
 
-    # Bubble 4: KKday/Klook 即時熱門活動
+    # Bubble 4: KKday/Klook 即時熱門活動（只用快取，避免 Vercel 超時）
     try:
         from bot.services.trending import scrape_kkday_hot, scrape_klook_hot
-        kkday_items = scrape_kkday_hot(country_code)
+        kkday_items = scrape_kkday_hot(country_code, cache_only=True)
         if kkday_items:
             lines = [f"{i+1}. {it['title'][:35]}" + (f"\n   💰{it['price']}" if it.get('price') else "")
                      for i, it in enumerate(kkday_items[:6])]
@@ -203,7 +203,7 @@ def _show_souvenirs(country_code: str) -> list:
     # Bubble 5: 即時美妝/商品排行（Cosme/OliveYoung 爬蟲）
     try:
         from bot.services.trending import get_trending_souvenirs
-        trending = get_trending_souvenirs(country_code)
+        trending = get_trending_souvenirs(country_code, cache_only=True)
         for source in trending.get("sources", [])[:1]:
             source_name = source.get("name", "")
             items = source.get("items", [])
@@ -344,7 +344,7 @@ def _show_trending_discovery() -> list:
         kkday_preview = []
         try:
             from bot.services.trending import scrape_kkday_hot
-            items = scrape_kkday_hot(code, limit=2)
+            items = scrape_kkday_hot(code, limit=2, cache_only=True)
             if items:
                 body_items.append({"type": "separator", "margin": "sm"})
                 body_items.append({
