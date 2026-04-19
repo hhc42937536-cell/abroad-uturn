@@ -42,9 +42,11 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("\u958b\u59cb\u898f\u5283", "\u5b8c\u6574\u51fa\u570b\u898f\u5283", "\u898f\u5283\u65c5\u7a0b"):
         return trip_flow.start(user_id)
 
+    _PLAN_SIGNALS = ("規劃", "幫我", "行程", "旅行", "安排")
     if any(kw in text for kw in ("\u73fe\u5728\u6700夯", "\u6700夯", "\u4f34\u624b\u79ae", "\u5fc5\u8cb7", "\u71b1\u9580\u73a9\u6cd5")):
-        from bot.handlers.souvenirs import handle_souvenirs
-        return handle_souvenirs(text, user_id)
+        if not any(pk in text for pk in _PLAN_SIGNALS):
+            from bot.handlers.souvenirs import handle_souvenirs
+            return handle_souvenirs(text, user_id)
 
     if "\u8ffd\u661f" in text:
         from bot.handlers.idol_trip import handle_idol_trip
@@ -196,7 +198,8 @@ def route_text(text: str, user_id: str) -> list:
     # ── 現在最夯 / 伴手禮（格6）──
     from bot.handlers.souvenirs import handle_souvenirs
     if any(kw in text for kw in ("現在最夯", "最夯", "伴手禮", "必買", "名產", "熱門玩法")):
-        return handle_souvenirs(text, user_id)
+        if not any(pk in text for pk in ("規劃", "幫我", "行程", "旅行", "安排")):
+            return handle_souvenirs(text, user_id)
 
     # ── 追星（格7）──
     from bot.handlers.idol_trip import handle_idol_trip
