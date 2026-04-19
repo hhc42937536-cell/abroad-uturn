@@ -42,7 +42,7 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("\u958b\u59cb\u898f\u5283", "\u5b8c\u6574\u51fa\u570b\u898f\u5283", "\u898f\u5283\u65c5\u7a0b"):
         return trip_flow.start(user_id)
 
-    if any(kw in text for kw in ("\u73fe\u5728\u6700\u5938", "\u6700\u5938", "\u4f34\u624b\u79ae", "\u5fc5\u8cb7", "\u71b1\u9580\u73a9\u6cd5")):
+    if any(kw in text for kw in ("\u73fe\u5728\u6700夯", "\u6700夯", "\u4f34\u624b\u79ae", "\u5fc5\u8cb7", "\u71b1\u9580\u73a9\u6cd5")):
         from bot.handlers.souvenirs import handle_souvenirs
         return handle_souvenirs(text, user_id)
 
