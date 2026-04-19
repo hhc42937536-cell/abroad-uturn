@@ -66,6 +66,27 @@ def start(user_id: str) -> list:
     ]
 
 
+def start_with_flight(user_id: str, dest_code: str, depart: str, ret: str) -> list:
+    """從機票卡片直接進規劃：跳過目的地+日期，直接到步驟3（人數）"""
+    from bot.constants.cities import IATA_TO_NAME, IATA_TO_COUNTRY
+    origin = get_user_origin(user_id)
+    start_session(user_id, origin)
+    city_name = IATA_TO_NAME.get(dest_code, dest_code)
+    country_code = IATA_TO_COUNTRY.get(dest_code, "")
+    update_session(user_id, {
+        "destination_code": dest_code,
+        "destination_name": city_name,
+        "country_code": country_code,
+        "flexibility": "specific",
+        "depart_date": depart,
+        "return_date": ret,
+    }, step=3)
+    return [{
+        "type": "text",
+        "text": f"✅ 目的地：{city_name}\n✅ 日期：{depart[5:].replace('-','/')} → {ret[5:].replace('-','/') if ret else '單程'}\n\n直接跳到步驟 3，幾個人出發？",
+    }] + _prompt_travelers(user_id)
+
+
 def start_with_destination(user_id: str, text: str) -> list:
     """從智慧偵測直接啟動規劃，跳過歡迎頁，直接到步驟 1（確認目的地）"""
     origin = get_user_origin(user_id)

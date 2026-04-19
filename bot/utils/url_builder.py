@@ -10,31 +10,31 @@ _EXPLORE_TFS_TW = (
 )
 
 
+def _iso_to_ymd(date_str: str) -> str:
+    """從 ISO 8601 字串（含時區）取 YYYY-MM-DD"""
+    return date_str[:10] if date_str else ""
+
+
 def skyscanner_url(origin: str, dest: str, depart: str, ret: str = "") -> str:
-    dep_d = depart.replace("-", "")[:8] if len(depart) >= 8 else ""
+    dep_d = _iso_to_ymd(depart).replace("-", "")
     base = f"https://www.skyscanner.com.tw/transport/flights/{origin.upper()}/{dest.upper()}"
     if dep_d:
         base += f"/{dep_d}"
-        if ret:
-            base += f"/{ret.replace('-', '')[:8]}"
+        ret_d = _iso_to_ymd(ret).replace("-", "")
+        if ret_d:
+            base += f"/{ret_d}"
     base += "/?adultsv2=1&cabinclass=economy&currency=TWD&locale=zh-TW"
     return base
 
 
 def google_flights_url(origin: str, dest: str, depart: str, ret: str = "") -> str:
-    """Google Flights 特定航線連結（城市名搜尋，相容性最佳）"""
-    try:
-        from bot.constants.cities import IATA_TO_NAME
-        dest_city = IATA_TO_NAME.get(dest, dest)
-    except Exception:
-        dest_city = dest
-    q = f"flights from {origin} to {dest_city}"
-    if depart:
-        q += f" on {depart}"
-    if ret:
-        q += f" return {ret}"
-    params = urllib.parse.urlencode({"q": q, "hl": "zh-TW", "curr": "TWD"})
-    return f"https://www.google.com/travel/flights?{params}"
+    """Google Flights 直接航線連結（IATA code，避免中文城市名跑掉）"""
+    dep_d = _iso_to_ymd(depart)
+    ret_d = _iso_to_ymd(ret)
+    flt = f"{origin.upper()}.{dest.upper()}.{dep_d}"
+    if ret_d:
+        flt += f"*{dest.upper()}.{origin.upper()}.{ret_d}"
+    return f"https://www.google.com/flights#flt={flt};c:TWD;e:1;sd:1;t:f"
 
 
 def google_explore_url(origin: str = "TPE") -> str:

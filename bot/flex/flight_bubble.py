@@ -45,10 +45,10 @@ def flight_bubble(
 
     date_display = ""
     if depart:
-        d = depart[5:].replace("-", "/") if len(depart) >= 10 else depart
+        d = depart[5:10].replace("-", "/")  # "2026-12-01T..." → "12/01"
         date_display = f"\U0001f4c5 {d}"
         if ret:
-            r = ret[5:].replace("-", "/") if len(ret) >= 10 else ret
+            r = ret[5:10].replace("-", "/")
             date_display += f" \u2192 {r}"
 
     body_contents = [
@@ -117,7 +117,7 @@ def flight_bubble(
     #     footer_contents.append({...})
     footer_contents.append({
         "type": "button", "style": "primary", "color": "#E91E63", "height": "sm",
-        "action": {"type": "message", "label": "🚀 立刻規劃行程", "text": f"規劃行程 {dest}"},
+        "action": {"type": "message", "label": "🚀 立刻規劃行程", "text": f"規劃行程|{dest}|{depart[:10]}|{ret[:10] if ret else ''}"},
     })
 
     return {
