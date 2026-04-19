@@ -297,11 +297,24 @@ def _parse_hints_from_text(text: str) -> dict:
         if val and 1 <= val <= 20:
             hints["adults"] = val
 
+    # 活動錨點偵測（演唱會/奧運/見面會等） → 改變 Step 2 問法
+    _EVENT_KEYWORDS = (
+        "演唱會", "見面會", "fan meeting", "fanmeet", "concert",
+        "奧運", "世界盃", "博覽會", "EXPO", "expo", "展覽", "比賽",
+        "世錦賽", "亞運", "世大運", "嘉年華",
+    )
+    if any(kw in text for kw in _EVENT_KEYWORDS):
+        hints["is_event_trip"] = True
+
     # 行程風格關鍵字 → 預填 custom_requests
     _STYLE_HINTS = [
         (("最夯", "熱門玩法", "夯玩法"), "請加入當地最熱門玩法、打卡景點與特色體驗"),
-        (("追星", "K-POP", "KPOP", "kpop", "演唱會", "見面會", "fan meeting", "fanmeet"),
-         "追星行程：請安排演唱會/見面會場地附近景點、偶像相關聖地"),
+        (("演唱會", "見面會", "fan meeting", "fanmeet", "concert",
+          "追星", "K-POP", "KPOP", "kpop"),
+         None),   # 活動行程的 custom_requests 在偵測到 event_date 後動態生成
+        (("奧運", "世界盃", "博覽會", "EXPO", "expo", "展覽", "比賽",
+          "世錦賽", "亞運", "世大運"),
+         None),   # 同上
         (("美食", "必吃", "吃吃喝喝"), "美食為主：請以必吃餐廳和在地小吃為行程重點"),
         (("購物", "掃貨", "逛街"), "購物為主：請安排購物中心、藥妝、免稅店"),
         (("自然", "健行", "爬山"), "親近自然：請安排山岳健行、自然風景景點"),
@@ -311,20 +324,28 @@ def _parse_hints_from_text(text: str) -> dict:
     ]
     for kws, hint_text in _STYLE_HINTS:
         if any(kw in text for kw in kws):
-            hints["custom_requests"] = hint_text
+            if hint_text:
+                hints["custom_requests"] = hint_text
             break
 
-    # 日期 → 預填 depart_date / return_date，讓 Step 2 可跳過
+    # 日期 → 預填，活動行程把解析到的日期存為 event_date（錨點）
     from bot.utils.date_parser import parse_date_range, parse_month
     depart, ret = parse_date_range(text)
     if depart:
-        hints["depart_date"] = depart
-        if ret:
-            hints["return_date"] = ret
-            hints["flexibility"] = "specific"
+        if hints.get("is_event_trip"):
+            hints["event_date"] = depart
+            # custom_requests 帶入活動日期資訊
+            event_kw = next((kw for kw in _EVENT_KEYWORDS if kw in text), "活動")
+            hints["custom_requests"] = (
+                f"行程核心是 {depart} 的{event_kw}，"
+                f"請以當天場館周邊安排活動日行程，其餘天自由探索城市"
+            )
         else:
+            hints["depart_date"] = depart
+            if ret:
+                hints["return_date"] = ret
             hints["flexibility"] = "specific"
-    elif not depart:
+    else:
         month = parse_month(text)
         if month:
             hints["depart_date"] = month
@@ -365,14 +386,30 @@ def _step1_destination(user_id: str, text: str) -> list:
     if llm_code:
         city_name = IATA_TO_NAME.get(llm_code, llm_code)
         flag = CITY_FLAG.get(llm_code, "🌍")
-        # 存入 session 但標記為「待確認」
+        is_event = hints.get("is_event_trip", False)
         update_session(user_id, {
             "destination_code": llm_code,
             "destination_name": city_name,
             "country_code": IATA_TO_COUNTRY.get(llm_code, ""),
-            "dest_needs_confirm": True,
             **hints,
         }, step=2)
+        if is_event:
+            event_kw = next(
+                (kw for kw in ("演唱會", "見面會", "奧運", "比賽", "博覽會", "展覽")
+                 if kw in text), "活動"
+            )
+            return [{
+                "type": "text",
+                "text": f"{event_kw}在哪個城市/場館呢？\n\n"
+                        f"我猜可能是 {flag} {city_name}，對嗎？\n\n"
+                        f"（不同城市場館差很多，請確認一下）",
+                "quickReply": {"items": [
+                    {"type": "action", "action": {"type": "message",
+                        "label": f"✅ 對，在{city_name}", "text": city_name}},
+                    {"type": "action", "action": {"type": "message",
+                        "label": "❌ 不對", "text": "推薦目的地"}},
+                ]},
+            }]
         return [{
             "type": "text",
             "text": f"我猜你要去的是 {flag} {city_name}，對嗎？\n\n"
@@ -443,10 +480,47 @@ def _after_destination_set(user_id: str, city_name: str, hints: dict) -> list:
 # ─── 步驟 2：日期 ────────────────────────────────────
 
 def _prompt_dates(user_id: str) -> list:
+    import datetime
     session = get_session(user_id) or {}
     city = session.get("destination_name", "")
     pre_depart = session.get("depart_date", "")
     pre_ret = session.get("return_date", "")
+    event_date = session.get("event_date", "")
+
+    # 活動錨點模式：問幾天前到、幾天後離開
+    if event_date:
+        try:
+            ed = datetime.date.fromisoformat(event_date)
+            ed_str = f"{ed.month}/{ed.day}"
+        except Exception:
+            ed_str = event_date
+        event_kw = session.get("custom_requests", "活動")[:6]
+
+        def _make_option(label: str, before: int, after: int) -> dict:
+            try:
+                dep = (ed - datetime.timedelta(days=before)).isoformat()
+                ret = (ed + datetime.timedelta(days=after)).isoformat()
+                return {"type": "action", "action": {"type": "message",
+                    "label": label, "text": f"{dep}-{ret}"}}
+            except Exception:
+                return {"type": "action", "action": {"type": "message",
+                    "label": label, "text": label}}
+
+        update_session(user_id, {}, step=3)
+        return [{
+            "type": "text",
+            "text": f"[2/8] 行程天數\n\n"
+                    f"📅 {event_kw[:10]} 日期：{ed_str}\n\n"
+                    f"你想幾天前抵達、活動後停留幾天？",
+            "quickReply": {"items": [
+                _make_option(f"前1天到 · 後1天離", 1, 1),
+                _make_option(f"前1天到 · 後2天離", 1, 2),
+                _make_option(f"前2天到 · 後1天離", 2, 1),
+                _make_option(f"前2天到 · 後2天離", 2, 2),
+                {"type": "action", "action": {"type": "message",
+                    "label": "自訂日期", "text": "自訂日期"}},
+            ]},
+        }]
 
     # 日期已從初始訊息預填 → 直接確認並跳到 Step 3
     if pre_depart:
