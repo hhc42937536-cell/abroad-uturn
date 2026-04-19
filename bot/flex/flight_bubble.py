@@ -3,7 +3,7 @@
 from bot.constants.cities import IATA_TO_NAME, CITY_FLAG
 from bot.constants.airlines import airline_name
 from bot.utils.date_parser import duration_str
-from bot.utils.url_builder import skyscanner_url, google_flights_url
+from bot.utils.url_builder import skyscanner_url, google_explore_url
 
 
 def flight_bubble(
@@ -95,9 +95,8 @@ def flight_bubble(
         })
 
     origin = flight.get("origin", "TPE")
-    link = flight.get("link", "")
     booking_url = skyscanner_url(origin, dest, depart, ret)
-    google_url = google_flights_url(origin, dest, depart, ret)
+    explore_url = google_explore_url(origin)
 
     footer_contents = [
         {
@@ -106,9 +105,9 @@ def flight_bubble(
             "action": {"type": "uri", "label": "\U0001f50d Skyscanner \u67e5\u7968", "uri": booking_url},
         },
         {
-            "type": "button", "style": "primary", "color": "#4285F4",
+            "type": "button", "style": "secondary",
             "height": "sm",
-            "action": {"type": "uri", "label": "\U0001f310 Google Flights \u6bd4\u50f9", "uri": google_url},
+            "action": {"type": "uri", "label": "\U0001f30f Google \u63a2\u7d22\u4ef7\u683c\u5730\u5716", "uri": explore_url},
         },
     ]
     # 追蹤功能暫停開放（每周一三五調整價格，推播額度控管中）
