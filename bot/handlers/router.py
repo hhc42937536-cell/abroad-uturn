@@ -34,52 +34,30 @@ def route_text(text: str, user_id: str) -> list:
         from bot.handlers.settings import handle_set_origin
         return handle_set_origin(user_id, text)
 
-    # ── Rich Menu 固定功能（永遠優先，不被 session 攔截）──
-    if text in ("\u8aaa\u8d70\u5c31\u8d70", "\u8aaa\u8d70\u5c31\u98db", "\u99ac\u4e0a\u98db", "\u5feb\u901f\u898f\u5283"):
+    # ── Rich Menu 精確按鈕（不進計分，保持即時回應）──
+    if text in ("說走就走", "說走就飛", "馬上飛", "快速規劃"):
         from bot.handlers.quick_trip import handle_quick_trip
         return handle_quick_trip(user_id, text)
 
-    if text in ("\u958b\u59cb\u898f\u5283", "\u5b8c\u6574\u51fa\u570b\u898f\u5283", "\u898f\u5283\u65c5\u7a0b"):
+    if text in ("開始規劃", "完整出國規劃", "規劃旅程"):
         return trip_flow.start(user_id)
 
-    _PLAN_SIGNALS = ("規劃", "幫我", "行程", "旅行", "安排")
-    if any(kw in text for kw in ("\u73fe\u5728\u6700夯", "\u6700夯", "\u4f34\u624b\u79ae", "\u5fc5\u8cb7", "\u71b1\u9580\u73a9\u6cd5")):
-        if not any(pk in text for pk in _PLAN_SIGNALS):
-            from bot.handlers.souvenirs import handle_souvenirs
-            return handle_souvenirs(text, user_id)
-
-    if "\u8ffd\u661f" in text:
-        from bot.handlers.idol_trip import handle_idol_trip
-        return handle_idol_trip(text, user_id)
-
-    if text in ("\u4ea4\u901a\u653b\u7565", "\u4ea4\u901a") or any(kw in text for kw in ("\u4ea4\u901a\u653b\u7565", "\u4ea4\u901a\u5361", "\u5730\u9435\u5361", "\u897f\u74dc\u5361", "\u516b\u9054\u901a", "T-money", "Suica", "EZ-Link", "Octopus", "\u5154\u5b50\u5361")):
-        from bot.handlers.transport import handle_transport
-        return handle_transport(text, user_id)
-
-    if text in ("\u6211\u7684\u65c5\u884c\u8a08\u756b", "\u6211\u7684\u8a08\u756b", "\u65c5\u884c\u8a08\u756b"):
-        from bot.handlers.my_plans import handle_my_plans
-        return handle_my_plans(user_id)
-
-    if text in ("\u4f4f\u5bbf", "\u4f4f\u5bbf\u63a8\u85a6") or ("\u4f4f\u5bbf" in text and len(text) <= 6):
-        from bot.handlers.hotels import handle_hotels
-        return handle_hotels(text, user_id)
-
-    if text in ("\u8a2d\u5b9a",):
+    if text == "設定":
         current = get_user_origin(user_id)
         name_map = {"TPE": "桃園國際", "TSA": "台北松山", "KHH": "高雄國際", "RMQ": "台中清泉崗", "TNN": "台南"}
         current_name = name_map.get(current, current)
         return [{
             "type": "flex",
-            "altText": "\u2699\ufe0f \u8a2d\u5b9a",
+            "altText": "⚙️ 設定",
             "contents": {
                 "type": "bubble", "size": "kilo",
                 "header": {
                     "type": "box", "layout": "vertical",
                     "backgroundColor": "#37474F", "paddingAll": "15px",
                     "contents": [
-                        {"type": "text", "text": "\u2699\ufe0f \u8a2d\u5b9a",
+                        {"type": "text", "text": "⚙️ 設定",
                          "color": "#FFFFFF", "weight": "bold", "size": "lg"},
-                        {"type": "text", "text": f"\u51fa\u767c\u5730\uff1a{current_name} ({current})",
+                        {"type": "text", "text": f"出發地：{current_name} ({current})",
                          "color": "#B0BEC5", "size": "sm"},
                     ],
                 },
@@ -88,16 +66,13 @@ def route_text(text: str, user_id: str) -> list:
                     "spacing": "sm", "paddingAll": "15px",
                     "contents": [
                         {"type": "button", "style": "primary", "color": "#FF6B35", "height": "sm",
-                         "action": {"type": "message", "label": "\u2708\ufe0f \u8b8a\u66f4\u51fa\u767c\u5730", "text": "\u51fa\u767c\u5730"}},
+                         "action": {"type": "message", "label": "✈️ 變更出發地", "text": "出發地"}},
                         {"type": "button", "style": "secondary", "height": "sm",
-                         "action": {"type": "message", "label": "\U0001f4d6 \u4f7f\u7528\u8aaa\u660e", "text": "\u4f7f\u7528\u8aaa\u660e"}},
+                         "action": {"type": "message", "label": "📖 使用說明", "text": "使用說明"}},
                     ],
                 },
             },
         }]
-
-    if text in ("\u4f7f\u7528\u8aaa\u660e", "\u8aaa\u660e", "\u4f7f\u7528\u6559\u5b78", "\u5e6b\u52a9", "help"):
-        return build_help_message()
 
     # ── 機票卡片「立刻規劃行程」帶目的地+日期直接進規劃（必須在 session 判斷前）──
     if text.startswith("規劃行程|"):
@@ -127,144 +102,116 @@ def route_text(text: str, user_id: str) -> list:
                 return trip_flow._prompt_budget_response(user_id, text)
             return trip_flow.handle_step(user_id, text, step)
 
-    # ── 3. 無 session → 進入規劃或獨立功能 ──
+    # ── 3. 精確指令（按鈕觸發，不進計分）──
     if text in ("開始規劃", "我要規劃旅行", "完整出國規劃", "規劃旅程", "旅行規劃"):
         return trip_flow.start(user_id)
 
-    # ── 含「規劃」且有目的地線索 → 直接啟動規劃 ──
-    if "規劃" in text and any(kw in text for kw in (
-        "行程", "旅程", "旅行", "出國", "天", "美國", "日本", "韓國",
-        "泰國", "歐洲", "英國", "法國", "澳洲", "加拿大", "東南亞",
-    )):
-        return trip_flow.start_with_destination(user_id, text)
-
-    # ── 說走就走（極速模式）──
-    if text in ("說走就走", "說走就飛", "馬上飛", "快速規劃"):
-        from bot.handlers.quick_trip import handle_quick_trip
-        return handle_quick_trip(user_id, text)
-
-    # ── 快速探索 ──
-    from bot.handlers.explore import (
-        handle_quick_explore, handle_explore, handle_compare,
-        handle_direct_flights, handle_transfer_cheapest,
-        handle_flexible_dates, handle_package, handle_popular_countries,
-    )
-    from bot.flex.month_picker import month_picker_flex
-
-    if text in ("便宜", "最便宜", "探索", "便宜國外探索"):
-        return handle_quick_explore(origin)
-
-    if text in ("探索最便宜", "便宜探索"):
-        from bot.handlers.explore import handle_explore_cheapest
-        return handle_explore_cheapest(origin)
+    if text in ("我的旅行計畫", "我的計畫", "旅行計畫"):
+        from bot.handlers.my_plans import handle_my_plans
+        return handle_my_plans(user_id)
 
     if text in ("選月份",):
+        from bot.flex.month_picker import month_picker_flex
         return month_picker_flex()
 
     if text.startswith("探索|"):
-        parts = text.split("|")
-        if len(parts) >= 2:
-            return handle_explore(parts[1], origin)
-
-    # ── 簽證速查（文字觸發，不在 Rich Menu）──
-    from bot.handlers.visa import handle_visa
-    if any(kw in text for kw in ("\u7c3d\u8b49", "\u9700\u8981\u7c3d\u8b49", "\u514d\u7c3d", "\u843d\u5730\u7c3d", "\u96fb\u5b50\u7c3d", "\u7c3d\u8b49\u67e5\u8a62", "\u7c3d\u8b49\u901f\u67e5")):
-        return handle_visa(text, user_id)
-
-    # ── 當地交通攻略（格4）──
-    from bot.handlers.transport import handle_transport
-    if text in ("\u4ea4\u901a\u653b\u7565", "\u4ea4\u901a") or any(kw in text for kw in ("\u4ea4\u901a\u653b\u7565", "\u4ea4\u901a\u5361", "\u5730\u9435\u5361", "\u767c\u5361", "\u897f\u74dc\u5361", "\u516b\u9054\u901a", "T-money", "Suica", "EZ-Link", "Octopus", "\u5154\u5b50\u5361")):
-        return handle_transport(text, user_id)
-
-    # ── 行前必知（格6，取代我的旅行計畫）──
-    if text in ("行前必知", "行前準備", "出發準備", "簽證匯率"):
-        from bot.handlers.pre_trip import handle_pre_trip_menu
-        return handle_pre_trip_menu()
+        from bot.handlers.explore import handle_explore
+        return handle_explore(text.split("|")[1], origin)
 
     if text.startswith("行前 ") or text.startswith("行前|"):
         from bot.handlers.pre_trip import handle_pre_trip_country
         return handle_pre_trip_country(text, user_id)
 
-    # ── 我的旅行計畫（保留文字觸發，Rich Menu 已移除）──
-    from bot.handlers.my_plans import handle_my_plans
-    if text in ("我的旅行計畫", "我的計畫", "旅行計畫"):
-        return handle_my_plans(user_id)
-
-    # ── 住宿推薦（格5）──
-    from bot.handlers.hotels import handle_hotels
-    if "住宿" in text or "飯店" in text:
-        return handle_hotels(text, user_id)
-
-    # ── 現在最夯 / 伴手禮（格6）──
-    from bot.handlers.souvenirs import handle_souvenirs
-    if any(kw in text for kw in ("現在最夯", "最夯", "伴手禮", "必買", "名產", "熱門玩法")):
-        if not any(pk in text for pk in ("規劃", "幫我", "行程", "旅行", "安排")):
-            return handle_souvenirs(text, user_id)
-
-    # ── 追星（格7）──
-    from bot.handlers.idol_trip import handle_idol_trip
-    if "追星" in text:
-        return handle_idol_trip(text, user_id)
-
-    # ── 價格追蹤 ──
-    from bot.handlers.tracking import handle_track, handle_cancel_track, handle_my_tracks
-
     if text.startswith("追蹤|"):
+        from bot.handlers.tracking import handle_track
         return handle_track(user_id, text)
 
     if text.startswith("取消追蹤"):
+        from bot.handlers.tracking import handle_cancel_track
         return handle_cancel_track(user_id, text)
 
-    if text in ("我的追蹤", "追蹤清單", "價格追蹤"):
+    # ── 4. 計分路由（自由文字）──
+    from bot.utils.intent import classify_intent
+    from bot.handlers.explore import (
+        handle_quick_explore, handle_compare, handle_direct_flights,
+        handle_transfer_cheapest, handle_flexible_dates, handle_package,
+        handle_popular_countries,
+    )
+    from bot.utils.date_parser import parse_destination, parse_date_range
+
+    intent = classify_intent(text)
+
+    if intent == "plan_trip":
+        dest = parse_destination(text)
+        if dest:
+            return trip_flow.start_with_destination(user_id, text)
+        return trip_flow.start(user_id)
+
+    if intent == "compare":
+        dest = parse_destination(text)
+        if dest:
+            return handle_compare(text, origin)
+        return handle_quick_explore(origin)
+
+    if intent == "explore":
+        if "直飛" in text:
+            return handle_direct_flights(origin)
+        if "轉機" in text:
+            return handle_transfer_cheapest(origin)
+        if "機加酒" in text:
+            return handle_package(text.replace("機加酒", "").strip(), origin)
+        if "熱門" in text:
+            return handle_popular_countries(origin)
+        if "彈性" in text:
+            return handle_flexible_dates(text.replace("彈性日期", "").replace("彈性", "").strip(), origin)
+        return handle_quick_explore(origin)
+
+    if intent == "visa":
+        from bot.handlers.visa import handle_visa
+        return handle_visa(text, user_id)
+
+    if intent == "transport":
+        from bot.handlers.transport import handle_transport
+        return handle_transport(text, user_id)
+
+    if intent == "hotel":
+        from bot.handlers.hotels import handle_hotels
+        return handle_hotels(text, user_id)
+
+    if intent == "souvenir":
+        from bot.handlers.souvenirs import handle_souvenirs
+        return handle_souvenirs(text, user_id)
+
+    if intent == "idol":
+        from bot.handlers.idol_trip import handle_idol_trip
+        return handle_idol_trip(text, user_id)
+
+    if intent == "pre_trip":
+        from bot.handlers.pre_trip import handle_pre_trip_menu, handle_pre_trip_country
+        dest = parse_destination(text)
+        if dest:
+            return handle_pre_trip_country(text, user_id)
+        return handle_pre_trip_menu()
+
+    if intent == "tracking":
+        from bot.handlers.tracking import handle_my_tracks
         return handle_my_tracks(user_id)
 
-    # ── 使用教學 ──
-    if text in ("使用教學", "使用說明", "幫助", "說明", "help"):
+    if intent == "help":
         return build_help_message()
 
-    # ── 智慧偵測：城市名 + 日期 → 自動比價 ──
-    from bot.utils.date_parser import parse_destination, parse_date_range
-    from bot.constants.cities import IATA_TO_NAME
-
+    # ── 5. unknown → 智慧偵測城市名 → 體驗關鍵字 → LLM fallback ──
     dest = parse_destination(text)
     if dest:
         depart, ret = parse_date_range(text)
         if depart:
             return handle_compare(text, origin)
-        else:
-            # 有目的地但無日期 → 直接啟動規劃 session，下一句就能接日期
-            return trip_flow.start_with_destination(user_id, text)
+        return trip_flow.start_with_destination(user_id, text)
 
-    # ── 旅行工具箱 ──
-    if text in ("旅行工具", "工具箱", "工具", "設定"):
-        return _build_toolbox()
-
-    # ── 彈性日期 ──
-    if "彈性日期" in text or text == "彈性":
-        return handle_flexible_dates(text.replace("彈性日期", "").replace("彈性", "").strip(), origin)
-
-    # ── 直飛 ──
-    if text in ("直飛", "直飛優先", "只要直飛"):
-        return handle_direct_flights(origin)
-
-    # ── 轉機最省 ──
-    if text in ("轉機", "轉機最省", "最省轉機"):
-        return handle_transfer_cheapest(origin)
-
-    # ── 機加酒 ──
-    if "機加酒" in text:
-        return handle_package(text.replace("機加酒", "").strip(), origin)
-
-    # ── 熱門國家 ──
-    if "熱門國家" in text or text in ("熱門", "熱門目的地", "國家"):
-        return handle_popular_countries(origin)
-
-    # ── 體驗關鍵字 → 直接推薦目的地（不需要 LLM）──
     experience = _match_experience(text)
     if experience:
         return experience
 
-    # ── Fallback：先用 LLM 理解意圖，失敗才給指令清單 ──
     return _llm_intent_fallback(text, user_id)
 
 
