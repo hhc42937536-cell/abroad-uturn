@@ -97,6 +97,15 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("\u4f7f\u7528\u8aaa\u660e", "\u8aaa\u660e", "\u4f7f\u7528\u6559\u5b78", "\u5e6b\u52a9", "help"):
         return build_help_message()
 
+    # ── 機票卡片「立刻規劃行程」帶目的地+日期直接進規劃（必須在 session 判斷前）──
+    if text.startswith("規劃行程|"):
+        parts = text.split("|")
+        dest_code = parts[1] if len(parts) > 1 else ""
+        depart = parts[2] if len(parts) > 2 else ""
+        ret = parts[3] if len(parts) > 3 else ""
+        if dest_code and depart:
+            return trip_flow.start_with_flight(user_id, dest_code, depart, ret)
+
     # ── 2. 檢查是否有進行中的規劃 session ──
     step = get_step(user_id)
     if step > 0:
@@ -126,15 +135,6 @@ def route_text(text: str, user_id: str) -> list:
         "泰國", "歐洲", "英國", "法國", "澳洲", "加拿大", "東南亞",
     )):
         return trip_flow.start_with_destination(user_id, text)
-
-    # ── 機票卡片「立刻規劃行程」帶目的地直接進規劃 ──
-    if text.startswith("規劃行程|"):
-        parts = text.split("|")
-        dest_code = parts[1] if len(parts) > 1 else ""
-        depart = parts[2] if len(parts) > 2 else ""
-        ret = parts[3] if len(parts) > 3 else ""
-        if dest_code and depart:
-            return trip_flow.start_with_flight(user_id, dest_code, depart, ret)
 
     # ── 說走就走（極速模式）──
     if text in ("說走就走", "說走就飛", "馬上飛", "快速規劃"):
