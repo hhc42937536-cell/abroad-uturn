@@ -4,13 +4,16 @@ STEP_LABELS = [
     "目的地", "日期", "人數", "機票", "住宿", "行程", "須知", "計畫書"
 ]
 
+# 進度條格子太窄，只顯示單字
+_BAR_LABELS = ["目", "日", "人", "機", "住", "行", "須", "計"]
+
 
 def build_progress_bar(current_step: int) -> dict:
     """
     建立步驟進度條 Flex Message（步驟 1-8，current_step 為 1-based）
     """
     segments = []
-    for i, label in enumerate(STEP_LABELS):
+    for i, label in enumerate(_BAR_LABELS):
         step_num = i + 1
         if step_num < current_step:
             # 已完成

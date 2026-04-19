@@ -8,7 +8,6 @@ from bot.session.manager import (
     clear_session, start_session,
 )
 from bot.handlers.settings import get_user_origin
-from bot.flex.progress_bar import progress_text
 
 
 def start(user_id: str) -> list:
@@ -152,7 +151,7 @@ def handle_step(user_id: str, text: str, step: int) -> list:
     if handler:
         return handler(user_id, text)
 
-    return [{"type": "text", "text": f"{progress_text(step)}\n\n請繼續輸入資料，或輸入「取消規劃」中止。"}]
+    return [{"type": "text", "text": "請繼續輸入資料，或輸入「取消規劃」中止。"}]
 
 
 def handle_postback(user_id: str, data: str) -> list:
@@ -846,7 +845,6 @@ def _prompt_flights(user_id: str) -> list:
     from bot.services.travelpayouts import search_flights, search_cheapest_by_month
     from bot.utils.url_builder import skyscanner_url, google_flights_url
     from bot.flex.flight_bubble import flight_bubble
-    from bot.flex.progress_bar import build_progress_bar
 
     session = get_session(user_id) or {}
     origin = session.get("origin", "TPE")
@@ -997,7 +995,6 @@ def _prompt_hotels(user_id: str) -> list:
     """根據目的地和日期產生多平台飯店連結"""
     from bot.constants.cities import IATA_TO_NAME, AGODA_CITY_KEYWORDS
     from bot.utils.url_builder import agoda_url, booking_url
-    from bot.flex.progress_bar import build_progress_bar
     from bot.handlers.hotels import _get_estimate
 
     session = get_session(user_id) or {}
@@ -1025,9 +1022,8 @@ def _prompt_hotels(user_id: str) -> list:
                     "type": "box", "layout": "vertical",
                     "backgroundColor": "#E91E8C", "paddingAll": "15px",
                     "contents": [
-                        build_progress_bar(5),
                         {"type": "text", "text": f"\U0001f3e8 {city_name} \u4f4f\u5bbf\u63a8\u85a6",
-                         "color": "#FFFFFF", "weight": "bold", "size": "lg", "margin": "md"},
+                         "color": "#FFFFFF", "weight": "bold", "size": "lg"},
                         {"type": "text", "text": f"\U0001f4c5 {date_display}",
                          "color": "#FFE0CC", "size": "sm", "margin": "xs"},
                     ],
@@ -1181,7 +1177,6 @@ def _prompt_travel_info(user_id: str) -> list:
     from bot.services.weather_api import get_weather
     from bot.services.exchange_api import get_exchange_rate
     from bot.constants.countries import COUNTRY_CURRENCY, COUNTRY_NAME
-    from bot.flex.progress_bar import build_progress_bar
     from bot.services.policy_checker import get_live_advisory
 
     session = get_session(user_id) or {}
@@ -1402,7 +1397,6 @@ def _prompt_summary(user_id: str) -> list:
     from bot.services.travel_data import get_visa_info, get_customs_info, get_cultural_notes
     from bot.services.weather_api import get_weather
     from bot.services.exchange_api import get_exchange_rate
-    from bot.flex.progress_bar import build_progress_bar
     from bot.utils.url_builder import skyscanner_url, google_flights_url, agoda_url, booking_url
 
     session = get_session(user_id) or {}
@@ -1585,9 +1579,8 @@ def _prompt_summary(user_id: str) -> list:
                     "type": "box", "layout": "vertical",
                     "backgroundColor": "#FF6B35", "paddingAll": "18px",
                     "contents": [
-                        build_progress_bar(8),
                         {"type": "text", "text": f"\U0001f389 \u4f60\u7684\u51fa\u570b\u8a08\u756b\u5b8c\u6210\uff01",
-                         "color": "#FFFFFF", "weight": "bold", "size": "xl", "margin": "md"},
+                         "color": "#FFFFFF", "weight": "bold", "size": "xl"},
                         {"type": "text", "text": f"{flag} {city} {days_text}",
                          "color": "#FFE0CC", "size": "md", "margin": "xs"},
                     ],

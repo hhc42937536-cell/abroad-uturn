@@ -1,8 +1,5 @@
 """各步驟的 Flex Message 模板"""
 
-from bot.flex.progress_bar import build_progress_bar
-
-
 def step_bubble(step: int, title: str, body_contents: list,
                 footer_contents: list = None, header_color: str = "#FF6B35") -> dict:
     """通用步驟卡片模板"""
@@ -14,11 +11,9 @@ def step_bubble(step: int, title: str, body_contents: list,
             "backgroundColor": header_color,
             "paddingAll": "15px",
             "contents": [
-                build_progress_bar(step),
                 {
                     "type": "text", "text": title,
                     "color": "#FFFFFF", "weight": "bold", "size": "lg",
-                    "margin": "md",
                 },
             ],
         },
