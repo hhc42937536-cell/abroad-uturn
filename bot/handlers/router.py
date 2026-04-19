@@ -142,10 +142,7 @@ def route_text(text: str, user_id: str) -> list:
     intent = classify_intent(text)
 
     if intent == "plan_trip":
-        dest = parse_destination(text)
-        if dest:
-            return trip_flow.start_with_destination(user_id, text)
-        return trip_flow.start(user_id)
+        return trip_flow.start_smart(user_id, text)
 
     if intent == "compare":
         dest = parse_destination(text)

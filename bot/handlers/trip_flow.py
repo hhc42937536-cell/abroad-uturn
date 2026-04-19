@@ -87,6 +87,99 @@ def start_with_flight(user_id: str, dest_code: str, depart: str, ret: str) -> li
     }] + _prompt_travelers(user_id)
 
 
+# ── 情境化提示：(IATA碼, 風格關鍵字) → 顧問式追問 ──────────────────────────
+_DEST_STYLE_TIPS: dict[tuple[str, str], str] = {
+    ("CTS", "滑雪"): "Niseko 適合中高手，富良野適合初學者，你是哪種程度？",
+    ("TYO", "購物"): "新宿、原宿、銀座各有特色，你偏哪一類？",
+    ("OSA", "美食"): "大阪「天下の台所」，道頓堀、黑門市場都是必訪！",
+    ("SEL", "追星"): "SM、YG、HYBE 聖地都在首爾，你追哪個組合？",
+    ("BKK", "美食"): "曼谷街頭美食和米其林餐廳都超值，你傾向哪種？",
+    ("DPS", "自然"): "峇里島梯田、火山、海灘，你最想體驗哪個？",
+    ("SIN", "美食"): "獅城美食文化超多元，老巴剎夜市、麥士威熟食中心你知道嗎？",
+    ("HKG", "購物"): "銅鑼灣、旺角、尖沙咀各有風格，你想逛哪一帶？",
+    ("NRT", "滑雪"): "關東滑雪推薦草津、尾瀨岩鞍，你是初學還是進階？",
+}
+
+_STYLE_DETECT: list[tuple[str, str]] = [
+    ("滑雪", "滑雪"), ("雪場", "滑雪"),
+    ("購物", "購物"), ("掃貨", "購物"), ("逛街", "購物"),
+    ("美食", "美食"), ("必吃", "美食"), ("吃吃喝喝", "美食"),
+    ("追星", "追星"), ("演唱會", "追星"), ("見面會", "追星"),
+    ("自然", "自然"), ("健行", "自然"), ("爬山", "自然"),
+    ("親子", "親子"), ("小孩", "親子"),
+    ("蜜月", "蜜月"), ("情侶", "蜜月"),
+]
+
+
+def _smart_greeting(dest_code: str, city_name: str, flag: str,
+                    text: str, hints: dict) -> str:
+    """生成情境化開場白，聽起來像旅行顧問而非制式系統。"""
+    style = next((st for kw, st in _STYLE_DETECT if kw in text), "")
+    tip = _DEST_STYLE_TIPS.get((dest_code, style))
+    if tip:
+        return f"{flag} {city_name}{style}行程！{tip}"
+
+    depart = hints.get("depart_date", "")
+    month_hint = ""
+    if depart and len(depart) >= 7:
+        try:
+            month_hint = f"{int(depart[5:7])}月"
+        except Exception:
+            pass
+
+    if style:
+        return f"{flag} {city_name}{month_hint}，{style}好選擇！"
+    return f"{flag} {city_name}{month_hint}，好選擇！"
+
+
+def start_smart(user_id: str, text: str) -> list:
+    """智慧快速啟動：解析文字中所有已知資訊，跳過已知步驟，情境化問缺口。"""
+    from bot.utils.date_parser import parse_destination_keyword, parse_destination
+    from bot.constants.cities import IATA_TO_NAME, IATA_TO_COUNTRY, CITY_FLAG
+
+    origin = get_user_origin(user_id)
+    start_session(user_id, origin)
+    hints = _parse_hints_from_text(text)
+
+    _HINT_KEYS = {"budget", "adults", "depart_date", "return_date",
+                  "flexibility", "custom_requests", "event_date", "is_event_trip"}
+
+    dest_code = parse_destination_keyword(text)
+    if not dest_code:
+        # LLM 猜測失敗也走 step 1，但帶上已解析的 hints
+        llm_code = parse_destination(text)
+        if hints:
+            update_session(user_id, {k: v for k, v in hints.items() if k in _HINT_KEYS})
+        if llm_code:
+            hints["_llm_dest"] = llm_code
+        return _step1_destination(user_id, text)
+
+    city_name = IATA_TO_NAME.get(dest_code, dest_code)
+    country_code = IATA_TO_COUNTRY.get(dest_code, "")
+    flag = CITY_FLAG.get(dest_code, "")
+
+    session_data = {
+        "destination_code": dest_code,
+        "destination_name": city_name,
+        "country_code": country_code,
+        **{k: v for k, v in hints.items() if k in _HINT_KEYS},
+    }
+
+    greeting = _smart_greeting(dest_code, city_name, flag, text, hints)
+    has_date = bool(hints.get("depart_date"))
+    has_travelers = "adults" in hints
+
+    if has_date and has_travelers:
+        update_session(user_id, session_data, step=4)
+        return [{"type": "text", "text": f"{greeting}\n\n✅ 目的地、日期、人數都記下了，幫你找機票！"}] + _prompt_flights(user_id)
+    elif has_date:
+        update_session(user_id, session_data, step=3)
+        return [{"type": "text", "text": greeting}] + _prompt_travelers(user_id)
+    else:
+        update_session(user_id, session_data, step=2)
+        return [{"type": "text", "text": greeting}] + _prompt_dates(user_id)
+
+
 def start_with_destination(user_id: str, text: str) -> list:
     """從智慧偵測直接啟動規劃，跳過歡迎頁，直接到步驟 1（確認目的地）"""
     origin = get_user_origin(user_id)
