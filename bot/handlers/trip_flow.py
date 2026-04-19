@@ -80,6 +80,7 @@ def start_with_flight(user_id: str, dest_code: str, depart: str, ret: str) -> li
         "flexibility": "specific",
         "depart_date": depart,
         "return_date": ret,
+        "flight_confirmed": True,  # 已從機票卡片選定，跳過 step 4
     }, step=3)
     return [{
         "type": "text",
@@ -556,12 +557,24 @@ def _prompt_budget_response(user_id: str, text: str) -> list:
         else:
             budget = 100000
 
-    update_session(user_id, {"budget": budget}, step=4)
+    session = get_session(user_id) or {}
+    flight_confirmed = session.get("flight_confirmed", False)
+    update_session(user_id, {"budget": budget}, step=5 if flight_confirmed else 4)
 
     # 預算合理性檢查
     warning = _check_budget_warning(user_id, budget)
     if warning:
         return [warning]   # 先給警告，等用戶確認後繼續
+
+    # 已從機票卡片選定航班 → 跳過機票搜尋，直接安排住宿
+    if flight_confirmed:
+        session = get_session(user_id) or {}
+        dest = session.get("destination_name", "")
+        depart = session.get("depart_date", "")
+        ret = session.get("return_date", "")
+        return [{"type": "text", "text":
+            f"✅ 機票已選定（{depart[5:10].replace('-','/')} → {ret[5:10].replace('-','/') if ret else '單程'}）\n\n接下來幫你安排住宿和行程！"}
+        ] + _prompt_hotels(user_id)
 
     return _prompt_flights(user_id)
 
