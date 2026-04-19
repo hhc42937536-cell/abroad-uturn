@@ -334,44 +334,91 @@ def _parse_hints_from_text(text: str) -> dict:
 
 
 def _step1_destination(user_id: str, text: str) -> list:
-    from bot.utils.date_parser import parse_destination
-    from bot.constants.cities import IATA_TO_NAME, IATA_TO_COUNTRY
+    from bot.utils.date_parser import parse_destination_keyword, parse_destination
+    from bot.constants.cities import IATA_TO_NAME, IATA_TO_COUNTRY, CITY_FLAG
 
-    if text in ("\u63a8\u85a6\u76ee\u7684\u5730", "\u5e6b\u6211\u63a8\u85a6"):
+    if text in ("推薦目的地", "幫我推薦"):
         from bot.handlers.explore import handle_quick_explore
         session = get_session(user_id)
         origin = session.get("origin", "TPE") if session else "TPE"
         return handle_quick_explore(origin) + [
-            {"type": "text", "text": "\u770b\u5230\u559c\u6b61\u7684\u76ee\u7684\u5730\u4e86\u55ce\uff1f\u8acb\u76f4\u63a5\u8f38\u5165\u57ce\u5e02\u540d\u5373\u53ef\u7e7c\u7e8c\u898f\u5283\uff01"}
+            {"type": "text", "text": "看到喜歡的目的地了嗎？請直接輸入城市名即可繼續規劃！"}
         ]
 
-    dest_code = parse_destination(text)
-    if not dest_code:
-        print(f"[dest_unknown] text={repr(text[:60])}")
+    hints = _parse_hints_from_text(text)
+
+    # ── 先用關鍵字比對（確定） ──
+    dest_code = parse_destination_keyword(text)
+    if dest_code:
+        city_name = IATA_TO_NAME.get(dest_code, dest_code)
+        country_code = IATA_TO_COUNTRY.get(dest_code, "")
+        update_session(user_id, {
+            "destination_code": dest_code,
+            "destination_name": city_name,
+            "country_code": country_code,
+            **hints,
+        }, step=2)
+        return _after_destination_set(user_id, city_name, hints)
+
+    # ── 關鍵字失敗 → LLM 猜，但顯示確認而非靜默設定 ──
+    llm_code = parse_destination(text)   # 這裡才呼叫 LLM
+    if llm_code:
+        city_name = IATA_TO_NAME.get(llm_code, llm_code)
+        flag = CITY_FLAG.get(llm_code, "🌍")
+        # 存入 session 但標記為「待確認」
+        update_session(user_id, {
+            "destination_code": llm_code,
+            "destination_name": city_name,
+            "country_code": IATA_TO_COUNTRY.get(llm_code, ""),
+            "dest_needs_confirm": True,
+            **hints,
+        }, step=2)
         return [{
             "type": "text",
-            "text": "你想去哪個城市呢？\n\n直接輸入城市名稱就可以，例如：",
+            "text": f"我猜你要去的是 {flag} {city_name}，對嗎？\n\n"
+                    f"如果不對，請直接輸入正確的城市名稱。",
             "quickReply": {"items": [
-                {"type": "action", "action": {"type": "message", "label": "🇯🇵 東京", "text": "東京"}},
-                {"type": "action", "action": {"type": "message", "label": "🇰🇷 首爾", "text": "首爾"}},
-                {"type": "action", "action": {"type": "message", "label": "🇺🇸 洛杉磯", "text": "洛杉磯"}},
-                {"type": "action", "action": {"type": "message", "label": "🇹🇭 曼谷", "text": "曼谷"}},
-                {"type": "action", "action": {"type": "message", "label": "🌍 幫我推薦", "text": "探索最便宜"}},
+                {"type": "action", "action": {"type": "message",
+                    "label": f"✅ 對，去{city_name}", "text": city_name}},
+                {"type": "action", "action": {"type": "message",
+                    "label": "❌ 不對，換一個", "text": "推薦目的地"}},
             ]},
         }]
 
-    city_name = IATA_TO_NAME.get(dest_code, dest_code)
-    country_code = IATA_TO_COUNTRY.get(dest_code, "")
+    # ── LLM 也猜不到 → 直接問 ──
+    print(f"[dest_unknown] text={repr(text[:60])}")
+    return [{
+        "type": "text",
+        "text": "你想去哪個城市呢？\n\n直接輸入城市名稱就可以，例如：",
+        "quickReply": {"items": [
+            {"type": "action", "action": {"type": "message", "label": "🇯🇵 東京", "text": "東京"}},
+            {"type": "action", "action": {"type": "message", "label": "🇰🇷 首爾", "text": "首爾"}},
+            {"type": "action", "action": {"type": "message", "label": "🇺🇸 洛杉磯", "text": "洛杉磯"}},
+            {"type": "action", "action": {"type": "message", "label": "🇹🇭 曼谷", "text": "曼谷"}},
+            {"type": "action", "action": {"type": "message", "label": "🌍 幫我推薦", "text": "推薦目的地"}},
+        ]},
+    }]
 
-    # 同時萃取預算、天數、人數
-    hints = _parse_hints_from_text(text)
 
-    update_session(user_id, {
-        "destination_code": dest_code,
-        "destination_name": city_name,
-        "country_code": country_code,
-        **hints,
-    }, step=2)
+def _after_destination_set(user_id: str, city_name: str, hints: dict) -> list:
+    """目的地確認後，根據是否預填日期決定下一步提示。"""
+    if hints.get("depart_date"):
+        return _prompt_dates(user_id)
+    return [{
+        "type": "text", "text":
+            f"[2/8] 日期\n\n"
+            f"目的地：{city_name} ✅\n\n"
+            f"第二步：你預計什麼時候出發？\n\n"
+            f"請選擇或輸入：\n"
+            f"• 直接輸入日期，例如「6/15-6/22」\n"
+            f"• 或輸入月份，例如「6月」",
+        "quickReply": {
+            "items": [
+                {"type": "action", "action": {"type": "message", "label": "彈性日期", "text": "彈性"}},
+                {"type": "action", "action": {"type": "message", "label": "下個月", "text": "下個月"}},
+            ],
+        },
+    }]
 
     return [{
         "type": "text", "text":

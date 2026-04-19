@@ -178,9 +178,8 @@ def parse_date_range(text: str) -> tuple:
     return ("", "")
 
 
-def parse_destination(text: str) -> str:
-    """從文字中解析目的地 IATA 碼；關鍵字失敗時用 LLM 補救。"""
-    import os
+def parse_destination_keyword(text: str) -> str:
+    """只用關鍵字比對，不呼叫 LLM。找不到回傳空字串。"""
     text_lower = text.lower().strip()
     for name, code in CITY_CODES.items():
         if name in text_lower:
@@ -188,6 +187,15 @@ def parse_destination(text: str) -> str:
     m = re.search(r"\b([A-Z]{3})\b", text)
     if m:
         return m.group(1)
+    return ""
+
+
+def parse_destination(text: str) -> str:
+    """從文字中解析目的地 IATA 碼；關鍵字失敗時用 LLM 補救。"""
+    import os
+    code = parse_destination_keyword(text)
+    if code:
+        return code
 
     # 關鍵字全部失敗 → 用 LLM 推斷（大谷翔平、極光、名人等）
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
