@@ -274,6 +274,22 @@ def _parse_hints_from_text(text: str) -> dict:
         if val and 1 <= val <= 20:
             hints["adults"] = val
 
+    # 行程風格關鍵字 → 預填 custom_requests
+    _STYLE_HINTS = [
+        (("最夯", "熱門玩法", "夯玩法"), "請加入當地最熱門玩法、打卡景點與特色體驗"),
+        (("追星", "K-POP", "KPOP", "kpop", "演唱會"), "追星行程：請安排 K-POP 聖地、偶像相關景點"),
+        (("美食", "必吃", "吃吃喝喝"), "美食為主：請以必吃餐廳和在地小吃為行程重點"),
+        (("購物", "掃貨", "逛街"), "購物為主：請安排購物中心、藥妝、免稅店"),
+        (("自然", "健行", "爬山"), "親近自然：請安排山岳健行、自然風景景點"),
+        (("歷史", "文化", "古蹟"), "文化深度：請安排歷史古蹟、博物館、傳統文化體驗"),
+        (("親子", "小孩", "帶小孩"), "親子行程：請安排適合兒童的景點與活動"),
+        (("蜜月", "情侶", "兩人世界"), "浪漫行程：請安排適合情侶的景點、餐廳與夜景"),
+    ]
+    for kws, hint_text in _STYLE_HINTS:
+        if any(kw in text for kw in kws):
+            hints["custom_requests"] = hint_text
+            break
+
     return hints
 
 
@@ -919,27 +935,47 @@ def _prompt_itinerary(user_id: str) -> list:
     city = session.get("destination_name", "")
     depart = session.get("depart_date", "")
     ret = session.get("return_date", "")
+    pre_filled = session.get("custom_requests", "")
 
     days = _calc_days(depart, ret)
-    days_text = f"{days} \u5929" if days > 0 else "\u5f48\u6027\u5929\u6578"
+    days_text = f"{days} 天" if days > 0 else "彈性天數"
+
+    if pre_filled:
+        # 已從初始訊息偵測到行程偏好，直接顯示並讓用戶確認或修改
+        return [{
+            "type": "text", "text":
+                f"[6/8] 行程大綱\n\n"
+                f"目的地：{city}\n"
+                f"天數：{days_text}\n\n"
+                f"✅ 我已記住你的行程偏好：\n「{pre_filled}」\n\n"
+                f"可以直接點「繼續」讓我規劃，或輸入其他想法來調整：",
+            "quickReply": {
+                "items": [
+                    {"type": "action", "action": {"type": "message", "label": "✅ 就這樣，繼續", "text": pre_filled}},
+                    {"type": "action", "action": {"type": "message", "label": "🏰 熱門景點", "text": "熱門景點"}},
+                    {"type": "action", "action": {"type": "message", "label": "🍜 美食為主", "text": "美食為主"}},
+                    {"type": "action", "action": {"type": "message", "label": "🤖 幫我規劃", "text": "幫我規劃"}},
+                ],
+            },
+        }]
 
     return [{
         "type": "text", "text":
-            f"[6/8] \u884c\u7a0b\u5927\u7db1\n\n"
-            f"\u76ee\u7684\u5730\uff1a{city}\n"
-            f"\u5929\u6578\uff1a{days_text}\n\n"
-            f"\u6709\u6c92\u6709\u7279\u5225\u60f3\u53bb\u7684\u666f\u9ede\u6216\u60f3\u907f\u958b\u7684\uff1f\n\n"
-            f"\u53ef\u4ee5\u544a\u8a34\u6211\uff0c\u4f8b\u5982\uff1a\n"
-            f"\u2022 \u300c\u60f3\u53bb\u8fea\u58eb\u5c3c\u300d\n"
-            f"\u2022 \u300c\u60f3\u9003\u907f\u89c0\u5149\u5ba2\u300d\n"
-            f"\u2022 \u300c\u7f8e\u98df\u70ba\u4e3b\u300d\n\n"
-            f"\u6216\u9ede\u300c\u5e6b\u6211\u898f\u5283\u300d\u7531\u6211\u81ea\u52d5\u5b89\u6392",
+            f"[6/8] 行程大綱\n\n"
+            f"目的地：{city}\n"
+            f"天數：{days_text}\n\n"
+            f"有沒有特別想去的景點或想避開的？\n\n"
+            f"可以告訴我，例如：\n"
+            f"• 「想去迪士尼」\n"
+            f"• 「想逃避觀光客」\n"
+            f"• 「美食為主」\n\n"
+            f"或點「幫我規劃」由我自動安排",
         "quickReply": {
             "items": [
-                {"type": "action", "action": {"type": "message", "label": "\U0001f3f0 \u71b1\u9580\u666f\u9ede", "text": "\u71b1\u9580\u666f\u9ede"}},
-                {"type": "action", "action": {"type": "message", "label": "\U0001f35c \u7f8e\u98df\u70ba\u4e3b", "text": "\u7f8e\u98df\u70ba\u4e3b"}},
-                {"type": "action", "action": {"type": "message", "label": "\U0001f6cd\ufe0f \u8cfc\u7269\u884c\u7a0b", "text": "\u8cfc\u7269\u884c\u7a0b"}},
-                {"type": "action", "action": {"type": "message", "label": "\U0001f916 \u5e6b\u6211\u898f\u5283", "text": "\u5e6b\u6211\u898f\u5283"}},
+                {"type": "action", "action": {"type": "message", "label": "🏰 熱門景點", "text": "熱門景點"}},
+                {"type": "action", "action": {"type": "message", "label": "🍜 美食為主", "text": "美食為主"}},
+                {"type": "action", "action": {"type": "message", "label": "🛍️ 購物行程", "text": "購物行程"}},
+                {"type": "action", "action": {"type": "message", "label": "🤖 幫我規劃", "text": "幫我規劃"}},
             ],
         },
     }]
