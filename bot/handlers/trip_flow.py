@@ -111,13 +111,40 @@ _STYLE_DETECT: list[tuple[str, str]] = [
 ]
 
 
+def _llm_tip(dest_code: str, city_name: str, style: str) -> str:
+    """用 Haiku 生成情境化追問，結果存 Redis 7天。timeout=3s，失敗回空字串。"""
+    import os
+    try:
+        from bot.services.redis_store import redis_get, redis_set
+        cache_key = f"smart_tip:{dest_code}:{style}"
+        cached = redis_get(cache_key)
+        if cached:
+            return cached
+
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            return ""
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key, timeout=3.0)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=60,
+            messages=[{"role": "user", "content":
+                f"你是台灣旅遊達人。用戶想去{city_name}體驗「{style}」。"
+                f"用一句繁體中文問他一個能幫助規劃的關鍵問題，親切口語，不超過30字，不要開頭問候。"}],
+        )
+        tip = msg.content[0].text.strip()
+        redis_set(cache_key, tip, ttl=7 * 86400)
+        return tip
+    except Exception as e:
+        print(f"[smart_tip] {e}")
+        return ""
+
+
 def _smart_greeting(dest_code: str, city_name: str, flag: str,
                     text: str, hints: dict) -> str:
     """生成情境化開場白，聽起來像旅行顧問而非制式系統。"""
     style = next((st for kw, st in _STYLE_DETECT if kw in text), "")
-    tip = _DEST_STYLE_TIPS.get((dest_code, style))
-    if tip:
-        return f"{flag} {city_name}{style}行程！{tip}"
 
     depart = hints.get("depart_date", "")
     month_hint = ""
@@ -127,6 +154,14 @@ def _smart_greeting(dest_code: str, city_name: str, flag: str,
         except Exception:
             pass
 
+    # 1. 硬寫的高品質 tip（常見組合，零延遲）
+    tip = _DEST_STYLE_TIPS.get((dest_code, style))
+    if not tip and style:
+        # 2. LLM 動態生成（首次 3s，之後走 Redis 快取）
+        tip = _llm_tip(dest_code, city_name, style)
+
+    if tip:
+        return f"{flag} {city_name}{month_hint}{style}行程！{tip}"
     if style:
         return f"{flag} {city_name}{month_hint}，{style}好選擇！"
     return f"{flag} {city_name}{month_hint}，好選擇！"
