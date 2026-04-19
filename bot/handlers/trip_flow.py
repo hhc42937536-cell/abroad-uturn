@@ -462,10 +462,12 @@ def _step3_travelers(user_id: str, text: str) -> list:
             return _prompt_budget_response(user_id, str(hint_budget))
         return [{
             "type": "text", "text":
-                f"\u597d\u7684\uff0c{adults} \u4eba\u51fa\u767c\uff01\n\n"
-                f"\u9019\u8ddf\u65c5\u884c\u7684\u7e3d\u9810\u7b97\u5927\u7d04\u662f\u591a\u5c11\uff1f\uff08\u53f0\u5e63\uff09",
+                f"好的，{adults} 人出發！\n\n"
+                f"這趟旅行的總預算大約是多少？（台幣）\n\n"
+                f"不知道的話，可以點「幫我估算」，我會根據目的地幫你算出建議金額。",
             "quickReply": {
                 "items": [
+                    {"type": "action", "action": {"type": "message", "label": "💡 幫我估算", "text": "幫我估預算"}},
                     {"type": "action", "action": {"type": "message", "label": "3萬以下", "text": "預算3萬"}},
                     {"type": "action", "action": {"type": "message", "label": "3~6萬", "text": "預算6萬"}},
                     {"type": "action", "action": {"type": "message", "label": "6~10萬", "text": "預算10萬"}},
@@ -478,9 +480,58 @@ def _step3_travelers(user_id: str, text: str) -> list:
     return _prompt_budget_response(user_id, text)
 
 
+def _suggest_budget(user_id: str) -> list:
+    """根據目的地+天數+人數自動估算預算，並詢問是否採用"""
+    import datetime
+    from bot.utils.budget_estimator import estimate_budget, build_budget_bubble
+    from bot.constants.cities import CITY_FLAG
+
+    session = get_session(user_id) or {}
+    dest = session.get("destination_code", "")
+    city = session.get("destination_name", dest)
+    flag = CITY_FLAG.get(dest, "✈️")
+    adults = session.get("adults", 1)
+    depart = session.get("depart_date", "")
+    ret = session.get("return_date", "")
+
+    # 計算天數
+    days = session.get("duration_days") or 5
+    if depart and ret:
+        try:
+            d1 = datetime.date.fromisoformat(depart[:10])
+            d2 = datetime.date.fromisoformat(ret[:10])
+            days = max((d2 - d1).days + 1, 1)
+        except Exception:
+            pass
+
+    # 機票粗估：用目的地最低預算的 60%
+    flight_pp = int(_MIN_BUDGET_PER_PERSON.get(dest, 30000) * 0.6)
+
+    b = estimate_budget(dest, days, adults, flight_pp)
+    recommended = int(b["total"] * 1.2 / 10000 + 0.5) * 10000  # 無條件進位到萬
+
+    bubble = build_budget_bubble(dest, city, days, adults, flight_pp, flag)
+
+    return [
+        {"type": "flex", "altText": f"💰 {city} 預估旅費明細",
+         "contents": bubble},
+        {"type": "text",
+         "text": f"📊 建議預備預算：NT$ {recommended:,}\n（含安全餘裕 ×1.2）\n\n要用這個預算繼續規劃嗎？",
+         "quickReply": {"items": [
+             {"type": "action", "action": {"type": "message",
+              "label": "✅ 用建議預算", "text": f"預算{recommended // 10000}萬"}},
+             {"type": "action", "action": {"type": "message",
+              "label": "自己輸入金額", "text": "自訂預算"}},
+         ]}},
+    ]
+
+
 def _prompt_budget_response(user_id: str, text: str) -> list:
     """解析預算並進入步驟 4（自動搜尋機票）"""
     import re
+
+    if text in ("幫我估預算", "幫我估算", "不知道", "幫我算"):
+        return _suggest_budget(user_id)
 
     budget_map = {
         # 舊格式（向下相容）
