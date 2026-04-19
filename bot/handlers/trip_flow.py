@@ -95,24 +95,40 @@ def start_with_destination(user_id: str, text: str) -> list:
     return _step1_destination(user_id, text)
 
 
+_INTENT_LABELS: dict[str, str] = {
+    "compare":   "查機票比價",
+    "explore":   "探索便宜目的地",
+    "visa":      "查簽證資訊",
+    "transport": "查交通攻略",
+    "hotel":     "查住宿推薦",
+    "souvenir":  "查最夯玩法 / 伴手禮",
+    "idol":      "規劃追星行程",
+    "pre_trip":  "查行前必知",
+    "tracking":  "管理價格追蹤",
+    "help":      "使用說明",
+}
+
+# 這些步驟使用者輸入的是自由文字（城市名/日期/客製需求），不做計分攔截
+_FREE_INPUT_STEPS = {1, 2, 6}
+
+# 計分達到此門檻才視為「明確的其他意圖」
+_INTENT_INTERCEPT_SCORE = 4
+
+
 def handle_step(user_id: str, text: str, step: int) -> list:
     """根據目前步驟處理使用者輸入"""
-    # ── 全域跳脫：在規劃中途想做其他事 ──
-    _REDIRECT_HINTS = {
-        ("追星", "演唱會", "見面會"): "追星",
-        ("行前", "簽證", "海關", "匯率"): "行前必知",
-        ("便宜", "探索", "比價"): "便宜",
-        ("住宿", "飯店", "旅館"): "住宿",
-        ("交通", "地鐵卡", "交通卡"): "交通攻略",
-    }
-    for kws, redirect in _REDIRECT_HINTS.items():
-        if any(kw in text for kw in kws):
+    # ── 全域跳脫：計分偵測到明確的非規劃意圖 ──
+    if step not in _FREE_INPUT_STEPS:
+        from bot.utils.intent import classify_intent_scored
+        intent, score = classify_intent_scored(text)
+        if score >= _INTENT_INTERCEPT_SCORE and intent not in ("plan_trip", "unknown"):
+            label = _INTENT_LABELS.get(intent, intent)
             return [{
                 "type": "text",
                 "text": f"你目前有一個規劃進行到第 {step}/8 步喔！\n\n"
-                        f"要繼續規劃嗎？還是先查「{redirect}」？\n\n"
-                        "• 輸入「繼續規劃」回到剛才\n"
-                        "• 輸入「取消規劃」結束此次規劃",
+                        f"偵測到你可能想「{label}」\n\n"
+                        "• 輸入「繼續規劃」回到剛才的步驟\n"
+                        "• 輸入「取消規劃」結束規劃、查詢其他功能",
                 "quickReply": {"items": [
                     {"type": "action", "action": {"type": "message",
                         "label": "繼續規劃", "text": "繼續規劃"}},

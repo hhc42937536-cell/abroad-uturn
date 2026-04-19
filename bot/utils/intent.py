@@ -119,6 +119,12 @@ def classify_intent(text: str) -> str:
     返回得分最高的 intent 名稱，全部為零時返回 'unknown'。
     同分時以 _RULES 定義順序（越前面越優先）決勝。
     """
+    intent, _ = classify_intent_scored(text)
+    return intent
+
+
+def classify_intent_scored(text: str) -> tuple[str, int]:
+    """返回 (intent, score)；全部為零時返回 ('unknown', 0)。"""
     scores: dict[str, int] = {k: 0 for k in _RULES}
 
     for intent, rules in _RULES.items():
@@ -127,4 +133,5 @@ def classify_intent(text: str) -> str:
                 scores[intent] += weight
 
     best = max(scores, key=scores.get)
-    return best if scores[best] > 0 else "unknown"
+    top_score = scores[best]
+    return (best, top_score) if top_score > 0 else ("unknown", 0)
