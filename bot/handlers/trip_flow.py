@@ -159,7 +159,13 @@ def handle_postback(user_id: str, data: str) -> list:
             city = session.get("destination_name", "")
             depart = session.get("depart_date", "")
             ret = session.get("return_date", "")
-            itinerary_msgs = build_itinerary_flex(dest, depart, ret, city) if dest and depart else []
+            print(f"[step8] dest={dest!r} depart={depart!r} ret={ret!r}")
+            itinerary_msgs = []
+            if dest and depart:
+                try:
+                    itinerary_msgs = build_itinerary_flex(dest, depart, ret, city)
+                except Exception as e:
+                    print(f"[step8] itinerary error: {e}")
             summary_msgs = _prompt_summary(user_id)
             return (itinerary_msgs + summary_msgs)[:5]
         return _show_step_prompt(user_id, target_step)
@@ -1148,7 +1154,13 @@ def _step7_travel_info(user_id: str, text: str) -> list:
     _budget_num = session.get("budget", 0)
     budget = f"NT${_budget_num//10000}萬" if _budget_num else ""
     adults = session.get("adults", 1)
-    itinerary_msgs = build_itinerary_flex(dest, depart, ret, city, budget=budget, adults=adults) if dest and depart else []
+    print(f"[step7] dest={dest!r} depart={depart!r} ret={ret!r}")
+    itinerary_msgs = []
+    if dest and depart:
+        try:
+            itinerary_msgs = build_itinerary_flex(dest, depart, ret, city, budget=budget, adults=adults)
+        except Exception as e:
+            print(f"[step7] itinerary error: {e}")
     summary_msgs = _prompt_summary(user_id)
     return (itinerary_msgs + summary_msgs)[:5]
 

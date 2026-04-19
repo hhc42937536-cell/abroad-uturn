@@ -5,8 +5,14 @@ GET /api/download?token=xxx
 
 import io
 import json
+import os
+import sys
+import traceback
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+
+# 確保 bot/ 模組可被 import（Vercel 部署環境）
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from docx import Document
 from docx.shared import Pt, RGBColor, Cm
@@ -187,6 +193,18 @@ def _build_docx(plan: dict) -> bytes:
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        try:
+            self._handle_get()
+        except Exception as e:
+            print(f"[download] unhandled: {traceback.format_exc()}")
+            try:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(str(e).encode("utf-8"))
+            except Exception:
+                pass
+
+    def _handle_get(self):
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
         token  = params.get("token", [None])[0]

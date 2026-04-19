@@ -223,7 +223,7 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
             return None
-        client = anthropic.Anthropic(api_key=api_key)
+        client = anthropic.Anthropic(api_key=api_key, timeout=8.0)
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=1024,
