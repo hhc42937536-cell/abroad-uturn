@@ -175,11 +175,18 @@ def handle_postback(user_id: str, data: str) -> list:
             city = session.get("destination_name", "")
             depart = session.get("depart_date", "")
             ret = session.get("return_date", "")
-            print(f"[step8] dest={dest!r} depart={depart!r} ret={ret!r}")
+            custom = session.get("custom_requests", "")
+            budget_num = session.get("budget", 0)
+            budget = f"NT${budget_num//10000}萬" if budget_num else ""
+            adults = session.get("adults", 1)
+            print(f"[step8] dest={dest!r} depart={depart!r} ret={ret!r} custom={custom!r}")
             itinerary_msgs = []
             if dest and depart:
                 try:
-                    itinerary_msgs = build_itinerary_flex(dest, depart, ret, city)
+                    itinerary_msgs = build_itinerary_flex(
+                        dest, depart, ret, city,
+                        custom_requests=custom, budget=budget, adults=adults,
+                    )
                 except Exception as e:
                     print(f"[step8] itinerary error: {e}")
             summary_msgs = _prompt_summary(user_id)
@@ -1249,11 +1256,15 @@ def _step7_travel_info(user_id: str, text: str) -> list:
     _budget_num = session.get("budget", 0)
     budget = f"NT${_budget_num//10000}萬" if _budget_num else ""
     adults = session.get("adults", 1)
-    print(f"[step7] dest={dest!r} depart={depart!r} ret={ret!r}")
+    custom = session.get("custom_requests", "")
+    print(f"[step7] dest={dest!r} depart={depart!r} ret={ret!r} custom={custom!r}")
     itinerary_msgs = []
     if dest and depart:
         try:
-            itinerary_msgs = build_itinerary_flex(dest, depart, ret, city, budget=budget, adults=adults)
+            itinerary_msgs = build_itinerary_flex(
+                dest, depart, ret, city,
+                custom_requests=custom, budget=budget, adults=adults,
+            )
         except Exception as e:
             print(f"[step7] itinerary error: {e}")
     summary_msgs = _prompt_summary(user_id)

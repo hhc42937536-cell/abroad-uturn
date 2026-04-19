@@ -187,7 +187,8 @@ def _time_row(time_label: str, content: str) -> dict:
 
 
 def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
-                   budget: str = "", adults: int = 1) -> list | None:
+                   budget: str = "", adults: int = 1,
+                   custom_requests: str = "") -> list | None:
     """
     呼叫 Claude Haiku 生成每日行程 JSON。
     回傳 list[{"theme":..., "am":..., "pm":..., "eve":...}] 或 None（失敗時）。
@@ -199,7 +200,7 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     except ImportError:
         return None
 
-    cache_key = f"llm_itinerary:{city_name}:{days}:{budget}"
+    cache_key = f"llm_itinerary:{city_name}:{days}:{budget}:{custom_requests[:20]}"
     cached = redis_get(cache_key)
     if cached:
         try:
@@ -210,9 +211,10 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     season_hint = f"（出發時正值{seasonal_tag}）" if seasonal_tag else ""
     budget_hint = f"預算約 {budget}" if budget else ""
     adults_hint = f"{adults}人同行" if adults > 1 else "獨自旅行"
+    custom_hint = f"\n特別需求：{custom_requests}" if custom_requests else ""
 
     prompt = (
-        f"請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。\n"
+        f"請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。{custom_hint}\n"
         f"只需回傳第 2 天到第 {days-1} 天（不含抵達/返台日）的中間天，共 {max(days-2,1)} 天。\n"
         f"回傳 JSON array，每個元素格式：\n"
         f'  {{"theme":"主題","am":"上午行程（1~2句）","pm":"下午行程（1~2句）","eve":"晚上行程（1~2句）"}}\n'
@@ -269,7 +271,9 @@ def build_itinerary_flex(dest_code: str, depart_date: str, return_date: str,
     # 嘗試 LLM 生成中間天行程（Day 2 ~ Day N-1）
     llm_plans = None
     if days >= 3:
-        llm_plans = _llm_day_plans(display_city, days, seasonal_tag, budget, adults)
+        llm_plans = _llm_day_plans(
+            display_city, days, seasonal_tag, budget, adults, custom_requests
+        )
 
     bubbles = []
     llm_idx = 0
