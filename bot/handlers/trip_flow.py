@@ -861,8 +861,10 @@ def _step2_dates(user_id: str, text: str) -> list:
         return _prompt_travelers(user_id)
 
     return [{"type": "text", "text":
-        "\u6211\u770b\u4e0d\u61c2\u65e5\u671f\uff0c\u8acb\u8a66\u8a66\uff1a\n"
-        "\u300c6/15-6/22\u300d\u300c7\u6708\u300d\u300c\u4e0b\u500b\u6708\u300d"
+        "請問出發日期大約是什麼時候呢？\n\n"
+        "可以這樣輸入：\n"
+        "・明年三月 / 7月 / 下個月\n"
+        "・6/15-6/22 / 2027-03-10"
     }]
 
 
