@@ -200,19 +200,18 @@ def start_smart(user_id: str, text: str) -> list:
         **{k: v for k, v in hints.items() if k in _HINT_KEYS},
     }
 
-    greeting = _smart_greeting(dest_code, city_name, flag, text, hints)
     has_date = bool(hints.get("depart_date"))
     has_travelers = "adults" in hints
 
     if has_date and has_travelers:
         update_session(user_id, session_data, step=4)
+        greeting = _smart_greeting(dest_code, city_name, flag, text, hints)
         return [{"type": "text", "text": f"{greeting}\n\n✅ 目的地、日期、人數都記下了，幫你找機票！"}] + _prompt_flights(user_id)
-    elif has_date:
-        update_session(user_id, session_data, step=3)
-        return [{"type": "text", "text": greeting}] + _prompt_travelers(user_id)
-    else:
-        update_session(user_id, session_data, step=2)
-        return [{"type": "text", "text": greeting}] + _prompt_dates(user_id)
+
+    # 資訊不齊 → 進 LLM 對話蒐集模式
+    update_session(user_id, session_data, step=1)
+    greeting = _smart_greeting(dest_code, city_name, flag, text, hints)
+    return _llm_gather(user_id, text, greeting=greeting)
 
 
 def start_with_destination(user_id: str, text: str) -> list:
@@ -235,11 +234,131 @@ _INTENT_LABELS: dict[str, str] = {
     "help":      "使用說明",
 }
 
-# 這些步驟使用者輸入的是自由文字（城市名/日期/客製需求），不做計分攔截
-_FREE_INPUT_STEPS = {1, 2, 6}
+# 這些步驟使用者輸入的是自由文字，不做計分攔截
+_FREE_INPUT_STEPS = {1, 2, 3, 6}
 
 # 計分達到此門檻才視為「明確的其他意圖」
 _INTENT_INTERCEPT_SCORE = 4
+
+
+def _gather_fallback(user_id: str, text: str, session: dict) -> list:
+    """LLM 失敗時降級：看缺什麼就用舊有制式卡片補。"""
+    if not session.get("destination_code"):
+        return _step1_destination(user_id, text)
+    if not session.get("depart_date"):
+        return _step2_dates(user_id, text)
+    if not session.get("adults"):
+        update_session(user_id, {"adults": 1}, step=4)
+    else:
+        update_session(user_id, {}, step=4)
+    return _prompt_flights(user_id)
+
+
+def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
+    """
+    LLM 驅動的對話式資訊蒐集（取代 Step 1-3 制式卡片）。
+    每輪萃取新資訊、更新 session，缺什麼問什麼；
+    目的地 + 日期齊全後自動觸發 Step 4。
+    """
+    import json, os
+    session = get_session(user_id) or {}
+
+    # 整理已知欄位給 LLM
+    known: dict = {}
+    for k, label in [("destination_name", "destination"), ("depart_date", "depart_date"),
+                     ("return_date", "return_date"), ("adults", "adults"),
+                     ("budget", "budget"), ("custom_requests", "custom_requests")]:
+        if session.get(k):
+            known[label] = session[k]
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return _gather_fallback(user_id, text, session)
+
+    prompt = (
+        f"你是台灣旅遊顧問。\n"
+        f"已知資訊：{json.dumps(known, ensure_ascii=False)}\n"
+        f"用戶說：「{text}」\n\n"
+        f"請：\n"
+        f"1. 從用戶訊息萃取新資訊（只萃取明確說的）：\n"
+        f"   destination=城市中文名、depart_date=YYYY-MM或YYYY-MM-DD、"
+        f"return_date=YYYY-MM-DD、adults=整數、budget=台幣整數、custom_requests=偏好文字\n"
+        f"2. 合併已知+新萃取，若同時具備「目的地」和「出發日期/月份」→ ready:true\n"
+        f"3. ready:false 時，用一句口語繁體中文問最重要的缺口，15-25 字，親切自然\n\n"
+        "只回傳 JSON，不要其他文字：\n"
+        '{"extracted":{"destination":"","depart_date":"","return_date":"",'
+        '"adults":0,"budget":0,"custom_requests":""},"next_question":"","ready":false}'
+    )
+
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key, timeout=5.0)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=220,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = msg.content[0].text.strip()
+        s, e = raw.find("{"), raw.rfind("}") + 1
+        if s == -1:
+            raise ValueError("no JSON")
+        result = json.loads(raw[s:e])
+    except Exception as exc:
+        print(f"[llm_gather] {exc}")
+        return _gather_fallback(user_id, text, session)
+
+    extracted = result.get("extracted", {})
+    ready = result.get("ready", False)
+    next_q = result.get("next_question", "")
+
+    # 更新 session
+    updates: dict = {}
+    if extracted.get("destination") and not session.get("destination_code"):
+        from bot.utils.date_parser import parse_destination_keyword, parse_destination
+        from bot.constants.cities import IATA_TO_NAME, IATA_TO_COUNTRY
+        code = (parse_destination_keyword(extracted["destination"])
+                or parse_destination(extracted["destination"]))
+        if code:
+            updates["destination_code"] = code
+            updates["destination_name"] = IATA_TO_NAME.get(code, extracted["destination"])
+            updates["country_code"] = IATA_TO_COUNTRY.get(code, "")
+        else:
+            updates["destination_name"] = extracted["destination"]
+
+    if extracted.get("depart_date"):
+        dv = extracted["depart_date"]
+        updates["depart_date"] = dv
+        updates["flexibility"] = "month" if len(dv) == 7 else "specific"
+    if extracted.get("return_date"):
+        updates["return_date"] = extracted["return_date"]
+    if extracted.get("adults", 0) > 0:
+        updates["adults"] = extracted["adults"]
+    if extracted.get("budget", 0) > 0:
+        updates["budget"] = extracted["budget"]
+    if extracted.get("custom_requests"):
+        exist = session.get("custom_requests", "")
+        nc = extracted["custom_requests"]
+        updates["custom_requests"] = f"{exist}；{nc}" if exist else nc
+
+    # 真正 ready 的條件：dest_code + depart_date 都存在
+    has_dest = updates.get("destination_code") or session.get("destination_code")
+    has_date = updates.get("depart_date") or session.get("depart_date")
+
+    if ready and has_dest and has_date:
+        if not updates.get("adults") and not session.get("adults"):
+            updates["adults"] = 1
+        update_session(user_id, updates, step=4)
+        confirm = "✅ 資訊齊全，幫你搜尋機票！"
+        if greeting:
+            return [{"type": "text", "text": f"{greeting}\n\n{confirm}"}] + _prompt_flights(user_id)
+        return [{"type": "text", "text": confirm}] + _prompt_flights(user_id)
+
+    # 還有缺口，繼續問
+    update_session(user_id, updates, step=1)
+    reply = next_q or "請告訴我目的地、大概幾月去？"
+    if greeting:
+        reply = f"{greeting}\n\n{reply}"
+    return [{"type": "text", "text": reply}]
 
 
 def handle_step(user_id: str, text: str, step: int) -> list:
@@ -264,10 +383,11 @@ def handle_step(user_id: str, text: str, step: int) -> list:
                 ]},
             }]
 
+    # Steps 1-3 全部走 LLM 對話蒐集，降級時再走個別制式 handler
+    if step in (1, 2, 3):
+        return _llm_gather(user_id, text)
+
     handlers = {
-        1: _step1_destination,
-        2: _step2_dates,
-        3: _step3_travelers,
         4: _step4_flights,
         5: _step5_hotels,
         6: _step6_itinerary,
