@@ -188,7 +188,8 @@ def _time_row(time_label: str, content: str) -> dict:
 
 def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
                    budget: str = "", adults: int = 1,
-                   custom_requests: str = "") -> list | None:
+                   custom_requests: str = "",
+                   dest_code: str = "") -> list | None:
     """
     呼叫 Claude Haiku 生成每日行程 JSON。
     回傳 list[{"theme":..., "am":..., "pm":..., "eve":...}] 或 None（失敗時）。
@@ -213,12 +214,36 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     adults_hint = f"{adults}人同行" if adults > 1 else "獨自旅行"
     custom_hint = f"\n特別需求：{custom_requests}" if custom_requests else ""
 
+    # 注入在地眉角（票務/人潮/交通/隱藏景點）
+    insider_block = ""
+    if dest_code:
+        try:
+            from bot.services.travel_data import get_insider_tips
+            tips = get_insider_tips(dest_code)
+            if tips:
+                parts = []
+                if tips.get("ticket"):
+                    parts.append("【票務時機】" + "；".join(tips["ticket"][:3]))
+                if tips.get("crowd"):
+                    parts.append("【人潮眉角】" + "；".join(tips["crowd"][:3]))
+                if tips.get("transport"):
+                    parts.append("【交通秘技】" + "；".join(tips["transport"][:2]))
+                if tips.get("hidden"):
+                    parts.append("【隱藏景點】" + "；".join(tips["hidden"][:2]))
+                if parts:
+                    insider_block = (
+                        "\n\n以下是台灣旅客專屬的在地眉角，請優先融入行程建議中（這些資訊一般旅遊網站查不到）：\n"
+                        + "\n".join(parts)
+                    )
+        except Exception:
+            pass
+
     prompt = (
-        f"請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。{custom_hint}\n"
+        f"請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。{custom_hint}{insider_block}\n\n"
         f"只需回傳第 2 天到第 {days-1} 天（不含抵達/返台日）的中間天，共 {max(days-2,1)} 天。\n"
         f"回傳 JSON array，每個元素格式：\n"
-        f'  {{"theme":"主題","am":"上午行程（1~2句）","pm":"下午行程（1~2句）","eve":"晚上行程（1~2句）"}}\n'
-        f"只回傳 JSON array，不要其他文字。景點需具體，符合當地特色。"
+        f'  {{"theme":"主題","am":"上午行程（1~2句，含具體時間/秘訣）","pm":"下午行程","eve":"晚上行程"}}\n'
+        f"只回傳 JSON array，不要其他文字。請融入在地眉角讓建議比一般 Google 搜尋更有價值。"
     )
 
     try:
@@ -272,7 +297,8 @@ def build_itinerary_flex(dest_code: str, depart_date: str, return_date: str,
     llm_plans = None
     if days >= 3:
         llm_plans = _llm_day_plans(
-            display_city, days, seasonal_tag, budget, adults, custom_requests
+            display_city, days, seasonal_tag, budget, adults, custom_requests,
+            dest_code=dest_code
         )
 
     bubbles = []

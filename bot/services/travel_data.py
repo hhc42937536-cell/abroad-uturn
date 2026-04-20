@@ -65,6 +65,12 @@ def get_cultural_notes(country_code: str) -> dict | None:
     return data.get(country_code)
 
 
+def get_insider_tips(dest_code: str) -> dict | None:
+    """讀取目的地的在地眉角（票務時機/人潮規律/交通/隱藏景點/省錢技巧）"""
+    data = _load_json("insider_tips.json")
+    return data.get(dest_code)
+
+
 def get_packing_list(country_code: str, month: int = 6) -> dict:
     """根據國家和月份產生打包清單"""
     data = _load_json("packing_templates.json")
