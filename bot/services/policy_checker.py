@@ -291,41 +291,35 @@ def _scrape_boca_visa_exempt() -> list[dict]:
 
 def scrape_and_update_visa() -> dict:
     """
-    爬外交部 BOCA，解析後存入 Redis visa:live:{code}
-    只更新能成功解析的國家，失敗的保留 Redis 舊值或 JSON fallback
-    回傳: {"updated": [codes], "failed": [codes]}
+    將 visa_info.json 載入 Redis（確保 Redis 有資料）。
+    BOCA 已將免簽清單改為 PDF，HTML 爬蟲不再可靠；
+    改以 JSON 為單一資料來源，每週 cron 刷新 TTL。
+    回傳: {"loaded": [codes], "skipped": [codes]}
     """
     base_data = _load_json("visa_info.json")
-    updated, failed = [], []
+    loaded, skipped = [], []
 
-    all_scraped: dict[str, dict] = {}
-
-    for item in _scrape_boca_visa_exempt():
-        code = item.pop("code")
-        all_scraped[code] = item
-
-    print(f"[policy] BOCA 爬到 {len(all_scraped)} 個國家")
-
-    # 合併：以 JSON 為底，用爬蟲結果覆蓋關鍵欄位
-    for code, base in base_data.items():
+    for code, info in base_data.items():
         if code == "_meta":
             continue
+        # 已有 Redis 資料且包含 _scraped 標記（人工更新過）→ 保留
+        existing_raw = redis_get(f"visa:live:{code}")
+        if existing_raw:
+            try:
+                existing = json.loads(existing_raw)
+                if existing.get("_scraped"):
+                    # 刷新 TTL 但保留內容
+                    redis_set(f"visa:live:{code}", existing_raw, ttl=86400 * 8)
+                    skipped.append(code)
+                    continue
+            except Exception:
+                pass
+        # Redis 無資料或無 _scraped → 從 JSON 載入
+        redis_set(f"visa:live:{code}", json.dumps(info, ensure_ascii=False), ttl=86400 * 8)
+        loaded.append(code)
 
-        scraped = all_scraped.get(code)
-        if scraped:
-            # 爬到資料 → 合併（保留 JSON 裡的 passport_validity、entry_card 等欄位）
-            merged = {**base, **scraped}
-            redis_set(f"visa:live:{code}", json.dumps(merged, ensure_ascii=False), ttl=86400 * 8)
-            updated.append(code)
-        else:
-            # 沒爬到 → 把 JSON 資料存進 Redis（確保 Redis 不是空的）
-            existing = redis_get(f"visa:live:{code}")
-            if not existing:
-                redis_set(f"visa:live:{code}", json.dumps(base, ensure_ascii=False), ttl=86400 * 8)
-            failed.append(code)
-
-    print(f"[policy] visa 更新: {len(updated)} 個, 未爬到: {len(failed)} 個（保留舊資料）")
-    return {"updated": updated, "failed": failed}
+    print(f"[policy] visa: 載入 {len(loaded)} 個, TTL 刷新 {len(skipped)} 個")
+    return {"loaded": loaded, "skipped": skipped}
 
 
 # ── 海關爬蟲 ─────────────────────────────────────────
