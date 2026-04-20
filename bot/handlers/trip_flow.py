@@ -1858,6 +1858,7 @@ def _prompt_summary(user_id: str) -> list:
         "custom": custom,
         "must_eat": _get_must_eat(dest),
         "itinerary": _get_itinerary_for_download(dest, depart, ret),
+        "insider": _get_insider_for_download(dest),
     }
     redis_set(f"download:{download_token}", _json.dumps(plan_data, ensure_ascii=False), ttl=259200)
 
@@ -2000,6 +2001,24 @@ def _get_itinerary_for_download(dest_code: str, depart: str, ret: str) -> list:
         return result
     except Exception:
         return []
+
+
+def _get_insider_for_download(dest_code: str) -> dict:
+    """取得在地眉角資料（票務/人潮/交通/隱藏景點/省錢），供 .docx 使用"""
+    try:
+        from bot.services.travel_data import get_insider_tips
+        tips = get_insider_tips(dest_code)
+        if not tips:
+            return {}
+        return {
+            "ticket":    tips.get("ticket", [])[:4],
+            "crowd":     tips.get("crowd", [])[:4],
+            "transport": tips.get("transport", [])[:4],
+            "hidden":    tips.get("hidden", [])[:3],
+            "money":     tips.get("money", [])[:4],
+        }
+    except Exception:
+        return {}
 
 
 def _summary_row(label: str, value: str) -> dict:

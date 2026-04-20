@@ -162,6 +162,27 @@ def _build_docx(plan: dict) -> bytes:
 
         doc.add_paragraph()
 
+    # ── 在地眉角 ────────────────────────────────────────
+    insider = plan.get("insider", {})
+    if insider:
+        _add_heading(doc, f"✨ {city} 在地眉角", level=1)
+        sections = [
+            ("🎟️ 票務時機", insider.get("ticket", [])),
+            ("👥 人潮規律", insider.get("crowd", [])),
+            ("🚇 交通秘技", insider.get("transport", [])),
+            ("🗺️ 隱藏景點", insider.get("hidden", [])),
+            ("💰 省錢技巧", insider.get("money", [])),
+        ]
+        for sec_title, items in sections:
+            if not items:
+                continue
+            _add_heading(doc, sec_title, level=3)
+            for item in items:
+                p = doc.add_paragraph(style="List Bullet")
+                run = p.add_run(item)
+                run.font.size = Pt(10)
+        doc.add_paragraph()
+
     # ── 必吃清單 ────────────────────────────────────────
     must_eat = plan.get("must_eat", [])
     if must_eat:
