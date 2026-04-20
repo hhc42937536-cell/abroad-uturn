@@ -65,6 +65,41 @@ class handler(BaseHTTPRequestHandler):
             from bot.utils.feedback import check_and_send_feedback
             result = check_and_send_feedback()
             self._json_response(200, result)
+        elif parsed.path == "/api/download":
+            # 行程計畫書 .docx 下載
+            from urllib.parse import parse_qs
+            import json as _json
+            from bot.services.redis_store import redis_get
+            params = parse_qs(parsed.query)
+            token = params.get("token", [None])[0]
+            if not token:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"Missing token")
+                return
+            raw = redis_get(f"download:{token}")
+            if not raw:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write("找不到行程，連結已過期（72小時）".encode("utf-8"))
+                return
+            plan = _json.loads(raw)
+            from api.download import _build_docx
+            content = _build_docx(plan)
+            city = plan.get("city", "行程")
+            date_display = plan.get("date_display", "").replace("/", "-").replace(" ~ ", "_")
+            filename = f"{city}_{date_display}_計畫書.docx"
+            from urllib.parse import quote
+            encoded_name = quote(filename, safe="")
+            self.send_response(200)
+            self.send_header("Content-Type",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            self.send_header("Content-Disposition",
+                f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_name}')
+            self.send_header("Content-Length", str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
+            return
         else:
             self._json_response(200, {"status": "ok", "bot": "AbroadUturn", "version": "2.5", "build": "auto-cron-3x"})
 

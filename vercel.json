@@ -8,7 +8,8 @@
     },
     {
       "src": "api/download.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "50mb" }
     }
   ],
   "routes": [
@@ -18,7 +19,7 @@
     },
     {
       "src": "/api/download",
-      "dest": "api/download.py"
+      "dest": "api/webhook.py"
     },
     {
       "src": "/api/check_prices",
