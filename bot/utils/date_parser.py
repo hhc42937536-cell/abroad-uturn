@@ -121,8 +121,18 @@ def _relative_date_range(text: str) -> tuple | None:
                 sunday = monday + _dt.timedelta(days=6)
                 return (monday.isoformat(), sunday.isoformat())
 
-    # ── 純月份：X月 ─────────────────────────────────────────
-    m = re.search(r"^(\d{1,2}|[一二三四五六七八九十]{1,3})月$", text.strip())
+    # ── 明年/後年 X月 ────────────────────────────────────────
+    for kw, offset in [("明年", 1), ("後年", 2)]:
+        m = re.search(r"(?:" + kw + r")(十[一二]|[一二三四五六七八九十]|\d{1,2})月", text)
+        if m:
+            mon = _cn_to_int(m.group(1))
+            if mon:
+                y = year + offset
+                last = _last_day(y, mon)
+                return (f"{y}-{mon:02d}-01", f"{y}-{mon:02d}-{last:02d}")
+
+    # ── 純月份：X月（中文或數字）────────────────────────────
+    m = re.search(r"(十[一二]|[一二三四五六七八九十]|\d{1,2})月", text.strip())
     if m:
         mon = _cn_to_int(m.group(1))
         if mon:
@@ -241,18 +251,33 @@ def parse_destination(text: str) -> str:
 
 
 def parse_month(text: str) -> str:
-    """從文字解析月份，返回 YYYY-MM 格式"""
+    """從文字解析月份，返回 YYYY-MM 格式。支援中文數字與明年/後年。"""
     import datetime
     today = datetime.date.today()
     year = today.year
+
+    # YYYY-MM / YYYY/MM
     m = re.search(r"(\d{4})[-/](\d{1,2})", text)
     if m:
         return f"{m.group(1)}-{int(m.group(2)):02d}"
-    m = re.search(r"(\d{1,2})月", text)
+
+    # 明年X月 / 後年X月
+    _YEAR_OFFSET = {"明年": 1, "後年": 2, "大後年": 3}
+    for kw, offset in _YEAR_OFFSET.items():
+        m = re.search(r"(?:" + kw + r")(十[一二]|[一二三四五六七八九十]|\d{1,2})月", text)
+        if m:
+            mon = _cn_to_int(m.group(1))
+            if mon:
+                return f"{year + offset}-{mon:02d}"
+
+    # 今年X月 / 中文月份（一月～十二月）
+    m = re.search(r"(十[一二]|[一二三四五六七八九十]|\d{1,2})月", text)
     if m:
-        mon = int(m.group(1))
-        y = year if mon >= today.month else year + 1
-        return f"{y}-{mon:02d}"
+        mon = _cn_to_int(m.group(1))
+        if mon:
+            y = year if mon >= today.month else year + 1
+            return f"{y}-{mon:02d}"
+
     return ""
 
 
