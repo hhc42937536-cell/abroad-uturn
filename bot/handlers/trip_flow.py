@@ -171,10 +171,12 @@ def start_smart(user_id: str, text: str) -> list:
     """智慧快速啟動：解析文字中所有已知資訊，跳過已知步驟，情境化問缺口。"""
     from bot.utils.date_parser import parse_destination_keyword, parse_destination
     from bot.constants.cities import IATA_TO_NAME, IATA_TO_COUNTRY, CITY_FLAG
+    from bot.services.supabase_logger import log as slog
 
     origin = get_user_origin(user_id)
     start_session(user_id, origin)
     hints = _parse_hints_from_text(text)
+    slog(user_id, "trip_start")
 
     _HINT_KEYS = {"budget", "adults", "depart_date", "return_date",
                   "flexibility", "custom_requests", "event_date", "is_event_trip"}
@@ -206,6 +208,8 @@ def start_smart(user_id: str, text: str) -> list:
     if has_date and has_travelers:
         update_session(user_id, session_data, step=4)
         greeting = _smart_greeting(dest_code, city_name, flag, text, hints)
+        slog(user_id, "trip_complete", destination=dest_code,
+             extra={"path": "start_smart_full"})
         return [{"type": "text", "text": f"{greeting}\n\n✅ 目的地、日期、人數都記下了，幫你找機票！"}] + _prompt_flights(user_id)
 
     # 資訊不齊 → 進 LLM 對話蒐集模式
@@ -243,6 +247,9 @@ _INTENT_INTERCEPT_SCORE = 4
 
 def _gather_fallback(user_id: str, text: str, session: dict) -> list:
     """LLM 失敗時降級：看缺什麼就用舊有制式卡片補。"""
+    from bot.services.supabase_logger import log as slog
+    slog(user_id, "llm_gather_fail", destination=session.get("destination_code", ""),
+         step=session.get("step"))
     if not session.get("destination_code"):
         return _step1_destination(user_id, text)
     if not session.get("depart_date"):
@@ -348,6 +355,11 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
         if not updates.get("adults") and not session.get("adults"):
             updates["adults"] = 1
         update_session(user_id, updates, step=4)
+        from bot.services.supabase_logger import log as slog
+        turns = session.get("gather_turns", 0) + 1
+        slog(user_id, "llm_gather_ok",
+             destination=updates.get("destination_code") or session.get("destination_code", ""),
+             gather_turns=turns)
         confirm = "✅ 資訊齊全，幫你搜尋機票！"
         if greeting:
             return [{"type": "text", "text": f"{greeting}\n\n{confirm}"}] + _prompt_flights(user_id)
@@ -1928,6 +1940,12 @@ def _prompt_summary(user_id: str) -> list:
             "altText": f"💰 {city} 預估旅遊支出",
             "contents": budget_bubble,
         })
+
+    from bot.services.supabase_logger import log as slog
+    session = get_session(user_id) or {}
+    slog(user_id, "plan_generated",
+         destination=session.get("destination_code", ""),
+         extra={"days": session.get("days"), "adults": session.get("adults")})
 
     return msgs
 
