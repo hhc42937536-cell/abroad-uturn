@@ -1637,6 +1637,72 @@ def _step7_travel_info(user_id: str, text: str) -> list:
 
 # ─── 步驟 8：完整計畫書（Phase 5 完整實作）───────────
 
+_STYLE_THEME: list[tuple[tuple, str, str]] = [
+    (("滑雪", "雪場", "ski"), "#1565C0", "🎿"),
+    (("潛水", "浮潛", "海灘", "beach"), "#00838F", "🤿"),
+    (("美食", "必吃", "吃吃喝喝"), "#E91E63", "🍜"),
+    (("購物", "掃貨", "逛街"), "#6A1B9A", "🛍️"),
+    (("追星", "演唱會", "見面會", "KPOP", "kpop"), "#B71C1C", "🎤"),
+    (("蜜月", "情侶", "兩人世界"), "#AD1457", "💑"),
+    (("親子", "小孩", "帶小孩"), "#2E7D32", "👨‍👩‍👧"),
+    (("健行", "爬山", "自然"), "#4E342E", "🏔️"),
+    (("馬拉松", "路跑", "賽跑"), "#1B5E20", "🏃"),
+    (("奧運", "世界盃", "亞運", "比賽"), "#0D47A1", "🏆"),
+]
+
+def _plan_theme(custom: str) -> tuple[str, str]:
+    """依行程偏好回傳 (header_color, emoji)"""
+    for keywords, color, emoji in _STYLE_THEME:
+        if any(kw in custom for kw in keywords):
+            return color, emoji
+    return "#FF6B35", "✈️"
+
+
+def _llm_plan_tagline(city: str, custom: str, days: int, adults: int,
+                      depart: str) -> str:
+    """
+    LLM 生成一句行程標語（快取 Redis 7天）。
+    失敗回空字串，不影響主流程。
+    """
+    import os, json
+    try:
+        from bot.services.redis_store import redis_get, redis_set
+        style_kw = next((kw for kws, _, _ in _STYLE_THEME for kw in kws if kw in custom), "")
+        cache_key = f"plan_tagline:{city}:{style_kw}:{days}"
+        cached = redis_get(cache_key)
+        if cached:
+            return cached
+
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            return ""
+
+        month = ""
+        if depart and len(depart) >= 7:
+            try:
+                month = f"{int(depart[5:7])}月"
+            except Exception:
+                pass
+
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key, timeout=4.0)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=50,
+            messages=[{"role": "user", "content":
+                f"為這趟旅行寫一句吸引人的中文標語（繁體，15字內，不加引號）：\n"
+                f"目的地：{city}　{month}　{days}天　{adults}人\n"
+                f"主題：{custom or '自由行'}\n"
+                f"要有畫面感，讓人看了想分享。"}],
+        )
+        tagline = msg.content[0].text.strip()
+        redis_set(cache_key, tagline, ttl=7 * 86400)
+        return tagline
+    except Exception as e:
+        print(f"[plan_tagline] {e}")
+        return ""
+
+
 def _prompt_summary(user_id: str) -> list:
     """產出完整計畫書"""
     from bot.constants.cities import IATA_TO_NAME, TW_AIRPORTS, CITY_FLAG, IATA_TO_COUNTRY
@@ -1700,6 +1766,10 @@ def _prompt_summary(user_id: str) -> list:
     if culture:
         plug = culture.get("plug_type", "")
         culture_highlights = f"\U0001f50c {plug}" if plug else ""
+
+    # ── 主題配色 + LLM 標語 ──
+    theme_color, theme_emoji = _plan_theme(custom)
+    tagline = _llm_plan_tagline(city, custom, days, adults, depart)
 
     # ── 建立計畫書 Flex Message ──
     # 摘要卡片
@@ -1825,12 +1895,15 @@ def _prompt_summary(user_id: str) -> list:
                 "type": "bubble", "size": "mega",
                 "header": {
                     "type": "box", "layout": "vertical",
-                    "backgroundColor": "#FF6B35", "paddingAll": "18px",
+                    "backgroundColor": theme_color, "paddingAll": "18px",
                     "contents": [
-                        {"type": "text", "text": f"\U0001f389 \u4f60\u7684\u51fa\u570b\u8a08\u756b\u5b8c\u6210\uff01",
+                        {"type": "text",
+                         "text": f"{theme_emoji} {flag} {city} {days_text}",
                          "color": "#FFFFFF", "weight": "bold", "size": "xl"},
-                        {"type": "text", "text": f"{flag} {city} {days_text}",
-                         "color": "#FFE0CC", "size": "md", "margin": "xs"},
+                        {"type": "text",
+                         "text": tagline if tagline else "你的出國計畫完成！",
+                         "color": "#FFFFFFCC", "size": "sm",
+                         "margin": "sm", "wrap": True},
                     ],
                 },
                 "body": {
