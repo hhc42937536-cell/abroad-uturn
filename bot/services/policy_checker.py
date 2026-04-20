@@ -209,61 +209,84 @@ def scrape_travel_advisories() -> dict:
 
 _BOCA_BASE = "https://www.boca.gov.tw"
 
-# BOCA 各區域頁面（台灣護照免簽概覽）
-_BOCA_REGIONS = [
-    "/sp-foof-countrylp-01-2.html",   # 亞太
-    "/sp-foof-countrylp-01-3.html",   # 美洲
-    "/sp-foof-countrylp-01-4.html",   # 歐洲
-    "/sp-foof-countrylp-01-5.html",   # 非洲中東
-]
+# BOCA 免簽/落地簽/電子簽綜合頁面（2025 改版後的正確 URL）
+_BOCA_VISA_EXEMPT_URL = "/cp-220-4486-7785a-1.html"
+
+# 落地簽與電子簽頁面（各有獨立頁面）
+_BOCA_VOA_URL = "/cp-220-4489-7785a-1.html"
+_BOCA_EVISA_URL = "/cp-220-4490-7785a-1.html"
 
 
-def _scrape_boca_region(path: str) -> list[dict]:
-    """爬單一 BOCA 區域頁面，回傳 [{code, visa_required, stay_limit, notes}]"""
-    html = _fetch(f"{_BOCA_BASE}{path}")
-    if not html:
-        return []
-
+def _parse_boca_list_page(html: str, visa_type_label: str) -> list[dict]:
+    """
+    解析 BOCA 改版後的 <ol> 列表頁面。
+    頁面結構：<h3>停留XX天</h3> → <ol><li>國名</li>…</ol>
+    visa_type_label: "免簽" / "落地簽" / "電子簽"
+    """
     results = []
+    today = datetime.date.today().isoformat()
 
-    # BOCA 頁面通常用 table 列出國家，每列包含：國名、停留天數、備註
-    rows = re.findall(r'<tr[^>]*>(.*?)</tr>', html, re.DOTALL | re.IGNORECASE)
-    for row in rows:
-        cells = re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', row, re.DOTALL | re.IGNORECASE)
-        # 去除 HTML tag，取純文字
-        clean = [re.sub(r'<[^>]+>', '', c).strip() for c in cells]
-        clean = [" ".join(c.split()) for c in clean if c.strip()]
+    # 把頁面切成段落：找每個「停留N天」區塊
+    # 例：<h3...>停留90天</h3>...<ol>...<li>日本</li>...</ol>
+    sections = re.split(r'(?=<h[23][^>]*>)', html, flags=re.IGNORECASE)
+    for section in sections:
+        # 取出天數
+        days_m = re.search(r'停留\s*(\d+)\s*天', section)
+        stay_days = f"{days_m.group(1)}天" if days_m else ""
 
-        if len(clean) < 2:
+        # 取出 <ol> 內所有 <li>
+        ol_m = re.search(r'<ol[^>]*>(.*?)</ol>', section, re.DOTALL | re.IGNORECASE)
+        if not ol_m:
             continue
-
-        country_name = clean[0]
-        iso = _ZH_TO_ISO.get(country_name)
-        if not iso:
-            # 嘗試部分匹配
-            for zh, code in _ZH_TO_ISO.items():
-                if zh in country_name:
-                    iso = code
-                    break
-        if not iso:
-            continue
-
-        combined = " ".join(clean[1:])
-        visa_type = _parse_visa_type(combined)
-        stay = _parse_stay_days(combined)
-
-        if not visa_type:
-            continue
-
-        results.append({
-            "code": iso,
-            "visa_required": False if visa_type == "免簽" else visa_type,
-            "stay_limit": stay or "依簽證效期",
-            "notes": combined[:80],
-            "_scraped": datetime.date.today().isoformat(),
-        })
+        items = re.findall(r'<li[^>]*>(.*?)</li>', ol_m.group(1), re.DOTALL | re.IGNORECASE)
+        for item in items:
+            name = re.sub(r'<[^>]+>', '', item).strip()
+            name = " ".join(name.split())
+            if not name:
+                continue
+            # 對照 ISO code
+            iso = _ZH_TO_ISO.get(name)
+            if not iso:
+                for zh, code in _ZH_TO_ISO.items():
+                    if zh in name:
+                        iso = code
+                        break
+            if not iso:
+                continue
+            results.append({
+                "code": iso,
+                "visa_required": False if visa_type_label == "免簽" else visa_type_label,
+                "stay_limit": stay_days or "依簽證效期",
+                "notes": f"{visa_type_label}，停留{stay_days}" if stay_days else visa_type_label,
+                "_scraped": today,
+            })
 
     return results
+
+
+def _scrape_boca_visa_exempt() -> list[dict]:
+    """爬 BOCA 免簽/落地簽/電子簽三個頁面，合併回傳"""
+    all_results: dict[str, dict] = {}
+    today = datetime.date.today().isoformat()
+
+    for path, label in [
+        (_BOCA_VISA_EXEMPT_URL, "免簽"),
+        (_BOCA_VOA_URL, "落地簽"),
+        (_BOCA_EVISA_URL, "電子簽"),
+    ]:
+        html = _fetch(f"{_BOCA_BASE}{path}")
+        if not html:
+            print(f"[policy] BOCA {label} 頁面抓取失敗: {path}")
+            continue
+        items = _parse_boca_list_page(html, label)
+        print(f"[policy] BOCA {label} 解析到 {len(items)} 個國家")
+        for item in items:
+            code = item["code"]
+            # 免簽優先（覆蓋落地簽/電子簽）
+            if code not in all_results or label == "免簽":
+                all_results[code] = item
+
+    return list(all_results.values())
 
 
 def scrape_and_update_visa() -> dict:
@@ -277,11 +300,9 @@ def scrape_and_update_visa() -> dict:
 
     all_scraped: dict[str, dict] = {}
 
-    for region_path in _BOCA_REGIONS:
-        items = _scrape_boca_region(region_path)
-        for item in items:
-            code = item.pop("code")
-            all_scraped[code] = item
+    for item in _scrape_boca_visa_exempt():
+        code = item.pop("code")
+        all_scraped[code] = item
 
     print(f"[policy] BOCA 爬到 {len(all_scraped)} 個國家")
 
