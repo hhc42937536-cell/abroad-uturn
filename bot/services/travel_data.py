@@ -71,6 +71,51 @@ def get_insider_tips(dest_code: str) -> dict | None:
     return data.get(dest_code)
 
 
+def get_restaurants(dest_code: str) -> dict:
+    """讀取目的地精選餐廳資料（依類別分類）"""
+    # dest_code 可能是 IATA（TYO/SEL）或國家代碼，先直接查，查不到再嘗試映射
+    data = _load_json("restaurants.json")
+    result = data.get(dest_code)
+    if result:
+        return result
+    # IATA → city mapping
+    _iata_map = {
+        "NRT": "TYO", "HND": "TYO",
+        "KIX": "OSA", "ITM": "OSA",
+        "FUK": "FUK",
+        "ICN": "SEL", "GMP": "SEL",
+        "BKK": "BKK", "DMK": "BKK",
+        "SIN": "SIN",
+        "DPS": "DPS",
+        "HAN": "HAN",
+        "SGN": "SGN",
+        "KUL": "KUL",
+    }
+    mapped = _iata_map.get(dest_code)
+    return data.get(mapped, {}) if mapped else {}
+
+
+def get_restaurants_summary(dest_code: str, max_per_cat: int = 2) -> str:
+    """
+    把餐廳資料整理成 LLM prompt 用的文字摘要。
+    格式：【類別】店名（區域）必點：xxx；價位：xxx；秘訣：xxx
+    """
+    rests = get_restaurants(dest_code)
+    if not rests:
+        return ""
+    lines = []
+    for cat, items in rests.items():
+        for item in items[:max_per_cat]:
+            line = (
+                f"【{cat}】{item['name']}（{item['area']}）"
+                f"必點：{item['must_order']}；"
+                f"價位：{item['price_per_person']}；"
+                f"秘訣：{item['tip']}"
+            )
+            lines.append(line)
+    return "\n".join(lines)
+
+
 def get_packing_list(country_code: str, month: int = 6) -> dict:
     """根據國家和月份產生打包清單"""
     data = _load_json("packing_templates.json")

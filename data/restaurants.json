@@ -1,0 +1,458 @@
+{
+  "TYO": {
+    "sushi": [
+      {
+        "name": "大和寿司",
+        "area": "築地場外市場",
+        "category": "握壽司",
+        "price_per_person": "¥3,500-5,500",
+        "must_order": "おまかせ 10 貫",
+        "meal_time": ["早餐", "午餐"],
+        "tip": "週二公休；早上8點前到才排得到，10點後人龍超長",
+        "transit": "地鐵日比谷線「築地」站步行5分"
+      },
+      {
+        "name": "すし大",
+        "area": "築地場外市場",
+        "category": "握壽司",
+        "price_per_person": "¥4,000-6,000",
+        "must_order": "おまかせコース",
+        "meal_time": ["早餐", "午餐"],
+        "tip": "東京最有名的市場壽司之一，排隊2-3小時是常態，建議平日開門前1小時到",
+        "transit": "地鐵日比谷線「築地」站步行5分"
+      },
+      {
+        "name": "次郎長 銀座店",
+        "area": "銀座",
+        "category": "迴轉壽司",
+        "price_per_person": "¥2,000-4,000",
+        "must_order": "赤身・中トロ・雲丹",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "銀座高CP值迴轉壽司，11:30開門先到排隊免等",
+        "transit": "地鐵銀座線「銀座」站步行3分"
+      }
+    ],
+    "ramen": [
+      {
+        "name": "一蘭拉麵 新宿店",
+        "area": "新宿",
+        "category": "豚骨拉麵",
+        "price_per_person": "¥980-1,500",
+        "must_order": "一蘭拉麵（可自選濃度/辣度/蔥量）",
+        "meal_time": ["午餐", "晚餐", "宵夜"],
+        "tip": "24小時營業；個室座位不用跟陌生人並排，獨旅最舒服；替玉（加麵）¥150必點",
+        "transit": "JR 新宿站東口步行5分"
+      },
+      {
+        "name": "麺屋海神 新宿店",
+        "area": "新宿",
+        "category": "魚介清湯拉麵",
+        "price_per_person": "¥1,200-1,500",
+        "must_order": "あら炊き塩らーめん（魚骨鹽味）",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "不同於一般豚骨，魚骨清湯獨特，週末排隊30分鐘是常態",
+        "transit": "JR 新宿站西口步行8分"
+      },
+      {
+        "name": "東京拉麵街（東京ラーメンストリート）",
+        "area": "東京站",
+        "category": "拉麵廣場",
+        "price_per_person": "¥900-1,300",
+        "must_order": "各店招牌（六厘舎沾麵・ソラノイロ蔬菜拉麵）",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "東京站一番街地下1F，8間名店集中，平日午餐時間各店排30-60分",
+        "transit": "JR 東京站八重洲南口地下"
+      }
+    ],
+    "tempura": [
+      {
+        "name": "大黒家天麩羅",
+        "area": "淺草",
+        "category": "江戶前天婦羅",
+        "price_per_person": "¥1,800-2,500",
+        "must_order": "天丼（えび天・きす天のせ）",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "1887年創業老舖，天丼醬汁濃厚偏甜是特色；13:00-15:00 人最少",
+        "transit": "地鐵銀座線「淺草」站步行5分"
+      },
+      {
+        "name": "つな八 新宿総本店",
+        "area": "新宿",
+        "category": "天婦羅",
+        "price_per_person": "¥2,500-4,000",
+        "must_order": "天丼・天ぷら定食",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "新宿老字號天婦羅，建議訂位；比淺草大黒家清爽，適合不愛重口味的人",
+        "transit": "JR 新宿站東口步行5分"
+      }
+    ],
+    "gyukatsu": [
+      {
+        "name": "京都勝牛 渋谷店",
+        "area": "澀谷",
+        "category": "炸牛排（牛カツ）",
+        "price_per_person": "¥1,500-2,200",
+        "must_order": "牛カツ定食（含麥飯・高麗菜絲・麻婆豆腐）",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "六成熟炸牛排用小鍋石板自己加熱到喜歡的熟度，台灣人必體驗；澀谷店排隊約20分鐘",
+        "transit": "JR 澀谷站ハチ公口步行5分"
+      }
+    ],
+    "yakiniku": [
+      {
+        "name": "叙々苑 新宿御苑店",
+        "area": "新宿",
+        "category": "和牛燒肉",
+        "price_per_person": "¥6,000-10,000",
+        "must_order": "和牛カルビ・タン塩・ユッケ（生牛肉）",
+        "meal_time": ["晚餐"],
+        "tip": "東京最知名連鎖燒肉之一，台灣人愛去；建議提前訂位，走路進去常客滿",
+        "transit": "地鐵丸ノ内線「新宿御苑前」站步行3分"
+      }
+    ],
+    "izakaya": [
+      {
+        "name": "磯丸水産 新宿東口店",
+        "area": "新宿",
+        "category": "海鮮居酒屋",
+        "price_per_person": "¥2,500-4,000",
+        "must_order": "帆立貝自燒・海老・刺身盛合わせ",
+        "meal_time": ["晚餐", "宵夜"],
+        "tip": "24小時營業，自己拿食材在桌上炭火燒，超好玩；新宿東口人多建議20:00後去",
+        "transit": "JR 新宿站東口步行3分"
+      },
+      {
+        "name": "大衆酒場 鳳月 上野店",
+        "area": "上野",
+        "category": "昭和風居酒屋",
+        "price_per_person": "¥1,500-2,500",
+        "must_order": "焼き鳥串盛り・ホッピー（低卡啤酒替代）",
+        "meal_time": ["晚餐"],
+        "tip": "昭和感滿滿的大衆居酒屋，串燒¥100-150/串，上野本地工薪族愛去的類型",
+        "transit": "JR 上野站 御徒町口步行3分"
+      }
+    ],
+    "sweets": [
+      {
+        "name": "梅園 淺草本店",
+        "area": "淺草",
+        "category": "和菓子・甘味",
+        "price_per_person": "¥500-1,200",
+        "must_order": "あわぜんざい（粟子紅豆湯）・みつ豆",
+        "meal_time": ["下午茶"],
+        "tip": "1854年創業，淺草寺參拜後必去；夏天有刨冰，冬天喝ぜんざい暖身",
+        "transit": "淺草寺仲見世通側巷步行3分"
+      },
+      {
+        "name": "淺草ちょうちんもなか",
+        "area": "淺草",
+        "category": "最中（もなか）",
+        "price_per_person": "¥200-500",
+        "must_order": "提燈もなか（提燈造型最中）",
+        "meal_time": ["點心"],
+        "tip": "淺草限定造型最中，包裝超美適合當伴手禮；現做現賣，下午3點後常賣完",
+        "transit": "淺草雷門前"
+      }
+    ],
+    "convenience": [
+      {
+        "name": "7-11・全家・ローソン",
+        "area": "全東京",
+        "category": "便利商店",
+        "price_per_person": "¥300-800",
+        "must_order": "蛋沙拉三明治・551豬肉包（大阪限定）・布丁・草莓大福（季節限定）",
+        "meal_time": ["早餐", "宵夜", "點心"],
+        "tip": "台灣人最愛踩點！7-11的蛋沙拉三明治是傳說，全家的法式吐司也是神品；晚上9點後有折扣",
+        "transit": "各處"
+      }
+    ]
+  },
+  "OSA": {
+    "okonomiyaki": [
+      {
+        "name": "美津の 道頓堀本店",
+        "area": "道頓堀・難波",
+        "category": "大阪燒",
+        "price_per_person": "¥1,500-2,500",
+        "must_order": "山芋燒（やまいもやき）・海鮮大阪燒",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "道頓堀創業70年老舖，師傅在你面前煎；排隊約30-60分鐘，建議11:30開門前到",
+        "transit": "地鐵御堂筋線「難波」站步行5分"
+      },
+      {
+        "name": "福太郎 千日前店",
+        "area": "難波",
+        "category": "大阪燒・章魚燒",
+        "price_per_person": "¥1,200-2,000",
+        "must_order": "ミックス大阪燒・特製たこ焼き",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "美津の的平價替代，品質一樣好但等待時間短很多",
+        "transit": "難波千日前商店街內"
+      }
+    ],
+    "takoyaki": [
+      {
+        "name": "章魚の頭 道頓堀店",
+        "area": "道頓堀",
+        "category": "章魚燒",
+        "price_per_person": "¥600-900",
+        "must_order": "8個 たこ焼き（原味+明太子口味）",
+        "meal_time": ["點心", "宵夜"],
+        "tip": "道頓堀必吃，外酥內液體狀才是正宗；剛出爐燙嘴，小心",
+        "transit": "道頓堀商店街"
+      },
+      {
+        "name": "会津屋 難波店",
+        "area": "難波",
+        "category": "章魚燒（元祖）",
+        "price_per_person": "¥500-800",
+        "must_order": "元祖たこ焼き（不加美乃滋・只有醬油和蔥花）",
+        "meal_time": ["點心"],
+        "tip": "1933年章魚燒發源店，比現代口味清爽，愛歷史必來",
+        "transit": "地鐵「難波」站步行7分"
+      }
+    ],
+    "kushikatsu": [
+      {
+        "name": "だるま 新世界総本店",
+        "area": "新世界・通天閣",
+        "category": "串炸",
+        "price_per_person": "¥1,500-2,500",
+        "must_order": "串炸10本套餐（牛肉・蝦・雞・玉子・蓮藕）",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "新世界必去！醬料「只能沾一次」是鐵則；油炸香酥超好吃，配啤酒完美",
+        "transit": "地鐵堺筋線「恵美須町」站步行5分"
+      }
+    ],
+    "ramen": [
+      {
+        "name": "神座 道頓堀店",
+        "area": "道頓堀",
+        "category": "蔬菜豚骨拉麵",
+        "price_per_person": "¥800-1,200",
+        "must_order": "おいしいラーメン（特製白菜湯底）",
+        "meal_time": ["午餐", "晚餐", "宵夜"],
+        "tip": "大阪在地連鎖，白菜甜湯底是特色；道頓堀店24小時，逛完宵夜必選",
+        "transit": "道頓堀商店街"
+      }
+    ]
+  },
+  "SEL": {
+    "bbq": [
+      {
+        "name": "마포 갈매기 (麻浦갈매기)",
+        "area": "弘大・麻浦",
+        "category": "韓式烤肉（갈매기살）",
+        "price_per_person": "₩18,000-30,000",
+        "must_order": "갈매기살（豬橫膈膜）・삼겹살（五花肉）",
+        "meal_time": ["晚餐"],
+        "tip": "弘大一帶人氣烤肉，店員幫你烤；配生菜包肉+辛奇，配炒飯收尾",
+        "transit": "地鐵2號線「弘大入口」站步行7分"
+      },
+      {
+        "name": "원할머니 보쌈족발 명동점",
+        "area": "明洞",
+        "category": "보쌈（水煮豬肉）",
+        "price_per_person": "₩20,000-35,000",
+        "must_order": "보쌈 세트（生菜包水煮豬肉+辛奇+大醬）",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "明洞近，水煮豬肉清爽不油膩；台灣人比燒烤更少試，但超好吃",
+        "transit": "地鐵4號線「明洞」站步行5分"
+      }
+    ],
+    "jjajang": [
+      {
+        "name": "共和春 仁川차이나타운점",
+        "area": "仁川唐人街",
+        "category": "炸醬麵（짜장면）",
+        "price_per_person": "₩7,000-12,000",
+        "must_order": "짜장면（炸醬麵）・짬뽕（辣海鮮湯麵）",
+        "meal_time": ["午餐"],
+        "tip": "仁川唐人街最古老的韓式中餐館，炸醬麵發源地；從首爾搭地鐵1號線約1小時，適合首爾仁川機場出發時順遊",
+        "transit": "仁川地鐵1號線「仁川站」步行5分"
+      }
+    ],
+    "tteokbokki": [
+      {
+        "name": "마복림 할머니 떡볶이",
+        "area": "廣藏市場",
+        "category": "辣炒年糕",
+        "price_per_person": "₩3,000-5,000",
+        "must_order": "떡볶이（辣炒年糕）",
+        "meal_time": ["點心"],
+        "tip": "廣藏市場的年糕發源老奶奶店，搭配生魚片・蛋捲；廣藏市場早上9點最新鮮",
+        "transit": "地鐵1號線「鐘路5街」站步行5分"
+      }
+    ],
+    "chimaek": [
+      {
+        "name": "교촌치킨 弘大店",
+        "area": "弘大",
+        "category": "炸雞（치킨）",
+        "price_per_person": "₩15,000-22,000",
+        "must_order": "허니콤보（蜂蜜原味）・레드콤보（辣味）各半",
+        "meal_time": ["晚餐", "宵夜"],
+        "tip": "韓國三大炸雞之一；半半（반반）點兩種口味，配啤酒（치맥）是韓國必體驗",
+        "transit": "地鐵2號線「弘大入口」站步行5分"
+      }
+    ],
+    "cafe": [
+      {
+        "name": "익선동 한옥마을 카페거리",
+        "area": "益善洞韓屋村",
+        "category": "韓屋咖啡街",
+        "price_per_person": "₩5,000-12,000",
+        "must_order": "달고나 커피（糖霜拿鐵）・쑥 라떼（艾草拿鐵）",
+        "meal_time": ["下午茶"],
+        "tip": "百年韓屋改建咖啡館，傳統+現代感；週末午後人多，建議平日下午去或週末10點前",
+        "transit": "地鐵3號線「安國」站步行10分"
+      }
+    ]
+  },
+  "BKK": {
+    "padthai": [
+      {
+        "name": "Thip Samai（帝王炒河粉）",
+        "area": "老城區・Phra Nakhon",
+        "category": "Pad Thai",
+        "price_per_person": "฿90-250",
+        "must_order": "Pad Thai包蛋（ห่อไข่）・蝦膏版Pad Thai",
+        "meal_time": ["晚餐", "宵夜"],
+        "tip": "曼谷最傳奇炒河粉，包蛋版是必點；每天下午5點開始排隊，旺季等1-2小時；建議7點後人稍少",
+        "transit": "運河船 Phanfa橋站步行10分"
+      }
+    ],
+    "tomyum": [
+      {
+        "name": "Polo Fried Chicken（泰式炸雞+冬蔭功）",
+        "area": "Lumphini公園附近",
+        "category": "泰式炸雞・冬蔭功",
+        "price_per_person": "฿120-250",
+        "must_order": "炸雞腿・冬蔭功湯・泰式炒空心菜",
+        "meal_time": ["午餐", "晚餐"],
+        "tip": "曼谷最知名的泰式炸雞老店（不是KFC），皮超酥脆；配冬蔭功湯是標配",
+        "transit": "BTS「Ploen Chit」站步行15分或計程車"
+      }
+    ],
+    "streetfood": [
+      {
+        "name": "Or Tor Kor 市場（奧多可市場）",
+        "area": "Chatuchak",
+        "category": "高端生鮮市場・泰式熟食",
+        "price_per_person": "฿100-300",
+        "must_order": "Mango Sticky Rice・烤椰子・新鮮果汁・泰式甜點",
+        "meal_time": ["早餐", "午餐"],
+        "tip": "泰國最高品質的生鮮市場，緊鄰恰圖恰，食材比路邊攤乾淨很多；Mango Sticky Rice是全曼谷最好吃之一",
+        "transit": "BTS或地鐵「Mo Chit / Chatuchak Park」站步行5分"
+      },
+      {
+        "name": "Yaowarat 中國城夜市",
+        "area": "耀華叻・中國城",
+        "category": "海鮮夜市",
+        "price_per_person": "฿200-500",
+        "must_order": "烤生蠔・海鮮炒麵・燕窩（Guilin）",
+        "meal_time": ["晚餐"],
+        "tip": "曼谷中國城週末最熱鬧，海鮮現點現做；19:00-21:00人最旺，建議18:30到佔位",
+        "transit": "運河船到Ratchawong Pier步行5分"
+      }
+    ],
+    "massage": [
+      {
+        "name": "Wat Pho 按摩學校",
+        "area": "臥佛寺",
+        "category": "泰式古法按摩",
+        "price_per_person": "฿420-600/小時",
+        "must_order": "傳統泰式按摩60分鐘",
+        "meal_time": ["下午"],
+        "tip": "臥佛寺附設按摩學校是曼谷最正宗古法按摩，由認證學生施術；比路邊按摩貴但安全正規",
+        "transit": "臥佛寺 Chetuphon 側門"
+      }
+    ]
+  },
+  "SIN": {
+    "hawker": [
+      {
+        "name": "Maxwell 熟食中心",
+        "area": "牛車水（中國城）",
+        "category": "小販中心",
+        "price_per_person": "S$6-15",
+        "must_order": "天天海南雞飯・陳兆記芽菜雞・炒蘿蔔糕",
+        "meal_time": ["早餐", "午餐"],
+        "tip": "最著名的小販中心，天天海南雞飯是排行榜常客；平日11點前去避開午餐人潮；雞飯S$5起超值",
+        "transit": "地鐵East-West Line「Outram Park」站步行5分"
+      },
+      {
+        "name": "Lau Pa Sat 老巴刹",
+        "area": "中央商業區 CBD",
+        "category": "小販中心・夜市",
+        "price_per_person": "S$8-20",
+        "must_order": "沙嗲（晚上才有）・炒粿條・Teh Tarik（拉茶）",
+        "meal_time": ["晚餐"],
+        "tip": "1894年維多利亞鑄鐵建築，晚上7點後周邊路邊攤（Boon Tat St）開始擺沙嗲攤，必吃",
+        "transit": "地鐵Circle Line「Telok Ayer」站步行2分"
+      }
+    ],
+    "chilli_crab": [
+      {
+        "name": "Jumbo Seafood 東岸本店",
+        "area": "東海岸公園",
+        "category": "辣椒螃蟹",
+        "price_per_person": "S$80-150",
+        "must_order": "Chilli Crab・Black Pepper Crab・Mantou（沾醬油炸麵包）",
+        "meal_time": ["晚餐"],
+        "tip": "新加坡最著名辣椒蟹，預約是必要的（至少提前1週）；螃蟹依重量計費約S$65-85/kg",
+        "transit": "計程車或Grab最方便；東岸本店氛圍最好"
+      }
+    ],
+    "laksa": [
+      {
+        "name": "328 Katong Laksa",
+        "area": "加東",
+        "category": "叻沙（Laksa）",
+        "price_per_person": "S$5-8",
+        "must_order": "Katong Laksa（短麵版，用湯匙吃）",
+        "meal_time": ["早餐", "午餐"],
+        "tip": "新加坡最知名的叻沙流派，麵剪短用湯匙吃是特色；加東地區有多間競爭，找「328」這間",
+        "transit": "計程車到 East Coast Rd，或地鐵 Thomson-East Coast Line「Marine Parade」站"
+      }
+    ]
+  },
+  "DPS": {
+    "warung": [
+      {
+        "name": "Warung Babi Guling Ibu Oka",
+        "area": "烏布（Ubud）",
+        "category": "巴里島烤乳豬",
+        "price_per_person": "Rp50,000-80,000",
+        "must_order": "Babi Guling（烤乳豬飯套餐）",
+        "meal_time": ["午餐"],
+        "tip": "巴里島最傳奇烤乳豬，歐巴馬吃過！11點前到否則賣完；只收現金",
+        "transit": "Ubud皇宮旁步行5分"
+      }
+    ],
+    "seafood": [
+      {
+        "name": "Jimbaran 海鮮燒烤（Menega Cafe）",
+        "area": "金巴蘭海灘",
+        "category": "沙灘海鮮燒烤",
+        "price_per_person": "Rp150,000-300,000",
+        "must_order": "龍蝦・大蝦・鯛魚・魷魚（依重量計費）",
+        "meal_time": ["晚餐"],
+        "tip": "日落時分在海灘邊燒烤是巴里島最浪漫的體驗；Menega是金巴蘭最有口碑的一間；需砍價或確認計費方式",
+        "transit": "峇里島南部；計程車或Grab建議"
+      }
+    ],
+    "nasi_campur": [
+      {
+        "name": "Nasi Ayam Kedewatan Ibu Mangku",
+        "area": "Kedewatan・烏布",
+        "category": "峇里島雞飯（Nasi Ayam）",
+        "price_per_person": "Rp30,000-60,000",
+        "must_order": "Nasi Ayam Betutu（香料雞肉飯）",
+        "meal_time": ["早餐", "午餐"],
+        "tip": "烏布深受背包客推薦的在地食堂；貝都魯香料雞是峇里島特色，辣度可控",
+        "transit": "烏布市場附近，步行可達"
+      }
+    ]
+  }
+}

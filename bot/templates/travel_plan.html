@@ -288,9 +288,57 @@
   /* ── Must Eat ────────────────────────────────── */
   .food-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
   }
+  .food-card {
+    background: #fff8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-top: 3px solid #e65100;
+  }
+  .food-card-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #b71c1c;
+    margin-bottom: 4px;
+  }
+  .food-card-cat {
+    font-size: 11px;
+    color: #e65100;
+    font-weight: 600;
+    background: #ffe0cc;
+    border-radius: 50px;
+    padding: 1px 8px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .food-card-area {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .food-card-order {
+    font-size: 12.5px;
+    color: #3e1500;
+    margin-bottom: 4px;
+  }
+  .food-card-order strong { color: #b71c1c; }
+  .food-card-price {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  .food-card-tip {
+    font-size: 11.5px;
+    color: #555;
+    background: #fff3ec;
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  /* 字串版（fallback）*/
   .food-item {
     background: #fff8f0;
     border-radius: 8px;
@@ -600,7 +648,18 @@
       <div class="section-content">
         <div class="food-grid">
           {% for item in must_eat %}
-          <div class="food-item">{{ item }}</div>
+            {% if item is mapping %}
+            <div class="food-card">
+              <div class="food-card-name">{{ item.name }}</div>
+              {% if item.category %}<span class="food-card-cat">{{ item.category }}</span>{% endif %}
+              {% if item.area %}<div class="food-card-area">📍 {{ item.area }}</div>{% endif %}
+              {% if item.must_order %}<div class="food-card-order"><strong>必點：</strong>{{ item.must_order }}</div>{% endif %}
+              {% if item.price %}<div class="food-card-price">💰 {{ item.price }}/人</div>{% endif %}
+              {% if item.tip %}<div class="food-card-tip">💡 {{ item.tip }}</div>{% endif %}
+            </div>
+            {% else %}
+            <div class="food-item">{{ item }}</div>
+            {% endif %}
           {% endfor %}
         </div>
       </div>

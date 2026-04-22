@@ -278,14 +278,16 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     adults_hint = f"{adults}人同行" if adults > 1 else "獨自旅行"
     custom_hint = f"\n特別需求：{custom_requests}" if custom_requests else ""
 
-    # 注入在地眉角（票務/人潮/交通/隱藏景點）
-    insider_block = ""
+    # 注入在地眉角 + 精選餐廳
+    knowledge_block = ""
     if dest_code:
         try:
-            from bot.services.travel_data import get_insider_tips
+            from bot.services.travel_data import get_insider_tips, get_restaurants_summary
             tips = get_insider_tips(dest_code)
+            rest_summary = get_restaurants_summary(dest_code, max_per_cat=2)
+
+            parts = []
             if tips:
-                parts = []
                 if tips.get("ticket"):
                     parts.append("【票務時機】" + "；".join(tips["ticket"][:3]))
                 if tips.get("crowd"):
@@ -294,35 +296,43 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
                     parts.append("【交通秘技】" + "；".join(tips["transport"][:2]))
                 if tips.get("hidden"):
                     parts.append("【隱藏景點】" + "；".join(tips["hidden"][:2]))
-                if parts:
-                    insider_block = (
-                        "\n\n以下是台灣旅客專屬的在地眉角，請優先融入行程建議中（這些資訊一般旅遊網站查不到）：\n"
-                        + "\n".join(parts)
-                    )
+            if parts:
+                knowledge_block += (
+                    "\n\n【在地眉角（台灣旅客專屬，一般旅遊網站查不到）】\n"
+                    + "\n".join(parts)
+                )
+            if rest_summary:
+                knowledge_block += (
+                    "\n\n【精選餐廳資料庫（請優先從這裡挑選推薦，勿亂說不在清單裡的店）】\n"
+                    + rest_summary
+                )
         except Exception:
             pass
 
     mid_days = max(days - 2, 1)
-    prompt = f"""你是服務台灣旅客的資深領隊，熟悉{city_name}所有在地細節。
-請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。{custom_hint}{insider_block}
+    prompt = f"""你是服務台灣旅客的資深旅遊達人，深知{city_name}所有在地細節。
+請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。{custom_hint}{knowledge_block}
 
-任務：只規劃第 2 天到第 {days-1} 天的【中間天】，共 {mid_days} 天。（第1天抵達、最後一天回台，不需規劃）
+任務：只規劃第 2 天到第 {days-1} 天的【中間天】，共 {mid_days} 天。
+（第1天抵達/放行李，最後一天回台，這兩天不需規劃）
 
-每個時段（上午/下午/晚上）必須包含：
-1. 具體景點或區域名稱（例如：「築地場外市場」而非「市場」）
-2. 一個餐廳或美食推薦，含大概價格（日圓/韓元/泰銖，不要用台幣換算）
-3. 一個在地秘訣（幾點到最好、要不要預約、如何省錢/省時間）
-4. 可選替代行程（如果有好選項）
+【每個時段必須包含】
+1. 具體景點名稱（「築地場外市場」，不能只寫「市場」）
+2. 具體餐廳名稱 + 必點菜色 + 大概價格（從上方精選清單挑，若清單無該區餐廳才自行推薦）
+3. 到達時間建議 + 一個讓行程更順暢的秘訣
+4. 每個時段約 3~4 句話，資訊密度高，口氣像在地朋友推薦
 
-文字風格：像朋友推薦，不要機器人感。每個時段約 3~4 句話，資訊密度高。
+【禁止】
+- 不能只寫「去居酒屋」「吃拉麵」這種廢話
+- 不能推薦不確定存在的店名（不在清單又沒把握的，寫區域+食物類型就好）
+- 不要在 JSON 之外輸出任何文字
 
-輸出格式：只回傳 JSON array，不要其他文字。
-每個元素：
+輸出格式：只回傳 JSON array。
 {{
   "theme": "當天主題（2~4個地名，用・分隔）",
-  "am": "上午詳細規劃（含景點、美食、秘訣）",
-  "pm": "下午詳細規劃（含景點、美食、秘訣）",
-  "eve": "晚上詳細規劃（含餐廳推薦、氛圍、消費預估）"
+  "am": "上午詳細規劃",
+  "pm": "下午詳細規劃",
+  "eve": "晚上詳細規劃（含具體餐廳名稱或區域+類型+消費預估）"
 }}"""
 
     try:

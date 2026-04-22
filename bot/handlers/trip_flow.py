@@ -1954,7 +1954,31 @@ def _prompt_summary(user_id: str) -> list:
 
 
 def _get_must_eat(dest_code: str) -> list:
-    """取得目的地必吃清單（供下載用）"""
+    """
+    取得目的地必吃清單（供下載用）。
+    優先從 restaurants.json 取具體店家資訊，fallback 靜態範本。
+    回傳格式：str 或 dict（含 name/tip/price/must_order）
+    """
+    try:
+        from bot.services.travel_data import get_restaurants
+        rests = get_restaurants(dest_code)
+        if rests:
+            result = []
+            for cat, items in rests.items():
+                for item in items[:2]:  # 每類最多2間
+                    result.append({
+                        "name": item["name"],
+                        "category": item.get("category", cat),
+                        "area": item.get("area", ""),
+                        "must_order": item.get("must_order", ""),
+                        "price": item.get("price_per_person", ""),
+                        "tip": item.get("tip", ""),
+                    })
+            if result:
+                return result
+    except Exception:
+        pass
+    # fallback：靜態範本字串清單
     try:
         from bot.utils.itinerary_builder import _get_template
         tmpl = _get_template(dest_code)
