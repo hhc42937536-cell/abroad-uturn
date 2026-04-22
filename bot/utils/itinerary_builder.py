@@ -186,6 +186,70 @@ def _time_row(time_label: str, content: str) -> dict:
     }
 
 
+def get_hotel_recs(dest_code: str, city_name: str, budget: str = "",
+                   adults: int = 1) -> dict | None:
+    """
+    呼叫 Claude Haiku 生成住宿區域推薦。
+    回傳 {"areas": [...], "budget_note": "...", "tip": "..."} 或 None。
+    快取 48 小時。
+    """
+    try:
+        import anthropic
+        from bot.services.redis_store import redis_get, redis_set
+    except ImportError:
+        return None
+
+    cache_key = f"llm_hotel:{dest_code}:{budget}"
+    cached = redis_get(cache_key)
+    if cached:
+        try:
+            return json.loads(cached)
+        except Exception:
+            pass
+
+    budget_hint = f"預算約 {budget}" if budget else ""
+    adults_hint = f"{adults}人同行" if adults > 1 else "獨自旅行"
+
+    prompt = f"""你是{city_name}住宿達人，請給台灣旅客{adults_hint}({budget_hint})的住宿建議。
+
+輸出 JSON（只回傳 JSON，不要其他文字）：
+{{
+  "areas": [
+    {{
+      "name": "住宿區域名稱",
+      "pros": "推薦原因（交通/生活機能/氛圍，1~2句）",
+      "suited_for": "適合誰（例：第一次去/愛購物/親子）",
+      "landmark": "附近地標或車站名"
+    }}
+  ],
+  "budget_note": "大概每晚費用，含幣種（不要換算台幣）",
+  "booking_tip": "訂房技巧或注意事項（1句）"
+}}
+
+請列 3~4 個區域，從最推薦到次選排列。"""
+
+    try:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            return None
+        client = anthropic.Anthropic(api_key=api_key, timeout=8.0)
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = message.content[0].text.strip()
+        start, end = raw.find("{"), raw.rfind("}") + 1
+        if start == -1 or end == 0:
+            return None
+        result = json.loads(raw[start:end])
+        redis_set(cache_key, json.dumps(result, ensure_ascii=False), ttl=60 * 60 * 48)
+        return result
+    except Exception as e:
+        print(f"[itinerary] hotel recs error: {e}")
+    return None
+
+
 def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
                    budget: str = "", adults: int = 1,
                    custom_requests: str = "",
@@ -238,22 +302,37 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
         except Exception:
             pass
 
-    prompt = (
-        f"請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。{custom_hint}{insider_block}\n\n"
-        f"只需回傳第 2 天到第 {days-1} 天（不含抵達/返台日）的中間天，共 {max(days-2,1)} 天。\n"
-        f"回傳 JSON array，每個元素格式：\n"
-        f'  {{"theme":"主題","am":"上午行程（1~2句，含具體時間/秘訣）","pm":"下午行程","eve":"晚上行程"}}\n'
-        f"只回傳 JSON array，不要其他文字。請融入在地眉角讓建議比一般 Google 搜尋更有價值。"
-    )
+    mid_days = max(days - 2, 1)
+    prompt = f"""你是服務台灣旅客的資深領隊，熟悉{city_name}所有在地細節。
+請為台灣旅客規劃{city_name} {days}天旅遊行程{season_hint}，{adults_hint}，{budget_hint}。{custom_hint}{insider_block}
+
+任務：只規劃第 2 天到第 {days-1} 天的【中間天】，共 {mid_days} 天。（第1天抵達、最後一天回台，不需規劃）
+
+每個時段（上午/下午/晚上）必須包含：
+1. 具體景點或區域名稱（例如：「築地場外市場」而非「市場」）
+2. 一個餐廳或美食推薦，含大概價格（日圓/韓元/泰銖，不要用台幣換算）
+3. 一個在地秘訣（幾點到最好、要不要預約、如何省錢/省時間）
+4. 可選替代行程（如果有好選項）
+
+文字風格：像朋友推薦，不要機器人感。每個時段約 3~4 句話，資訊密度高。
+
+輸出格式：只回傳 JSON array，不要其他文字。
+每個元素：
+{{
+  "theme": "當天主題（2~4個地名，用・分隔）",
+  "am": "上午詳細規劃（含景點、美食、秘訣）",
+  "pm": "下午詳細規劃（含景點、美食、秘訣）",
+  "eve": "晚上詳細規劃（含餐廳推薦、氛圍、消費預估）"
+}}"""
 
     try:
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
             return None
-        client = anthropic.Anthropic(api_key=api_key, timeout=8.0)
+        client = anthropic.Anthropic(api_key=api_key, timeout=12.0)
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=1024,
+            max_tokens=2048,
             messages=[{"role": "user", "content": prompt}],
         )
         raw = message.content[0].text.strip()

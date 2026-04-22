@@ -1860,6 +1860,7 @@ def _prompt_summary(user_id: str) -> list:
         "must_eat": _get_must_eat(dest),
         "itinerary": _get_itinerary_for_download(dest, depart, ret),
         "insider": _get_insider_for_download(dest),
+        "hotel_recs": _get_hotel_recs_for_download(dest, city, budget, adults),
     }
     redis_set(f"download:{download_token}", _json.dumps(plan_data, ensure_ascii=False), ttl=259200)
 
@@ -2020,6 +2021,17 @@ def _get_insider_for_download(dest_code: str) -> dict:
         }
     except Exception:
         return {}
+
+
+def _get_hotel_recs_for_download(dest_code: str, city: str,
+                                  budget: int | None, adults: int) -> dict | None:
+    """呼叫 LLM 生成住宿區域推薦，供計畫書頁面使用。"""
+    try:
+        from bot.utils.itinerary_builder import get_hotel_recs
+        budget_str = f"NT${budget:,}" if budget else ""
+        return get_hotel_recs(dest_code, city, budget=budget_str, adults=adults)
+    except Exception:
+        return None
 
 
 def _summary_row(label: str, value: str) -> dict:
