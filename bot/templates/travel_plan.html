@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ city }} 行程計畫書</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: {{ theme.primary }};
+    --accent:  {{ theme.accent }};
+    --light:   {{ theme.light }};
+    --text:    #1a1a2e;
+    --muted:   #64748b;
+    --white:   #ffffff;
+    --radius:  12px;
+    --shadow:  0 4px 24px rgba(0,0,0,0.10);
+  }
+
+  body {
+    font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    background: #f0f4f8;
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Print ───────────────────────────────────── */
+  @media print {
+    body { background: white; }
+    .no-print { display: none !important; }
+    .page { box-shadow: none; margin: 0; max-width: 100%; }
+    .hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section-card { break-inside: avoid; }
+    .day-card { break-inside: avoid; }
+  }
+
+  /* ── Layout ──────────────────────────────────── */
+  .page {
+    max-width: 820px;
+    margin: 24px auto;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Hero Header ─────────────────────────────── */
+  .hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 60%, #0288d1 100%);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .hero-flag {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 12px;
+    position: relative; z-index: 1;
+  }
+  .hero-title {
+    font-family: 'Montserrat', 'Noto Sans TC', sans-serif;
+    font-size: 40px;
+    font-weight: 900;
+    color: white;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    position: relative; z-index: 1;
+    margin-bottom: 8px;
+  }
+  .hero-subtitle {
+    font-size: 15px;
+    color: rgba(255,255,255,0.80);
+    position: relative; z-index: 1;
+    margin-bottom: 28px;
+  }
+  .hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    position: relative; z-index: 1;
+  }
+  .chip {
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.30);
+    color: white;
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* ── Download Button ─────────────────────────── */
+  .download-btn-wrap {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 40px;
+    background: var(--light);
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .download-btn {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 28px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 4px 14px rgba(26,35,126,0.25);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .download-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(26,35,126,0.35);
+  }
+
+  /* ── Content Body ────────────────────────────── */
+  .body-wrap {
+    padding: 32px 40px 48px;
+  }
+
+  /* ── Section Cards ───────────────────────────── */
+  .section-card {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid #e8edf5;
+    margin-bottom: 24px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: white;
+  }
+  .section-header.blue   { background: linear-gradient(90deg, #1a237e, #1565c0); }
+  .section-header.teal   { background: linear-gradient(90deg, #004d40, #00796b); }
+  .section-header.red    { background: linear-gradient(90deg, #b71c1c, #c62828); }
+  .section-header.amber  { background: linear-gradient(90deg, #e65100, #f57c00); }
+  .section-header.purple { background: linear-gradient(90deg, #4a148c, #6a1b9a); }
+  .section-header-icon { font-size: 18px; }
+  .section-content { padding: 20px; }
+
+  /* ── Info Grid ───────────────────────────────── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 540px) { .info-grid { grid-template-columns: 1fr; } }
+  .info-item {
+    background: #f8faff;
+    border-radius: 8px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--accent);
+  }
+  .info-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+  .info-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .info-full {
+    grid-column: 1 / -1;
+    background: #f8faff;
+    border-radius: 8px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--accent);
+  }
+
+  /* ── Travel Info Table ───────────────────────── */
+  .travel-table { width: 100%; border-collapse: collapse; }
+  .travel-table td { padding: 10px 12px; vertical-align: top; font-size: 13.5px; border-bottom: 1px solid #f0f4f8; }
+  .travel-table tr:last-child td { border-bottom: none; }
+  .travel-table .td-label {
+    width: 110px; font-weight: 700; color: #1565c0;
+    background: #f0f4ff; border-radius: 4px;
+    white-space: nowrap;
+  }
+  .travel-table tr:nth-child(even) .td-value { background: #fafbff; }
+
+  /* ── Day Cards ───────────────────────────────── */
+  .days-grid { display: flex; flex-direction: column; gap: 16px; }
+  .day-card {
+    background: #f8faff;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid #dde8f8;
+  }
+  .day-header {
+    background: linear-gradient(90deg, #1565c0, #1976d2);
+    color: white;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .day-number {
+    background: rgba(255,255,255,0.25);
+    border-radius: 50px;
+    padding: 2px 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .day-title { font-size: 14px; font-weight: 700; }
+  .day-date  { font-size: 12px; opacity: 0.80; margin-left: auto; }
+  .day-slots { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 600px) { .day-slots { grid-template-columns: 1fr; } }
+  .day-slot {
+    padding: 14px 16px;
+    border-right: 1px solid #dde8f8;
+    min-height: 80px;
+  }
+  .day-slot:last-child { border-right: none; }
+  .slot-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .slot-text { font-size: 13px; line-height: 1.55; color: var(--text); }
+
+  /* ── Insider Tips ────────────────────────────── */
+  .insider-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 540px) { .insider-grid { grid-template-columns: 1fr; } }
+  .insider-block {
+    background: #f0fdf4;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 3px solid #2e7d32;
+  }
+  .insider-block-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2e7d32;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .insider-block ul { padding-left: 16px; }
+  .insider-block ul li { font-size: 12.5px; margin-bottom: 5px; line-height: 1.5; color: #1a3a1a; }
+
+  /* ── Must Eat ────────────────────────────────── */
+  .food-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  .food-item {
+    background: #fff8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    border-left: 3px solid #e65100;
+    font-size: 13px;
+    font-weight: 500;
+    color: #3e1500;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .food-item::before { content: "🍴"; flex-shrink: 0; }
+
+  /* ── Footer ──────────────────────────────────── */
+  .footer {
+    background: var(--light);
+    border-top: 1px solid #dde8f8;
+    text-align: center;
+    padding: 16px 40px;
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── Divider ─────────────────────────────────── */
+  .divider { height: 1px; background: #edf2f7; margin: 4px 0 16px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ── Hero ── -->
+  <div class="hero">
+    <div class="hero-flag">{{ flag }}</div>
+    <div class="hero-title">{{ city }}</div>
+    <div class="hero-subtitle">行程計畫書　｜　由「出國優轉」LINE Bot 生成</div>
+    <div class="hero-chips">
+      {% if date_display %}<span class="chip">📅 {{ date_display }}</span>{% endif %}
+      {% if adults %}<span class="chip">👤 {{ adults }} 人</span>{% endif %}
+      {% if days_text %}<span class="chip">⏱ {{ days_text }}</span>{% endif %}
+      {% if budget %}<span class="chip">💰 NT${{ "{:,}".format(budget) }}</span>{% endif %}
+    </div>
+  </div>
+
+  <!-- ── Download Button ── -->
+  <div class="download-btn-wrap no-print">
+    <button class="download-btn" onclick="window.print()">⬇ 儲存 PDF</button>
+  </div>
+
+  <div class="body-wrap">
+
+    <!-- ── 基本資料 ── -->
+    <div class="section-card">
+      <div class="section-header blue">
+        <span class="section-header-icon">📋</span>
+        基本資料
+      </div>
+      <div class="section-content">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">目的地</div>
+            <div class="info-value">{{ flag }} {{ city }}</div>
+          </div>
+          {% if origin_name %}
+          <div class="info-item">
+            <div class="info-label">出發地</div>
+            <div class="info-value">{{ origin_name }}</div>
+          </div>
+          {% endif %}
+          {% if date_display %}
+          <div class="info-item">
+            <div class="info-label">旅行日期</div>
+            <div class="info-value">{{ date_display }}</div>
+          </div>
+          {% endif %}
+          {% if adults %}
+          <div class="info-item">
+            <div class="info-label">出行人數</div>
+            <div class="info-value">{{ adults }} 人</div>
+          </div>
+          {% endif %}
+          {% if budget %}
+          <div class="info-item">
+            <div class="info-label">旅行預算</div>
+            <div class="info-value">NT${{ "{:,}".format(budget) }}</div>
+          </div>
+          {% endif %}
+          {% if hotel_pref %}
+          <div class="info-item">
+            <div class="info-label">住宿偏好</div>
+            <div class="info-value">{{ hotel_pref }}</div>
+          </div>
+          {% endif %}
+          {% if custom %}
+          <div class="info-full">
+            <div class="info-label">特別需求</div>
+            <div class="info-value">{{ custom }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 旅遊資訊 ── -->
+    {% if flight_text or visa_text or weather_text or exchange_text or plug_text %}
+    <div class="section-card">
+      <div class="section-header amber">
+        <span class="section-header-icon">🗺</span>
+        行前必知
+      </div>
+      <div class="section-content">
+        <table class="travel-table">
+          {% if flight_text %}
+          <tr><td class="td-label">✈️ 機票</td><td class="td-value">{{ flight_text }}</td></tr>
+          {% endif %}
+          {% if visa_text %}
+          <tr><td class="td-label">📘 簽證</td><td class="td-value">{{ visa_text }}</td></tr>
+          {% endif %}
+          {% if weather_text %}
+          <tr><td class="td-label">🌤 天氣</td><td class="td-value">{{ weather_text }}</td></tr>
+          {% endif %}
+          {% if exchange_text %}
+          <tr><td class="td-label">💱 匯率</td><td class="td-value">{{ exchange_text }}</td></tr>
+          {% endif %}
+          {% if plug_text %}
+          <tr><td class="td-label">🔌 插座</td><td class="td-value">{{ plug_text }}</td></tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── 天天行程 ── -->
+    {% if itinerary %}
+    <div class="section-card">
+      <div class="section-header blue">
+        <span class="section-header-icon">📅</span>
+        天天行程
+      </div>
+      <div class="section-content">
+        <div class="days-grid">
+          {% for day in itinerary %}
+          <div class="day-card">
+            <div class="day-header">
+              <span class="day-number">Day {{ loop.index }}</span>
+              <span class="day-title">{{ day.title }}</span>
+              {% if day.date_label %}<span class="day-date">{{ day.date_label }}</span>{% endif %}
+            </div>
+            <div class="day-slots">
+              <div class="day-slot">
+                <div class="slot-label">🌅 上午</div>
+                <div class="slot-text">{{ day.am or "—" }}</div>
+              </div>
+              <div class="day-slot">
+                <div class="slot-label">☀️ 下午</div>
+                <div class="slot-text">{{ day.pm or "—" }}</div>
+              </div>
+              <div class="day-slot">
+                <div class="slot-label">🌙 晚上</div>
+                <div class="slot-text">{{ day.eve or "—" }}</div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── 在地眉角 ── -->
+    {% if insider %}
+    <div class="section-card">
+      <div class="section-header teal">
+        <span class="section-header-icon">✨</span>
+        {{ city }} 在地眉角（台灣人專屬秘訣）
+      </div>
+      <div class="section-content">
+        <div class="insider-grid">
+          {% if insider.ticket %}
+          <div class="insider-block">
+            <div class="insider-block-title">🎟 票務時機</div>
+            <ul>{% for tip in insider.ticket %}<li>{{ tip }}</li>{% endfor %}</ul>
+          </div>
+          {% endif %}
+          {% if insider.crowd %}
+          <div class="insider-block">
+            <div class="insider-block-title">👥 人潮規律</div>
+            <ul>{% for tip in insider.crowd %}<li>{{ tip }}</li>{% endfor %}</ul>
+          </div>
+          {% endif %}
+          {% if insider.transport %}
+          <div class="insider-block">
+            <div class="insider-block-title">🚇 交通秘技</div>
+            <ul>{% for tip in insider.transport %}<li>{{ tip }}</li>{% endfor %}</ul>
+          </div>
+          {% endif %}
+          {% if insider.hidden %}
+          <div class="insider-block">
+            <div class="insider-block-title">🗺 隱藏景點</div>
+            <ul>{% for tip in insider.hidden %}<li>{{ tip }}</li>{% endfor %}</ul>
+          </div>
+          {% endif %}
+          {% if insider.money %}
+          <div class="insider-block">
+            <div class="insider-block-title">💰 省錢技巧</div>
+            <ul>{% for tip in insider.money %}<li>{{ tip }}</li>{% endfor %}</ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── 必吃清單 ── -->
+    {% if must_eat %}
+    <div class="section-card">
+      <div class="section-header red">
+        <span class="section-header-icon">🍜</span>
+        {{ city }} 必吃清單
+      </div>
+      <div class="section-content">
+        <div class="food-grid">
+          {% for item in must_eat %}
+          <div class="food-item">{{ item }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div><!-- /body-wrap -->
+
+  <!-- ── Footer ── -->
+  <div class="footer">
+    ⚠️ 簽證 / 海關資訊僅供參考，出發前請以官方公告為準<br>
+    由 <strong>出國優轉 LINE Bot</strong> 生成　｜　{{ generated_at }}
+  </div>
+
+</div><!-- /page -->
+
+</body>
+</html>

@@ -10,6 +10,11 @@
       "src": "api/download.py",
       "use": "@vercel/python",
       "config": { "maxLambdaSize": "50mb" }
+    },
+    {
+      "src": "api/view.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "50mb" }
     }
   ],
   "routes": [
@@ -20,6 +25,10 @@
     {
       "src": "/api/download",
       "dest": "api/webhook.py"
+    },
+    {
+      "src": "/api/view",
+      "dest": "api/view.py"
     },
     {
       "src": "/api/check_prices",

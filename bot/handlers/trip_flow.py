@@ -1856,6 +1856,7 @@ def _prompt_summary(user_id: str) -> list:
         "exchange_text": exchange_text,
         "plug_text": culture_highlights,
         "custom": custom,
+        "dest_code": dest,
         "must_eat": _get_must_eat(dest),
         "itinerary": _get_itinerary_for_download(dest, depart, ret),
         "insider": _get_insider_for_download(dest),
@@ -1864,11 +1865,11 @@ def _prompt_summary(user_id: str) -> list:
 
     # 取得 Vercel 部署 URL
     vercel_url = "https://abroad-uturn.vercel.app"
-    download_url = f"{vercel_url}/api/download?token={download_token}"
+    download_url = f"{vercel_url}/api/view?token={download_token}"
 
     footer_buttons.append({
-        "type": "button", "style": "secondary", "height": "sm",
-        "action": {"type": "uri", "label": "📥 下載行程計畫書 (.docx)",
+        "type": "button", "style": "primary", "height": "sm",
+        "action": {"type": "uri", "label": "✨ 查看行程計畫書（可存 PDF）",
                    "uri": download_url},
     })
     footer_buttons.extend([
