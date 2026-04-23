@@ -227,6 +227,8 @@ def _build_onboarding_origin_msg() -> dict:
                     {"type": "button", "style": "primary", "color": "#FF6B35", "height": "sm",
                      "action": {"type": "message", "label": "🛫 台北桃園 (TPE)", "text": "出發地 台北"}},
                     {"type": "button", "style": "secondary", "height": "sm",
+                     "action": {"type": "message", "label": "🛫 台北松山 (TSA)", "text": "出發地 松山"}},
+                    {"type": "button", "style": "secondary", "height": "sm",
                      "action": {"type": "message", "label": "🛫 高雄小港 (KHH)", "text": "出發地 高雄"}},
                     {"type": "button", "style": "secondary", "height": "sm",
                      "action": {"type": "message", "label": "🛫 台中清泉崗 (RMQ)", "text": "出發地 台中"}},
