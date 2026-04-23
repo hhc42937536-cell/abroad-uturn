@@ -1788,9 +1788,9 @@ def _prompt_summary(user_id: str) -> list:
         plug = culture.get("plug_type", "")
         culture_highlights = f"\U0001f50c {plug}" if plug else ""
 
-    # ── 主題配色 + LLM 標語 ──
+    # ── 主題配色（不再同步呼叫 LLM，標語改在 view.py 懶生成）──
     theme_color, theme_emoji = _plan_theme(custom)
-    tagline = _llm_plan_tagline(city, custom, days, adults, depart)
+    tagline = ""  # 由 view.py 在開啟頁面時生成
 
     # ── 建立計畫書 Flex Message ──
     # 摘要卡片
@@ -1867,7 +1867,7 @@ def _prompt_summary(user_id: str) -> list:
         "must_eat": _get_must_eat(dest),
         "itinerary": _get_itinerary_for_download(dest, depart, ret),
         "insider": _get_insider_for_download(dest),
-        "hotel_recs": _get_hotel_recs_for_download(dest, city, budget, adults),
+        "hotel_recs": None,  # 由 view.py 在開啟頁面時懶生成
     }
     redis_set(f"download:{download_token}", _json.dumps(plan_data, ensure_ascii=False), ttl=259200)
 

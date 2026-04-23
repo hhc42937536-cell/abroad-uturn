@@ -80,6 +80,47 @@ class handler(BaseHTTPRequestHandler):
             self._err(500, "資料格式錯誤")
             return
 
+        # ── 懶生成：hotel_recs 和 tagline 在此處補齊 ──
+        updated = False
+        if not plan.get("hotel_recs"):
+            try:
+                from bot.utils.itinerary_builder import get_hotel_recs
+                dest_code = plan.get("dest_code", "")
+                city = plan.get("city", "")
+                budget_num = plan.get("budget", 0)
+                budget_str = f"NT${budget_num:,}" if budget_num else ""
+                adults = plan.get("adults", 1)
+                recs = get_hotel_recs(dest_code, city, budget=budget_str, adults=adults)
+                if recs:
+                    plan["hotel_recs"] = recs
+                    updated = True
+            except Exception:
+                pass
+
+        if not plan.get("tagline"):
+            try:
+                from bot.handlers.trip_flow import _llm_plan_tagline
+                city = plan.get("city", "")
+                custom = plan.get("custom", "")
+                days_text = plan.get("days_text", "")
+                days = int(days_text.replace("天", "").split("天")[0]) if "天" in days_text else 3
+                adults = plan.get("adults", 1)
+                depart = plan.get("date_display", "")
+                tagline = _llm_plan_tagline(city, custom, days, adults, depart)
+                if tagline:
+                    plan["tagline"] = tagline
+                    updated = True
+            except Exception:
+                pass
+
+        if updated:
+            try:
+                import json as _json
+                from bot.services.redis_store import redis_set
+                redis_set(f"download:{token}", _json.dumps(plan, ensure_ascii=False), ttl=259200)
+            except Exception:
+                pass
+
         try:
             html = render_plan_html(plan)
         except Exception as e:

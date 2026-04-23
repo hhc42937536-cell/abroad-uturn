@@ -14,7 +14,7 @@
     {
       "src": "api/view.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "50mb" }
+      "config": { "maxLambdaSize": "50mb", "maxDuration": 30 }
     }
   ],
   "routes": [
