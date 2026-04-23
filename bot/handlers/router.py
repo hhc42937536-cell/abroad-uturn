@@ -34,6 +34,13 @@ def route_text(text: str, user_id: str) -> list:
         from bot.handlers.settings import handle_set_origin
         return handle_set_origin(user_id, text)
 
+    # ── 說走就走：等待特別需求的自由文字輸入 ──
+    session = get_session(user_id) or {}
+    if "quick_pending_pick" in session:
+        from bot.handlers.quick_trip import handle_quick_pick
+        idx = session["quick_pending_pick"]
+        return handle_quick_pick(user_id, idx, custom=text)
+
     # ── Rich Menu 精確按鈕（不進計分，保持即時回應）──
     if text in ("說走就走", "說走就飛", "馬上飛", "快速規劃"):
         from bot.handlers.quick_trip import handle_quick_trip

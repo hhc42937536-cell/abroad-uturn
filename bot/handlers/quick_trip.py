@@ -313,7 +313,35 @@ def _build_option_card(idx: int, opt: dict, requested_days: int) -> dict:
     }
 
 
-def handle_quick_pick(user_id: str, idx: int) -> list:
+def _ask_custom(user_id: str, idx: int) -> list:
+    """選完方案後問有沒有特別需求"""
+    update_session(user_id, {"quick_pending_pick": idx})
+    return [{
+        "type": "text",
+        "text": "✈️ 好的！出發前最後一問：\n\n有什麼特別需求嗎？（幫我把行程規劃得更符合你）",
+        "quickReply": {
+            "items": [
+                {"type": "action", "action": {"type": "postback",
+                    "label": "🍜 美食探索", "data": "quick_custom=美食探索，想吃在地小吃和特色料理",
+                    "displayText": "美食探索"}},
+                {"type": "action", "action": {"type": "postback",
+                    "label": "🏛 文化體驗", "data": "quick_custom=喜歡文化歷史，想參觀博物館和寺廟",
+                    "displayText": "文化體驗"}},
+                {"type": "action", "action": {"type": "postback",
+                    "label": "🛍 購物行程", "data": "quick_custom=愛購物，想逛百貨商圈和特色市集",
+                    "displayText": "購物行程"}},
+                {"type": "action", "action": {"type": "postback",
+                    "label": "👨‍👩‍👧 親子出遊", "data": "quick_custom=親子旅遊，有小孩同行",
+                    "displayText": "親子出遊"}},
+                {"type": "action", "action": {"type": "postback",
+                    "label": "⏭ 直接產出", "data": "quick_custom=",
+                    "displayText": "直接產出"}},
+            ],
+        },
+    }]
+
+
+def handle_quick_pick(user_id: str, idx: int, custom: str = "") -> list:
     """使用者選了某個方案 → 產出完整計畫書"""
     session = get_session(user_id) or {}
     options = session.get("quick_trip_options", [])
@@ -341,8 +369,8 @@ def handle_quick_pick(user_id: str, idx: int) -> list:
         "origin": origin,
         "flight_choice": chosen,
         "flight_choice_display": f"NT${chosen['price']:,} ({airline_name(chosen['airline'])})",
-        "hotel_preference": "\u5e02\u4e2d\u5fc3",
-        "custom_requests": "\u8aaa\u8d70\u5c31\u8d70\u5feb\u901f\u898f\u5283",
+        "hotel_preference": "市中心",
+        "custom_requests": custom if custom else "說走就走快速規劃",
     }, step=8)
 
     from bot.handlers.trip_flow import _prompt_travel_info, _prompt_summary

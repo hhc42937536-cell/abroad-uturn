@@ -462,8 +462,15 @@ def handle_postback(user_id: str, data: str) -> list:
         return _find_options(user_id, int(params["quick_days"]))
 
     if "quick_pick" in params:
+        from bot.handlers.quick_trip import _ask_custom
+        return _ask_custom(user_id, int(params["quick_pick"]))
+
+    if "quick_custom" in params:
         from bot.handlers.quick_trip import handle_quick_pick
-        return handle_quick_pick(user_id, int(params["quick_pick"]))
+        from bot.session.manager import get_session
+        s = get_session(user_id) or {}
+        idx = s.get("quick_pending_pick", 0)
+        return handle_quick_pick(user_id, idx, custom=params["quick_custom"])
 
     return []
 
