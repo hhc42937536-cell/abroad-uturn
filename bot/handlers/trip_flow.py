@@ -397,7 +397,11 @@ def handle_step(user_id: str, text: str, step: int) -> list:
 
     # Steps 1-3 全部走 LLM 對話蒐集，降級時再走個別制式 handler
     if step in (1, 2, 3):
-        return _llm_gather(user_id, text)
+        try:
+            return _llm_gather(user_id, text)
+        except Exception as e:
+            print(f"[handle_step] _llm_gather crash: {e}")
+            return _gather_fallback(user_id, text, get_session(user_id) or {})
 
     handlers = {
         4: _step4_flights,

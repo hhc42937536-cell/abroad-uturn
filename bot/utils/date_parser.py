@@ -213,7 +213,7 @@ def parse_destination(text: str) -> str:
         return ""
     try:
         import anthropic
-        client = anthropic.Anthropic(api_key=api_key)
+        client = anthropic.Anthropic(api_key=api_key, timeout=5.0)
         msg = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=20,

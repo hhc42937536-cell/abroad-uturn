@@ -34,6 +34,11 @@ def route_text(text: str, user_id: str) -> list:
         from bot.handlers.settings import handle_set_origin
         return handle_set_origin(user_id, text)
 
+    # ── 開始/重啟規劃（含按鈕帶驚嘆號的變體）──
+    if text in ("開始規劃", "開始規劃！", "完整出國規劃", "規劃旅程", "重新規劃"):
+        clear_session(user_id)
+        return trip_flow.start(user_id)
+
     # ── 說走就走：等待特別需求的自由文字輸入 ──
     session = get_session(user_id) or {}
     if "quick_pending_pick" in session:
@@ -45,9 +50,6 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("說走就走", "說走就飛", "馬上飛", "快速規劃"):
         from bot.handlers.quick_trip import handle_quick_trip
         return handle_quick_trip(user_id, text)
-
-    if text in ("開始規劃", "完整出國規劃", "規劃旅程"):
-        return trip_flow.start(user_id)
 
     if text == "設定":
         current = get_user_origin(user_id)
