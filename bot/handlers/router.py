@@ -92,6 +92,38 @@ def route_text(text: str, user_id: str) -> list:
         if dest_code and depart:
             return trip_flow.start_with_flight(user_id, dest_code, depart, ret)
 
+    # ── 1b. 全域 Rich Menu 逃生口（不管 session 狀態都能觸發）──
+    if text in ("便宜", "探索最便宜", "最便宜", "便宜機票", "看哪裡便宜"):
+        from bot.handlers.explore import handle_quick_explore
+        return handle_quick_explore(origin)
+
+    if text in ("我的追蹤", "我的追蹤清單", "追蹤清單"):
+        from bot.handlers.tracking import handle_my_tracks
+        return handle_my_tracks(user_id)
+
+    if text in ("我的旅行計畫", "我的計畫", "旅行計畫"):
+        from bot.handlers.my_plans import handle_my_plans
+        return handle_my_plans(user_id)
+
+    if text in ("使用說明", "使用教學", "說明", "help", "Help", "HELP"):
+        return build_help_message()
+
+    if text.startswith("探索|"):
+        from bot.handlers.explore import handle_explore
+        return handle_explore(text.split("|")[1], origin)
+
+    if text.startswith("行前 ") or text.startswith("行前|"):
+        from bot.handlers.pre_trip import handle_pre_trip_country
+        return handle_pre_trip_country(text, user_id)
+
+    if text.startswith("追蹤|"):
+        from bot.handlers.tracking import handle_track
+        return handle_track(user_id, text)
+
+    if text.startswith("取消追蹤"):
+        from bot.handlers.tracking import handle_cancel_track
+        return handle_cancel_track(user_id, text)
+
     # ── 2. 檢查是否有進行中的規劃 session ──
     step = get_step(user_id)
     if step > 0:
@@ -115,29 +147,9 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("開始規劃", "我要規劃旅行", "完整出國規劃", "規劃旅程", "旅行規劃"):
         return trip_flow.start(user_id)
 
-    if text in ("我的旅行計畫", "我的計畫", "旅行計畫"):
-        from bot.handlers.my_plans import handle_my_plans
-        return handle_my_plans(user_id)
-
     if text in ("選月份",):
         from bot.flex.month_picker import month_picker_flex
         return month_picker_flex()
-
-    if text.startswith("探索|"):
-        from bot.handlers.explore import handle_explore
-        return handle_explore(text.split("|")[1], origin)
-
-    if text.startswith("行前 ") or text.startswith("行前|"):
-        from bot.handlers.pre_trip import handle_pre_trip_country
-        return handle_pre_trip_country(text, user_id)
-
-    if text.startswith("追蹤|"):
-        from bot.handlers.tracking import handle_track
-        return handle_track(user_id, text)
-
-    if text.startswith("取消追蹤"):
-        from bot.handlers.tracking import handle_cancel_track
-        return handle_cancel_track(user_id, text)
 
     # ── 4. 計分路由（自由文字）──
     from bot.utils.intent import classify_intent
