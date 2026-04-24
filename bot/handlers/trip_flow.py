@@ -373,8 +373,16 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
     return [{"type": "text", "text": reply}]
 
 
+_RESTART_KEYWORDS = ("開始規劃", "重新規劃", "重新開始", "從頭開始", "重來")
+
 def handle_step(user_id: str, text: str, step: int) -> list:
     """根據目前步驟處理使用者輸入"""
+    # ── 全域跳脫：重啟規劃（不管幾步都生效）──
+    text_clean = text.rstrip("！!。.")
+    if any(kw in text_clean for kw in _RESTART_KEYWORDS):
+        clear_session(user_id)
+        return start(user_id)
+
     # ── 全域跳脫：計分偵測到明確的非規劃意圖 ──
     if step not in _FREE_INPUT_STEPS:
         from bot.utils.intent import classify_intent_scored
