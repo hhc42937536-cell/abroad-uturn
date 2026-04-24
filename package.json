@@ -1,0 +1,33 @@
+{
+  "name": "travel-line-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:migrate": "node scripts/migrate.js",
+    "asset:rich-menu": "powershell -ExecutionPolicy Bypass -File scripts/generate-rich-menu.ps1",
+    "line:rich-menu": "node scripts/create-rich-menu.js",
+    "line:rich-menu:list": "node scripts/list-rich-menus.js",
+    "line:rich-menu:delete": "node scripts/delete-rich-menu.js",
+    "line:webhook": "node scripts/set-line-webhook.js",
+    "line:setup": "npm run line:webhook && npm run line:rich-menu",
+    "smoke": "node scripts/smoke-webhook.js",
+    "self-test": "node scripts/self-test.js",
+    "test:vercel-api": "node scripts/test-vercel-api.js",
+    "fare:refresh": "node scripts/refresh-fares.js",
+    "policy:limited-push": "node scripts/check-reply-only.js",
+    "deploy:check": "node scripts/check-deploy-env.js",
+    "lint": "node --check src/server.js"
+  },
+  "dependencies": {},
+  "optionalDependencies": {
+    "ioredis": "^5.4.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {}
+}

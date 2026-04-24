@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/health", "dest": "/api/health.js" },
+    { "src": "/ready", "dest": "/api/ready.js" },
+    { "src": "/webhook", "dest": "/api/webhook.js" },
+    { "src": "/api/health", "dest": "/api/health.js" },
+    { "src": "/api/ready", "dest": "/api/ready.js" },
+    { "src": "/api/webhook", "dest": "/api/webhook.js" },
+    { "src": "/api/fare-refresh", "dest": "/api/fare-refresh.js" },
+    { "src": "/api/price-check", "dest": "/api/price-check.js" }
+  ],
+  "crons": [
+    {
+      "path": "/api/fare-refresh",
+      "schedule": "0 1 * * 1,3,5"
+    },
+    {
+      "path": "/api/price-check",
+      "schedule": "15 1 * * 1,3,5"
+    }
+  ]
+}
