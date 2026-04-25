@@ -8,6 +8,7 @@ import { popularDestinations } from './options.js';
 const eventTypes = ['演唱會', '見面會', '音樂節', '頒獎典禮', '快閃活動'];
 const dayOptions = ['2天', '3天', '4天', '5天'];
 const artistCategoryOptions = ['韓國歌手/團體', '韓國演員', '日本偶像', '其他（直接輸入）'];
+const searchArtistOption = '🔎 搜尋藝人/演員（未列出）';
 
 const artistsByCategory = {
   '韓國歌手/團體': [
@@ -66,15 +67,15 @@ export const m8 = {
 
     if (step === 1) {
       if (value === '其他（直接輸入）') {
-        return ask('請直接輸入藝人或演員名字（例如：IVE / 李敏鎬 / Snow Man）。', 2, state);
+        return ask('請直接輸入藝人或演員名字（例如：IVE / 李敏鎬 / Snow Man）。', 2, { ...state, awaitingArtistInput: true });
       }
 
       const list = artistsByCategory[value];
       if (list) {
         return cardAsk(
           `${value} - 選藝人`,
-          '若名單沒有，可直接輸入名字。',
-          list,
+          '若名單沒有，請點「搜尋藝人/演員（未列出）」。',
+          [...list, searchArtistOption],
           2,
           { ...state, artistCategory: value }
         );
@@ -83,7 +84,15 @@ export const m8 = {
       return quickAsk('是哪一種活動？', eventTypes, 3, { ...state, artistName: value });
     }
 
-    if (step === 2) return quickAsk('是哪一種活動？', eventTypes, 3, { ...state, artistName: value });
+    if (step === 2) {
+      if (value === searchArtistOption || state.awaitingArtistInput) {
+        if (state.awaitingArtistInput) {
+          return quickAsk('是哪一種活動？', eventTypes, 3, { ...state, artistName: value, awaitingArtistInput: false });
+        }
+        return ask('請輸入要搜尋的藝人或演員名字（中/英都可）。', 2, { ...state, awaitingArtistInput: true });
+      }
+      return quickAsk('是哪一種活動？', eventTypes, 3, { ...state, artistName: value, awaitingArtistInput: false });
+    }
 
     if (step === 3) {
       return cardAsk(
