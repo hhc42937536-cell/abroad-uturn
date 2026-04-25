@@ -8,7 +8,12 @@ import { popularDestinations } from './options.js';
 const eventTypes = ['演唱會', '見面會', '音樂節', '頒獎典禮', '快閃活動'];
 const dayOptions = ['2天', '3天', '4天', '5天'];
 const artistCategoryOptions = ['韓國歌手/團體', '韓國演員', '日本偶像', '其他（直接輸入）'];
-const searchArtistOption = '🔎 搜尋藝人/演員（未列出）';
+const searchArtistValue = '__SEARCH_ARTIST__';
+const searchArtistOption = {
+  label: '🔎 搜尋未列出',
+  value: searchArtistValue,
+  displayText: '搜尋未列出'
+};
 
 const artistsByCategory = {
   '韓國歌手/團體': [
@@ -85,7 +90,7 @@ export const m8 = {
     }
 
     if (step === 2) {
-      if (value === searchArtistOption || state.awaitingArtistInput) {
+      if (value === searchArtistValue || state.awaitingArtistInput) {
         if (state.awaitingArtistInput) {
           return quickAsk('是哪一種活動？', eventTypes, 3, { ...state, artistName: value, awaitingArtistInput: false });
         }
