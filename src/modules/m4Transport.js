@@ -351,7 +351,7 @@ export const m4 = {
     return done({
       type: 'flex',
       altText: `${city || raw || '目的地'} 交通攻略`,
-      contents: transportCard(city || raw || '目的地', guide)
+      contents: transportCarousel(city || raw || '目的地', guide)
     });
   }
 };
@@ -365,7 +365,23 @@ function normalizeCity(input) {
   return text;
 }
 
-function transportCard(city, guide) {
+function transportCarousel(city, guide) {
+  const noteChunks = chunkList(guide.cardNotes || [], 4);
+  return {
+    type: 'carousel',
+    contents: [
+      infoBubble(`${city} 交通攻略`, [sectionText('交通卡', guide.cards)]),
+      ...noteChunks.map((chunk, index) =>
+        infoBubble(`${city} 卡片注意 ${index + 1}/${noteChunks.length}`, [sectionList('卡片注意', chunk)])
+      ),
+      infoBubble(`${city} 機場與線路`, [sectionList('機場進市區', guide.airport), sectionList('核心線路', guide.lines)]),
+      infoBubble(`${city} 站點與 App`, [sectionList('關鍵站點', guide.stations), sectionList('常用 App', guide.apps)]),
+      actionBubble(city, guide)
+    ]
+  };
+}
+
+function infoBubble(title, sections) {
   return {
     type: 'bubble',
     size: 'mega',
@@ -373,16 +389,20 @@ function transportCard(city, guide) {
       type: 'box',
       layout: 'vertical',
       spacing: 'md',
-      contents: [
-        { type: 'text', text: `${city} 交通攻略`, weight: 'bold', size: 'xl', wrap: true, color: '#111827' },
-        sectionText('交通卡', guide.cards),
-        sectionList('卡片注意', guide.cardNotes),
-        sectionList('機場進市區', guide.airport),
-        sectionList('核心線路', guide.lines),
-        sectionList('關鍵站點', guide.stations),
-        sectionList('常用 App', guide.apps),
-        sectionList('注意事項', guide.culture)
-      ]
+      contents: [{ type: 'text', text: title, weight: 'bold', size: 'xl', wrap: true, color: '#111827' }, ...sections]
+    }
+  };
+}
+
+function actionBubble(city, guide) {
+  return {
+    type: 'bubble',
+    size: 'mega',
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'md',
+      contents: [{ type: 'text', text: `${city} 使用提醒`, weight: 'bold', size: 'xl', wrap: true, color: '#111827' }, sectionList('注意事項', guide.culture)]
     },
     footer: {
       type: 'box',
@@ -400,7 +420,7 @@ function transportCard(city, guide) {
 function sectionText(title, text) {
   return {
     type: 'text',
-    size: 'sm',
+    size: 'md',
     wrap: true,
     contents: [
       { type: 'span', text: `${title}：`, color: '#2563eb', weight: 'bold' },
@@ -415,16 +435,22 @@ function sectionList(title, items) {
     layout: 'vertical',
     spacing: 'xs',
     contents: [
-      { type: 'text', text: title, size: 'sm', weight: 'bold', color: '#0f172a' },
+      { type: 'text', text: title, size: 'md', weight: 'bold', color: '#0f172a' },
       ...items.map((item) => ({
         type: 'text',
         text: `- ${item}`,
-        size: 'sm',
+        size: 'md',
         color: '#374151',
         wrap: true
       }))
     ]
   };
+}
+
+function chunkList(items, size) {
+  const result = [];
+  for (let i = 0; i < items.length; i += size) result.push(items.slice(i, i + size));
+  return result;
 }
 
 function linkButton(label, uri, color) {
