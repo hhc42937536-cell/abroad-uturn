@@ -1,46 +1,96 @@
 import { getUser } from '../repositories/userRepository.js';
 import { exploreCheapFlights } from '../services/flightSearch.js';
-import { ask, done, textValue } from './shared.js';
+import { skyscannerLink } from '../services/deepLinks.js';
+import { cardAsk, done, textValue } from './shared.js';
+
+const taiwanAirports = [
+  { label: '桃園 TPE', value: 'TPE', city: '台北' },
+  { label: '松山 TSA', value: 'TSA', city: '台北' },
+  { label: '高雄 KHH', value: 'KHH', city: '高雄' },
+  { label: '台中 RMQ', value: 'RMQ', city: '台中' },
+  { label: '台南 TNN', value: 'TNN', city: '台南' }
+];
 
 export const m3 = {
   async start({ lineUserId }) {
     const user = await getUser(lineUserId);
-    const city = user?.departure_city ?? '\u53f0\u5317';
-    const airport = user?.departure_airport ?? 'TPE';
-    return ask(`\u5f9e\u54ea\u88e1\u51fa\u767c\uff1f\u9810\u8a2d\u70ba ${city}\uff08${airport}\uff09\uff0c\u53ef\u76f4\u63a5\u8f38\u5165\u6a5f\u5834\u4e09\u78bc\u3002`, 1);
+    const current = user?.departure_airport ?? 'TPE';
+    return cardAsk(
+      '探索最便宜',
+      `選出發機場，我會列出目前最適合衝一波的低價目的地。現在設定：${current}`,
+      taiwanAirports.map((airport) => ({
+        label: airport.label,
+        value: airport.value,
+        displayText: `從 ${airport.value} 找便宜機票`
+      })),
+      1
+    );
   },
 
   async handleStep({ message }) {
     const from = textValue(message).toUpperCase() || 'TPE';
     const flights = await exploreCheapFlights(from);
-    return done({
-      type: 'text',
-      text: flights
-        .map((flight, index) => formatFlight(index, flight))
-        .join('\n\n'),
-      quickReply: {
-        items: flights.slice(0, 5).map((flight) => ({
-          type: 'action',
-          action: {
-            type: 'postback',
-            label: `\u8ffd\u8e64 ${flight.code}`,
-            data: `action=track_price&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(flight.code)}&price=${flight.priceTwd}`,
-            displayText: `\u8ffd\u8e64 ${flight.code} \u964d\u50f9`
-          }
-        }))
-      }
-    });
+    return done(flightCarousel(from, flights));
   }
 };
 
-function formatFlight(index, flight) {
-  const comparison = flight.previousPriceTwd
-    ? flight.isCheaperThanLastWeek
-      ? `\n\u2b07 \u6bd4\u4e0a\u9031\u4fbf\u5b9c TWD ${Math.abs(flight.diffTwd).toLocaleString()}`
-      : flight.diffTwd > 0
-        ? `\n\u2b06 \u6bd4\u4e0a\u9031\u8cb4 TWD ${flight.diffTwd.toLocaleString()}`
-        : '\n= \u8207\u4e0a\u9031\u76f8\u540c'
-    : '\n\u7121\u4e0a\u9031\u6bd4\u8f03\u8cc7\u6599';
+function flightCarousel(from, flights) {
+  return {
+    type: 'flex',
+    altText: `${from} 便宜機票推薦`,
+    contents: {
+      type: 'carousel',
+      contents: flights.slice(0, 8).map((flight, index) => ({
+        type: 'bubble',
+        size: 'micro',
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          contents: [
+            { type: 'text', text: `${index + 1}. ${flight.city}`, weight: 'bold', size: 'lg', wrap: true },
+            { type: 'text', text: `${from} -> ${flight.code}`, color: '#2563eb', size: 'sm' },
+            { type: 'text', text: `TWD ${flight.priceTwd.toLocaleString()} 起`, weight: 'bold', size: 'md', color: '#dc2626' },
+            { type: 'text', text: `${flight.duration} / ${flight.stops}`, size: 'xs', color: '#6b7280' },
+            { type: 'text', text: comparisonText(flight), size: 'xs', color: flight.isCheaperThanLastWeek ? '#059669' : '#6b7280', wrap: true }
+          ]
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: '直接查機票',
+                uri: flight.bookingUrl || skyscannerLink({ from, to: flight.code })
+              }
+            },
+            {
+              type: 'button',
+              style: 'secondary',
+              height: 'sm',
+              action: {
+                type: 'postback',
+                label: '追蹤降價',
+                data: `action=track_price&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(flight.code)}&price=${flight.priceTwd}`,
+                displayText: `追蹤 ${flight.code} 降價`
+              }
+            }
+          ]
+        }
+      }))
+    }
+  };
+}
 
-  return `${index + 1}. ${flight.city} (${flight.code})\nTWD ${flight.priceTwd.toLocaleString()} \u8d77\uff5c${flight.duration}\uff5c${flight.stops}${comparison}\n${flight.bookingUrl}`;
+function comparisonText(flight) {
+  if (!flight.previousPriceTwd) return '目前沒有上週比較資料，先看即時價格。';
+  if (flight.isCheaperThanLastWeek) return `比上週便宜 TWD ${Math.abs(flight.diffTwd).toLocaleString()}`;
+  if (flight.diffTwd > 0) return `比上週貴 TWD ${flight.diffTwd.toLocaleString()}`;
+  return '和上週差不多。';
 }

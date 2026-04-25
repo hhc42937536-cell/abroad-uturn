@@ -1,23 +1,48 @@
-import { ask, done, textValue } from './shared.js';
+import { getExchangeRate } from '../services/exchangeRate.js';
+import { cardAsk, done, textValue } from './shared.js';
+
+const countries = [
+  { label: '日本 JPY', value: '日本|JPY', visa: '台灣護照短期觀光免簽，仍需確認護照效期與入境規定。', plugs: 'A 型插座，電壓 100V。' },
+  { label: '韓國 KRW', value: '韓國|KRW', visa: '台灣旅客短期觀光通常免簽，但 K-ETA/入境規定可能調整，出發前再確認。', plugs: 'C/F 型插座，電壓 220V。' },
+  { label: '泰國 THB', value: '泰國|THB', visa: '台灣旅客觀光入境規定常調整，出發前確認最新免簽天數。', plugs: 'A/B/C/O 型常見，建議帶萬用轉接頭。' },
+  { label: '越南 VND', value: '越南|VND', visa: '台灣護照通常需要簽證或電子簽，請先辦妥再訂最後行程。', plugs: 'A/C/G 型常見，建議帶萬用轉接頭。' },
+  { label: '香港/澳門 HKD', value: '香港/澳門|HKD', visa: '台灣旅客短期停留通常可入境，仍需確認證件與入境規定。', plugs: 'G 型插座，電壓 220V。' },
+  { label: '新加坡 SGD', value: '新加坡|SGD', visa: '短期觀光通常免簽，入境前需留意 SG Arrival Card。', plugs: 'G 型插座，電壓 230V。' },
+  { label: '美國 USD', value: '美國|USD', visa: '通常需 ESTA 或簽證，請確認護照、ESTA 狀態與轉機規定。', plugs: 'A/B 型插座，電壓 120V。' },
+  { label: '歐洲 EUR', value: '歐洲|EUR', visa: '申根短期免簽規定仍需確認，留意 ETIAS 上線狀態。', plugs: '多為 C/F 型，英國為 G 型。' }
+];
 
 export const m6 = {
   async start() {
-    return ask('\u8acb\u8f38\u5165\u76ee\u7684\u5730\u570b\u5bb6\u3002', 1);
+    return cardAsk(
+      '行前必知',
+      '選國家/地區，我會整理簽證、匯率、插座、網路、打包和入境注意事項。',
+      countries,
+      1
+    );
   },
 
-  async handleStep({ step, state, message }) {
-    const value = textValue(message);
-    if (step === 1) return ask('\u8acb\u8f38\u5165\u8b77\u7167\u570b\u7c4d\uff08\u9810\u8a2d\u53f0\u7063\uff09\u3002', 2, { country: value });
+  async handleStep({ message }) {
+    const [country, currencyInput] = textValue(message).split('|');
+    const profile = countries.find((item) => item.value.startsWith(country)) ?? countries[0];
+    const currency = (currencyInput || profile.value.split('|')[1]).toUpperCase();
+    const fx = await getExchangeRate('TWD', currency);
+    const rateText = fx.rate
+      ? `匯率參考：1 TWD 約 ${fx.rate.toFixed(4)} ${currency}（${fx.provider}）`
+      : `匯率暫時抓不到，出發前請再用銀行或換匯 App 確認 ${currency}。`;
 
     return done({
       type: 'text',
       text: [
-        `${state.country} \u884c\u524d\u9808\u77e5\uff08\u8b77\u7167\uff1a${value || '\u53f0\u7063'}\uff09`,
-        '\u7c3d\u8b49\uff1a\u8acb\u4ee5\u5916\u4ea4\u90e8\u9818\u52d9\u5c40\u8207\u76ee\u7684\u5730\u5b98\u65b9\u7db2\u7ad9\u70ba\u6e96\u3002',
-        '\u6d77\u95dc\uff1a\u73fe\u91d1\u3001\u98df\u54c1\u3001\u85e5\u54c1\u8207\u83f8\u9152\u9650\u5236\u9700\u51fa\u767c\u524d\u78ba\u8a8d\u3002',
-        '\u532f\u7387\uff1a\u6bd4\u8f03\u53f0\u7063\u9280\u884c\u724c\u544a\u3001\u7576\u5730 ATM \u63d0\u9818\u8207\u4fe1\u7528\u5361\u6d77\u5916\u56de\u994b\u3002',
-        '\u6253\u5305\uff1a\u4f9d\u5b63\u7bc0\u6e96\u5099\u8f49\u63a5\u982d\u3001\u5e38\u5099\u85e5\u3001\u5099\u7528\u4fe1\u7528\u5361\u8207\u8b77\u7167\u5f71\u672c\u3002',
-        '\u767b\u6a5f\uff1a\u6db2\u9ad4\u8207\u884c\u52d5\u96fb\u6e90\u9700\u7b26\u5408\u822a\u7a7a\u516c\u53f8\u898f\u7bc4\u3002'
+        `${country} 行前必知`,
+        '',
+        `簽證/入境：${profile.visa}`,
+        rateText,
+        `插座：${profile.plugs}`,
+        '網路：臨時出發建議先買 eSIM，落地後再視需求補實體 SIM。',
+        '現金：先準備第一天交通、餐費與小額現金，其餘用信用卡/提款卡備援。',
+        '打包：護照、信用卡、保險、訂房訂票截圖、轉接頭、常備藥、行動電源。',
+        '提醒：政策會變，出發前一天請再確認航空公司與官方入境資訊。'
       ].join('\n')
     });
   }
