@@ -150,14 +150,18 @@ export const m8 = {
 
     if (step === 5) {
       if (value === '換其他場次') {
-        const options = buildEventOptions(state.artistName, state.eventType, state.artistCategory, state.eventSearch);
+        const { options, choices } = buildEventOptions(state.artistName, state.eventType, state.artistCategory, state.eventSearch);
         return cardAsk(
           '重新選場次',
           '先看活動內容，再選你最想衝的一場。',
           options,
           4,
-          state
+          { ...state, slotChoices: choices }
         );
+      }
+
+      if (value !== '安排這場行程') {
+        return quickAsk('請先選擇下一步', confirmOptions, 5, state);
       }
 
       return quickAsk('這趟追星行程排幾天？', dayOptions, 6, {
@@ -233,6 +237,7 @@ function toSlotOptions(choices, eventTypeLabel) {
   const options = choices.map((choice, index) => ({
     label: `${choice.city || '未定'} ${eventTypeLabel}${index + 1}`,
     value: `slot|${index}`,
+    displayText: `${choice.city || '未定'} ${eventTypeLabel}${index + 1}`,
     note: `${choice.venue}${choice.date ? ` / ${choice.date}` : ''}`
   }));
   return { options, choices };
@@ -251,6 +256,7 @@ function normalizeEventType(value) {
 }
 
 function eventPreviewCard({ artistName, eventType, city, venue, date, sourceNote }) {
+  const note = normalizeSourceNote(sourceNote);
   return {
     type: 'flex',
     altText: `${artistName} ${eventType} 活動內容`,
@@ -269,7 +275,7 @@ function eventPreviewCard({ artistName, eventType, city, venue, date, sourceNote
           keyValue('日期', date || '待公告'),
           {
             type: 'text',
-            text: sourceNote || '目前為推薦候選場次，請再對照官方活動頁與票務平台。',
+            text: note,
             size: 'xs',
             color: '#475569',
             wrap: true
@@ -290,4 +296,13 @@ function keyValue(label, value) {
       { type: 'span', text: value, color: '#111827' }
     ]
   };
+}
+
+function normalizeSourceNote(sourceNote) {
+  const text = String(sourceNote || '').trim();
+  if (!text) return '目前為推薦候選場次，請再對照官方活動頁與票務平台。';
+  if (text.includes('Ticket crawler not configured')) {
+    return '活動抓取器尚未接上正式票務來源，目前為候選場次，請再對照官方公告。';
+  }
+  return text;
 }
