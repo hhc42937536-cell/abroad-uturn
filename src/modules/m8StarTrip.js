@@ -102,13 +102,15 @@ export const m8 = {
     if (step === 3) {
       const eventType = normalizeEventType(value);
       const eventSearch = await searchStarEvents(state.artistName, eventType);
-      const { options, choices } = buildEventOptions(state.artistName, eventType, state.artistCategory, eventSearch);
+      const { options, choices, hasRealEvents } = buildEventOptions(state.artistName, eventType, state.artistCategory, eventSearch);
       return cardAsk(
-        '先選場次',
-        '依活動類型先挑一場，不再先問城市。',
+        hasRealEvents ? '先選場次' : '目前無即時活動資料',
+        hasRealEvents
+          ? '以下是抓到的場次，先挑一場再安排。'
+          : '以下是候選城市（非已確認場次），可先做行程草案。',
         options,
         4,
-        { ...state, eventType, eventSearch, slotChoices: choices }
+        { ...state, eventType, eventSearch, slotChoices: choices, hasRealEvents }
       );
     }
 
@@ -203,7 +205,7 @@ function buildEventOptions(artistName, eventType, artistCategory, eventSearch) {
       date: event.date || '',
       label: `${event.city || '未定'} ${event.venue || eventType}`
     }));
-    return toSlotOptions(choices, eventType);
+    return toSlotOptions(choices, eventType, true);
   }
 
   const fallbackCities = inferLikelyCities(artistCategory);
@@ -214,7 +216,7 @@ function buildEventOptions(artistName, eventType, artistCategory, eventSearch) {
       date: '日期待官方公告',
       label: `${city} ${eventTypeLabel}`
     }));
-  return toSlotOptions(choices, eventTypeLabel);
+  return toSlotOptions(choices, eventTypeLabel, false);
 }
 
 function inferLikelyCities(artistCategory) {
@@ -233,14 +235,20 @@ function inferDestinationByCategory(artistCategory) {
   return '東京';
 }
 
-function toSlotOptions(choices, eventTypeLabel) {
+function toSlotOptions(choices, eventTypeLabel, hasRealEvents) {
   const options = choices.map((choice, index) => ({
-    label: `${choice.city || '未定'} ${eventTypeLabel}${index + 1}`,
+    label: hasRealEvents
+      ? `${choice.city || '未定'} ${eventTypeLabel}${index + 1}`
+      : `候選 ${choice.city || '未定'} ${index + 1}`,
     value: `slot|${index}`,
-    displayText: `${choice.city || '未定'} ${eventTypeLabel}${index + 1}`,
-    note: `${choice.venue}${choice.date ? ` / ${choice.date}` : ''}`
+    displayText: hasRealEvents
+      ? `${choice.city || '未定'} ${eventTypeLabel}${index + 1}`
+      : `候選 ${choice.city || '未定'} ${index + 1}`,
+    note: hasRealEvents
+      ? `${choice.venue}${choice.date ? ` / ${choice.date}` : ''}`
+      : `候選城市：${choice.city || '未定'}（尚無已確認場次）`
   }));
-  return { options, choices };
+  return { options, choices, hasRealEvents };
 }
 
 function parseSlotChoice(value, choices = []) {
