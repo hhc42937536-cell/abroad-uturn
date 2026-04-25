@@ -20,7 +20,7 @@ const cityAliases = {
   馬尼拉: ['馬尼拉', 'manila', '菲律賓']
 };
 
-const defaultTrendProfiles = {
+export const defaultTrendProfiles = {
   東京: {
     updated: '2026-04',
     hotBuys: [
@@ -300,7 +300,11 @@ const defaultTrendProfiles = {
 
 export const m7 = {
   async start() {
-    const mode = env.M7_TREND_FEED_URL ? '（已啟用自動更新）' : '（目前為內建資料）';
+    const mode = env.ENABLE_M7_AUTO_REFRESH
+      ? '（系統自動更新）'
+      : env.M7_TREND_FEED_URL
+        ? '（外部來源更新）'
+        : '（目前為內建資料）';
     return cardAsk(
       '現在最夯',
       `選城市，直接給你「大家買什麼 + 新景點 + 爆款行程 + 注意事項」${mode}。`,
@@ -345,7 +349,11 @@ function normalizeCity(input) {
 }
 
 function trendCarousel(city, profile) {
-  const sourceLabel = profile.source === 'remote' ? '自動更新來源' : '內建資料';
+  const sourceLabel = profile.source === 'auto'
+    ? '系統自動抓取'
+    : profile.source === 'remote'
+      ? '外部更新來源'
+      : '內建資料';
   return {
     type: 'carousel',
     contents: [

@@ -1,9 +1,24 @@
 import { env } from '../config/env.js';
 import { withCache } from './apiCache.js';
+import { getCachedJson } from './apiCache.js';
 
 const CACHE_KEY = 'm7:trend-feed:v1';
+export const M7_AUTO_CACHE_KEY = 'm7:auto-feed:v1';
 
 export async function loadTrendProfiles(defaultProfiles) {
+  if (env.ENABLE_M7_AUTO_REFRESH) {
+    const auto = await getCachedJson(M7_AUTO_CACHE_KEY).catch(() => null);
+    if (auto) {
+      const autoCities = readFeedCities(auto);
+      const profiles = mergeProfiles(defaultProfiles, autoCities);
+      return {
+        profiles,
+        source: 'auto',
+        sourceUpdatedAt: readFeedUpdatedAt(auto)
+      };
+    }
+  }
+
   if (!env.M7_TREND_FEED_URL) {
     return { profiles: defaultProfiles, source: 'built-in' };
   }

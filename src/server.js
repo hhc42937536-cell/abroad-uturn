@@ -1,8 +1,9 @@
 import http from 'node:http';
 import { env } from './config/env.js';
 import { hasDatabase } from './config/db.js';
-import { connectRedis } from './config/redis.js';
+import { connectRedis, hasRedisConfig } from './config/redis.js';
 import { startFareUpdateJob } from './jobs/fareUpdateJob.js';
+import { runM7TrendRefreshNow, startM7TrendRefreshJob } from './jobs/m7TrendRefreshJob.js';
 import { startPriceCheckJob } from './jobs/priceCheckJob.js';
 import { handleWebhookRequest } from './webhook/lineWebhook.js';
 import { isValidLineSignature } from './webhook/lineSignature.js';
@@ -26,8 +27,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/ready') {
       return json(res, 200, {
         ok: true,
-        storage: hasDatabase ? 'postgresql' : 'memory',
-        redis: Boolean(env.REDIS_URL || env.UPSTASH_REDIS_URL),
+        storage: hasDatabase ? 'postgresql' : hasRedisConfig ? 'redis' : 'memory',
+        redis: hasRedisConfig,
         line: Boolean(env.LINE_CHANNEL_ACCESS_TOKEN && env.LINE_CHANNEL_SECRET),
         openai: Boolean(env.OPENAI_API_KEY),
         appBaseUrl: Boolean(env.APP_BASE_URL),
@@ -41,6 +42,12 @@ const server = http.createServer(async (req, res) => {
           enabled: env.ENABLE_PRICE_PUSH,
           cron: env.PRICE_CHECK_CRON,
           timezone: env.FARE_UPDATE_TIMEZONE
+        },
+        m7TrendAuto: {
+          enabled: env.ENABLE_M7_AUTO_REFRESH,
+          cron: env.M7_AUTO_REFRESH_CRON,
+          timezone: env.M7_AUTO_REFRESH_TIMEZONE,
+          feedUrl: Boolean(env.M7_TREND_FEED_URL)
         }
       });
     }
@@ -55,6 +62,14 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, result);
     }
 
+    if ((req.method === 'GET' || req.method === 'POST') && url.pathname === '/m7-trend-refresh') {
+      if (!env.ENABLE_M7_AUTO_REFRESH) {
+        return json(res, 200, { ok: true, skipped: true, reason: 'm7 auto refresh disabled' });
+      }
+      const feed = await runM7TrendRefreshNow();
+      return json(res, 200, { ok: true, updatedAt: feed.updatedAt, cityCount: Object.keys(feed.cities || {}).length });
+    }
+
     return json(res, 404, { ok: false, error: 'Not found' });
   } catch (error) {
     console.error(error);
@@ -65,6 +80,7 @@ const server = http.createServer(async (req, res) => {
 await connectRedis();
 startFareUpdateJob();
 startPriceCheckJob();
+startM7TrendRefreshJob();
 
 server.listen(env.PORT, () => {
   console.log(`Travel LINE Bot listening on ${env.PORT}`);

@@ -211,9 +211,23 @@ M7 trends auto-update settings:
 M7_TREND_FEED_URL=
 M7_TREND_CACHE_SECONDS=21600
 M7_TREND_MAX_AGE_DAYS=60
+ENABLE_M7_AUTO_REFRESH=true
+M7_AUTO_REFRESH_CRON=30 7 * * *
+M7_AUTO_REFRESH_TIMEZONE=Asia/Taipei
+M7_AUTO_HEADLINES_LIMIT=8
 ```
 
-If `M7_TREND_FEED_URL` is set, M7 reads remote trend profiles with cache and falls back to built-in profiles on fetch failure.
+M7 now supports two auto-update paths:
+- Built-in auto refresh: scheduled job fetches Google News RSS signals and updates M7 cache automatically.
+- Optional remote feed override: if `M7_TREND_FEED_URL` is set and no auto cache is available, M7 reads that feed.
+
+Vercel cron endpoint for automatic M7 refresh:
+
+```text
+/api/m7-trend-refresh
+```
+
+Default Vercel schedule is daily at `23:30 UTC` (07:30 Asia/Taipei next day).
 Sample payload: `docs/m7-trend-feed.sample.json`
 
 Manual fare refresh:
