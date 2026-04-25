@@ -4,7 +4,7 @@ import { searchStarEvents } from '../services/starEvents.js';
 import { planCard } from '../views/flex/planCard.js';
 import { ask, cardAsk, done, quickAsk, textValue } from './shared.js';
 
-const eventTypes = ['演唱會', '見面會', '音樂節', '頒獎典禮', '快閃活動'];
+const eventTypes = ['演唱會', '見面會', '音樂節', '頒獎典禮', '快閃活動', '不限'];
 const dayOptions = ['2天', '3天', '4天', '5天'];
 const artistCategoryOptions = ['韓國歌手/團體', '韓國演員', '日本偶像', '其他（直接輸入）'];
 const searchArtistValue = '__SEARCH_ARTIST__';
@@ -99,14 +99,15 @@ export const m8 = {
     }
 
     if (step === 3) {
-      const eventSearch = await searchStarEvents(state.artistName, value);
-      const options = buildEventOptions(state.artistName, value, state.artistCategory, eventSearch);
+      const eventType = normalizeEventType(value);
+      const eventSearch = await searchStarEvents(state.artistName, eventType);
+      const options = buildEventOptions(state.artistName, eventType, state.artistCategory, eventSearch);
       return cardAsk(
         '先選場次',
         '依活動類型先挑一場，不再先問城市。',
         options,
         4,
-        { ...state, eventType: value, eventSearch }
+        { ...state, eventType, eventSearch }
       );
     }
 
@@ -161,13 +162,14 @@ function buildEventOptions(artistName, eventType, artistCategory, eventSearch) {
   }
 
   const fallbackCities = inferLikelyCities(artistCategory);
+  const eventTypeLabel = eventType === '不限' ? '全部活動' : eventType;
   return fallbackCities.map((city, index) => ({
-    label: `${city} ${eventType}${index + 1}`,
+    label: `${city} ${eventTypeLabel}${index + 1}`,
     value: stringifyEventValue({
       city,
-      venue: `${artistName} ${eventType} ${city} 場`,
+      venue: `${artistName} ${eventTypeLabel} ${city} 場`,
       date: '日期待官方公告',
-      label: `${city} ${eventType}`
+      label: `${city} ${eventTypeLabel}`
     }),
     note: `推薦先鎖定 ${city} 場次`
   }));
@@ -200,4 +202,8 @@ function parseEventValue(value) {
   }
   const [, city, venue, date, label] = text.split('|');
   return { city, venue, date, label };
+}
+
+function normalizeEventType(value) {
+  return value === '不限' ? '不限' : value;
 }
