@@ -87,7 +87,26 @@ export function bookingLink(city, keyword = '') {
 }
 
 export function googleMapsSearchLink(query) {
-  const url = new URL(`https://www.google.com/maps/search/${encodeURIComponent(query)}`);
+  const url = new URL('https://www.google.com/maps/search/');
+  url.searchParams.set('api', '1');
+  url.searchParams.set('query', String(query || '').trim());
+  url.searchParams.set('hl', 'zh-TW');
+  return url.toString();
+}
+
+export function googleMapsDirectionsLink({ origin = '', destination = '', travelmode = 'transit' } = {}) {
+  const url = new URL('https://www.google.com/maps/dir/');
+  url.searchParams.set('api', '1');
+  if (origin) url.searchParams.set('origin', origin);
+  if (destination) url.searchParams.set('destination', destination);
+  if (travelmode) url.searchParams.set('travelmode', travelmode);
+  url.searchParams.set('hl', 'zh-TW');
+  return url.toString();
+}
+
+export function googleSearchLink(query) {
+  const url = new URL('https://www.google.com/search');
+  url.searchParams.set('q', String(query || '').trim());
   url.searchParams.set('hl', 'zh-TW');
   return url.toString();
 }

@@ -1,4 +1,4 @@
-import { googleMapsSearchLink } from '../services/deepLinks.js';
+import { googleMapsDirectionsLink, googleMapsSearchLink, googleSearchLink } from '../services/deepLinks.js';
 import { cardAsk, done, textValue } from './shared.js';
 
 const cityOptions = [
@@ -66,7 +66,8 @@ const transportProfiles = {
       '車廂內避免講電話，請改文字訊息。',
       '月台排隊文化很重，先排再上車。',
       '尖峰車廂很擠，行李箱儘量避開 7:30-9:30。'
-    ]
+    ],
+    map: { airportOrigin: '成田機場', cityDestination: '東京車站' }
   },
   大阪: {
     cards: 'ICOCA（關西最通用）',
@@ -101,7 +102,8 @@ const transportProfiles = {
       '地鐵轉乘走路距離可能很長，預留 10-15 分鐘。',
       '熱門餐廳排隊常態，晚餐建議提早到店。',
       'USJ 當天一定早出門，避免把時間卡在交通。'
-    ]
+    ],
+    map: { airportOrigin: '關西國際機場', cityDestination: '難波站' }
   },
   首爾: {
     cards: 'T-money（便利商店可買可儲值）',
@@ -136,7 +138,8 @@ const transportProfiles = {
       '公車上下車都要刷卡。',
       '尖峰時段車廂很擠，行李箱請避開通勤時段。',
       '部分店家對一人用餐有限制，先看店規。'
-    ]
+    ],
+    map: { airportOrigin: '仁川國際機場', cityDestination: '首爾站' }
   },
   曼谷: {
     cards: 'Rabbit Card（BTS）；MRT 可單程或感應支付',
@@ -170,7 +173,8 @@ const transportProfiles = {
       '塞車嚴重，跨區優先 BTS/MRT。',
       '寺廟需注意服裝，肩膀與膝蓋避免裸露。',
       '計程車不一定跳表，叫車 App 較穩。'
-    ]
+    ],
+    map: { airportOrigin: '蘇凡納布國際機場', cityDestination: 'Siam' }
   },
   峴港: {
     cards: '無固定交通卡，市區以 Grab/包車為主',
@@ -202,7 +206,8 @@ const transportProfiles = {
       '機車流量大，過馬路保持固定速度直行。',
       '午後常有陣雨，包包內放輕便雨具。',
       '夜間回程先叫車，避免現場久等。'
-    ]
+    ],
+    map: { airportOrigin: '峴港國際機場', cityDestination: '韓市場' }
   },
   河內: {
     cards: '無固定旅客卡，老城區步行 + Grab',
@@ -235,7 +240,8 @@ const transportProfiles = {
       '交通節奏快，過馬路跟著人群節奏走。',
       '熱門店家可能不收卡，備少量現金。',
       'Train Street 開放狀態常變，先查當天公告。'
-    ]
+    ],
+    map: { airportOrigin: '內排國際機場', cityDestination: '還劍湖' }
   },
   澳門: {
     cards: '以飯店接駁巴士 + 公車 + 計程車為主',
@@ -265,7 +271,8 @@ const transportProfiles = {
       '假日人潮大，熱門景點建議早上先跑。',
       '飯店接駁需排隊，請預留等待時間。',
       '餐廳尖峰候位常見，可先訂位。'
-    ]
+    ],
+    map: { airportOrigin: '澳門國際機場', cityDestination: '路氹金光大道' }
   },
   香港: {
     cards: '八達通 Octopus（地鐵、公車、便利商店都可用）',
@@ -297,7 +304,8 @@ const transportProfiles = {
       '通勤時段很擠，避開 8:00-9:30 與 18:00-19:30。',
       '熱門餐廳通常需拿號碼牌排隊。',
       '上下手扶梯請依現場指示。'
-    ]
+    ],
+    map: { airportOrigin: '香港國際機場', cityDestination: '香港站' }
   },
   新加坡: {
     cards: 'SimplyGo（感應信用卡）或 EZ-Link',
@@ -330,7 +338,8 @@ const transportProfiles = {
       '捷運與公車內禁食禁飲。',
       '法規執行嚴格，公共空間注意標示。',
       '午後常有雷陣雨，包包放折傘。'
-    ]
+    ],
+    map: { airportOrigin: '樟宜機場', cityDestination: 'City Hall MRT Station' }
   }
 };
 
@@ -395,6 +404,8 @@ function infoBubble(title, sections) {
 }
 
 function actionBubble(city, guide) {
+  const origin = guide.map?.airportOrigin || `${city} 機場`;
+  const destination = guide.map?.cityDestination || `${city} 市中心`;
   return {
     type: 'bubble',
     size: 'mega',
@@ -409,9 +420,9 @@ function actionBubble(city, guide) {
       layout: 'vertical',
       spacing: 'sm',
       contents: [
-        linkButton('機場到市區地圖', googleMapsSearchLink(`${city} airport to city`), '#2563eb'),
-        linkButton('交通卡購買點', googleMapsSearchLink(`${city} transport card buy`), '#334155'),
-        linkButton('地鐵路線圖', googleMapsSearchLink(`${city} metro line map`), '#0f766e')
+        linkButton('機場->市區 大眾運輸', googleMapsDirectionsLink({ origin, destination, travelmode: 'transit' }), '#2563eb'),
+        linkButton('交通卡購買與儲值點', googleMapsSearchLink(`${city} 交通卡 購買 儲值`), '#334155'),
+        linkButton('官方地鐵路線圖', googleSearchLink(`${city} 地鐵 路線圖 官方`), '#0f766e')
       ]
     }
   };
@@ -474,6 +485,7 @@ function fallbackGuide(city) {
     lines: ['先鎖定住宿附近 1-2 條主線，不要一開始就買太多 pass。'],
     stations: [`${city} 主車站：跨區移動與行李轉乘核心。`, `${city} 市中心轉乘站：串接主要景點最有效率。`],
     apps: ['Google Maps：全程導航與步行銜接。', '當地叫車 App：夜間與行李移動備援。', '官方地鐵/公車 App：即時班次與停駛資訊。'],
-    culture: ['尖峰時段預留排隊時間。', '先看車廂禁食/行李規則。', '夜間回程先查末班車時間。']
+    culture: ['尖峰時段預留排隊時間。', '先看車廂禁食/行李規則。', '夜間回程先查末班車時間。'],
+    map: { airportOrigin: `${city} 機場`, cityDestination: `${city} 市中心` }
   };
 }
