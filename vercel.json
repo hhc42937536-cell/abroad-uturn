@@ -22,7 +22,7 @@
     },
     {
       "path": "/api/m7-trend-refresh",
-      "schedule": "30 23 * * *"
+      "schedule": "0 0 1 * *"
     }
   ]
 }

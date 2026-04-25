@@ -210,9 +210,9 @@ M7 trends auto-update settings:
 ```text
 M7_TREND_FEED_URL=
 M7_TREND_CACHE_SECONDS=21600
-M7_TREND_MAX_AGE_DAYS=60
+M7_TREND_MAX_AGE_DAYS=180
 ENABLE_M7_AUTO_REFRESH=true
-M7_AUTO_REFRESH_CRON=30 7 * * *
+M7_AUTO_REFRESH_CRON=0 8 1 * *
 M7_AUTO_REFRESH_TIMEZONE=Asia/Taipei
 M7_AUTO_HEADLINES_LIMIT=8
 ```
@@ -227,7 +227,7 @@ Vercel cron endpoint for automatic M7 refresh:
 /api/m7-trend-refresh
 ```
 
-Default Vercel schedule is daily at `23:30 UTC` (07:30 Asia/Taipei next day).
+Default Vercel schedule is monthly at `00:00 UTC` on day 1 (08:00 Asia/Taipei).
 Sample payload: `docs/m7-trend-feed.sample.json`
 
 Manual fare refresh:
