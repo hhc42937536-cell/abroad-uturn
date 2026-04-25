@@ -6,6 +6,7 @@ import { ask, cardAsk, done, quickAsk, textValue } from './shared.js';
 
 const eventTypes = ['演唱會', '見面會', '音樂節', '頒獎典禮', '快閃活動', '不限'];
 const dayOptions = ['2天', '3天', '4天', '5天'];
+const confirmOptions = ['安排這場行程', '換其他場次'];
 const artistCategoryOptions = ['韓國歌手/團體', '韓國演員', '日本偶像', '其他（直接輸入）'];
 const searchArtistValue = '__SEARCH_ARTIST__';
 const searchArtistOption = {
@@ -113,17 +114,50 @@ export const m8 = {
 
     if (step === 4) {
       const picked = parseEventValue(value);
-      return quickAsk('這趟追星行程排幾天？', dayOptions, 5, {
-        ...state,
-        pickedEventLabel: picked.label,
-        pickedEventVenue: picked.venue,
-        pickedEventDate: picked.date,
-        destination: picked.city || inferDestinationByCategory(state.artistCategory)
-      });
+      return {
+        done: false,
+        nextStep: 5,
+        state: {
+          ...state,
+          pickedEventLabel: picked.label,
+          pickedEventVenue: picked.venue,
+          pickedEventDate: picked.date,
+          destination: picked.city || inferDestinationByCategory(state.artistCategory)
+        },
+        messages: [
+          eventPreviewCard({
+            artistName: state.artistName,
+            eventType: state.eventType,
+            city: picked.city,
+            venue: picked.venue,
+            date: picked.date,
+            sourceNote: state.eventSearch?.note
+          }),
+          quickAsk('看完活動內容後，你要？', confirmOptions, 5).messages[0]
+        ]
+      };
     }
 
     if (step === 5) {
-      return ask('有沒有指定場館、搶票時間、必去店家或同行狀況？沒有請回「無」。', 6, { ...state, days: value });
+      if (value === '換其他場次') {
+        const options = buildEventOptions(state.artistName, state.eventType, state.artistCategory, state.eventSearch);
+        return cardAsk(
+          '重新選場次',
+          '先看活動內容，再選你最想衝的一場。',
+          options,
+          4,
+          state
+        );
+      }
+
+      return quickAsk('這趟追星行程排幾天？', dayOptions, 6, {
+        ...state,
+        destination: state.destination || inferDestinationByCategory(state.artistCategory)
+      });
+    }
+
+    if (step === 6) {
+      return ask('有沒有指定場館、搶票時間、必去店家或同行狀況？沒有請回「無」。', 7, { ...state, days: value });
     }
 
     const eventSearch = state.eventSearch ?? await searchStarEvents(state.artistName, state.eventType);
@@ -171,7 +205,7 @@ function buildEventOptions(artistName, eventType, artistCategory, eventSearch) {
       date: '日期待官方公告',
       label: `${city} ${eventTypeLabel}`
     }),
-    note: `推薦先鎖定 ${city} 場次`
+    note: `推薦候選（需再確認官方公告）`
   }));
 }
 
@@ -192,7 +226,7 @@ function inferDestinationByCategory(artistCategory) {
 }
 
 function stringifyEventValue(data) {
-  return `event|${data.city || ''}|${data.venue || ''}|${data.date || ''}|${data.label || ''}`;
+  return `event|${encodePart(data.city)}|${encodePart(data.venue)}|${encodePart(data.date)}|${encodePart(data.label)}`;
 }
 
 function parseEventValue(value) {
@@ -201,9 +235,63 @@ function parseEventValue(value) {
     return { city: '', venue: text, date: '', label: text };
   }
   const [, city, venue, date, label] = text.split('|');
-  return { city, venue, date, label };
+  return { city: decodePart(city), venue: decodePart(venue), date: decodePart(date), label: decodePart(label) };
 }
 
 function normalizeEventType(value) {
   return value === '不限' ? '不限' : value;
+}
+
+function eventPreviewCard({ artistName, eventType, city, venue, date, sourceNote }) {
+  return {
+    type: 'flex',
+    altText: `${artistName} ${eventType} 活動內容`,
+    contents: {
+      type: 'bubble',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        contents: [
+          { type: 'text', text: '先看活動內容', weight: 'bold', size: 'lg', color: '#111827' },
+          keyValue('藝人', artistName || '未填'),
+          keyValue('活動', eventType || '未填'),
+          keyValue('城市', city || '未定'),
+          keyValue('場館', venue || '未定'),
+          keyValue('日期', date || '待公告'),
+          {
+            type: 'text',
+            text: sourceNote || '目前為推薦候選場次，請再對照官方活動頁與票務平台。',
+            size: 'xs',
+            color: '#475569',
+            wrap: true
+          }
+        ]
+      }
+    }
+  };
+}
+
+function keyValue(label, value) {
+  return {
+    type: 'text',
+    size: 'sm',
+    wrap: true,
+    contents: [
+      { type: 'span', text: `${label}：`, color: '#2563eb', weight: 'bold' },
+      { type: 'span', text: value, color: '#111827' }
+    ]
+  };
+}
+
+function encodePart(value) {
+  return encodeURIComponent(String(value || ''));
+}
+
+function decodePart(value) {
+  try {
+    return decodeURIComponent(String(value || ''));
+  } catch {
+    return String(value || '');
+  }
 }
