@@ -50,8 +50,18 @@ const transportProfiles = {
       '丸之內線：新宿、東京、銀座',
       '半藏門線：澀谷、表參道、押上（晴空塔）'
     ],
-    stations: ['新宿站', '東京站', '上野站', '品川站'],
-    apps: ['Google Maps', 'Japan Travel by NAVITIME', '乘換案內 (Jorudan)', 'GO Taxi'],
+    stations: [
+      '新宿站：山手線與私鐵轉乘核心，往近郊與市區都快。',
+      '東京站：新幹線與多條 JR 幹線樞紐，跨城市移動主力。',
+      '上野站：往成田與東北方向常用節點，阿美橫町也近。',
+      '品川站：羽田進市區常見轉乘點，新幹線也可直上。'
+    ],
+    apps: [
+      'Google Maps：查即時路線、月台與步行時間。',
+      'Japan Travel by NAVITIME：跨區鐵道規劃與票券建議。',
+      '乘換案內 (Jorudan)：看首末班與轉乘時間細節。',
+      'GO Taxi：深夜或行李多時快速叫車。'
+    ],
     culture: [
       '車廂內避免講電話，請改文字訊息。',
       '月台排隊文化很重，先排再上車。',
@@ -75,8 +85,18 @@ const transportProfiles = {
       'JR 大阪環狀線：大阪、天王寺、京橋、西九條',
       '阪急/京阪：大阪往京都常用'
     ],
-    stations: ['難波站', '梅田/大阪站', '新大阪站', '天王寺站'],
-    apps: ['Google Maps', 'Japan Travel by NAVITIME', 'DiDi', 'GO Taxi'],
+    stations: [
+      '難波站：南海與地鐵核心，關西機場進城常用。',
+      '梅田/大阪站：北區商圈中心，JR/阪急/阪神轉乘密集。',
+      '新大阪站：新幹線進出大阪主站，跨城必經。',
+      '天王寺站：南區大站，往奈良與市區東南側方便。'
+    ],
+    apps: [
+      'Google Maps：查換乘動線與步行距離。',
+      'Japan Travel by NAVITIME：JR/私鐵混搭路線規劃。',
+      'DiDi：市區短程與深夜叫車。',
+      'GO Taxi：尖峰備援叫車。'
+    ],
     culture: [
       '地鐵轉乘走路距離可能很長，預留 10-15 分鐘。',
       '熱門餐廳排隊常態，晚餐建議提早到店。',
@@ -100,8 +120,18 @@ const transportProfiles = {
       '4 號線：明洞、首爾站、東大門',
       '9 號線：汝矣島、江南西側（有急行）'
     ],
-    stations: ['弘大入口站', '明洞站', '首爾站', '江南站'],
-    apps: ['Naver Map', 'KakaoMap', 'Subway Korea', 'Kakao T'],
+    stations: [
+      '弘大入口站：機場線與 2 號線交會，旅客住宿密集。',
+      '明洞站：購物與市中心景點最常用下車點。',
+      '首爾站：AREX、KTX、地鐵匯集，跨城與機場主樞紐。',
+      '江南站：商務與購物區核心，2 號線高頻站。'
+    ],
+    apps: [
+      'Naver Map：韓國在地導航最準，地址搜尋成功率高。',
+      'KakaoMap：路線備援與周邊店家評價查看。',
+      'Subway Korea：離線地鐵圖與站間時間。',
+      'Kakao T：計程車叫車與預估車資。'
+    ],
     culture: [
       '公車上下車都要刷卡。',
       '尖峰時段車廂很擠，行李箱請避開通勤時段。',
@@ -125,8 +155,17 @@ const transportProfiles = {
       'BTS Silom：Saphan Taksin、Sala Daeng',
       'MRT Blue：Bang Sue、Asok、Silom'
     ],
-    stations: ['Asok', 'Siam', 'Sala Daeng', 'Saphan Taksin'],
-    apps: ['Google Maps', 'Grab', 'ViaBus'],
+    stations: [
+      'Asok：BTS 與 MRT 交會，跨區最常轉乘。',
+      'Siam：BTS 雙線交會，市中心購物核心。',
+      'Sala Daeng：BTS 轉 MRT Silom 常用節點。',
+      'Saphan Taksin：銜接昭披耶河船線，跑河岸景點關鍵。'
+    ],
+    apps: [
+      'Google Maps：路線整體規劃與步行導航。',
+      'Grab：叫車與機場接送。',
+      'ViaBus：即時公車位置，避免久等。'
+    ],
     culture: [
       '塞車嚴重，跨區優先 BTS/MRT。',
       '寺廟需注意服裝，肩膀與膝蓋避免裸露。',
@@ -148,8 +187,17 @@ const transportProfiles = {
       '市區點對點：Grab 汽車/機車',
       '會安、巴拿山：一日團或包車最省時'
     ],
-    stations: ['峴港機場 DAD', '韓市場周邊', '美溪沙灘周邊'],
-    apps: ['Grab', 'Google Maps', 'Klook', 'KKday'],
+    stations: [
+      '峴港機場 DAD：到市區與回程最重要出入口。',
+      '韓市場周邊：市中心購物與換匯熱區。',
+      '美溪沙灘周邊：海灘住宿密集，晚間移動頻繁。'
+    ],
+    apps: [
+      'Grab：市區與景點點對點叫車主力。',
+      'Google Maps：確認上車點與營業時間。',
+      'Klook：會安/巴拿山等一日行程預訂。',
+      'KKday：比價在地團與接駁方案。'
+    ],
     culture: [
       '機車流量大，過馬路保持固定速度直行。',
       '午後常有陣雨，包包內放輕便雨具。',
@@ -172,8 +220,17 @@ const transportProfiles = {
       '跨區移動：Grab',
       '下龍灣/寧平：一日團接送'
     ],
-    stations: ['河內機場 HAN', '還劍湖', '老城區'],
-    apps: ['Grab', 'Google Maps', 'Klook', 'KKday'],
+    stations: [
+      '河內機場 HAN：進出城關鍵，叫車與接送集合點。',
+      '還劍湖：城市地標，往各區移動定位方便。',
+      '老城區：美食與咖啡最密集，步行探索核心。'
+    ],
+    apps: [
+      'Grab：主要移動方式，避開路邊喊價。',
+      'Google Maps：步行導覽與店家營業資訊。',
+      'Klook：下龍灣/寧平行程預訂。',
+      'KKday：接駁與一日團備援比價。'
+    ],
     culture: [
       '交通節奏快，過馬路跟著人群節奏走。',
       '熱門店家可能不收卡，備少量現金。',
@@ -195,8 +252,15 @@ const transportProfiles = {
       '半島景點：步行 + 公車',
       '半島 <-> 路氹：飯店接駁巴士'
     ],
-    stations: ['澳門機場 MFM', '關閘', '路氹金光大道'],
-    apps: ['Google Maps', '澳門巴士 App'],
+    stations: [
+      '澳門機場 MFM：飯店接駁與入境後首站。',
+      '關閘：陸路口岸樞紐，往半島與路氹分流點。',
+      '路氹金光大道：大型飯店與演出區移動核心。'
+    ],
+    apps: [
+      'Google Maps：步行與跨區路線參考。',
+      '澳門巴士 App：查公車到站與路線轉乘。'
+    ],
     culture: [
       '假日人潮大，熱門景點建議早上先跑。',
       '飯店接駁需排隊，請預留等待時間。',
@@ -218,8 +282,17 @@ const transportProfiles = {
       '荃灣線：尖沙咀、旺角、金鐘',
       '港島線：中環、灣仔、銅鑼灣'
     ],
-    stations: ['香港站', '九龍站', '尖沙咀站', '中環站'],
-    apps: ['MTR Mobile', 'Google Maps', 'Citymapper'],
+    stations: [
+      '香港站：機場快線終點，接中環商業區最快。',
+      '九龍站：西九龍與尖沙咀方向轉乘關鍵。',
+      '尖沙咀站：維港與購物區核心站，人流高。',
+      '中環站：港島線與商業區樞紐，過海轉乘常用。'
+    ],
+    apps: [
+      'MTR Mobile：官方路線、票價與服務通知。',
+      'Google Maps：跨港鐵/步行/巴士整合規劃。',
+      'Citymapper：都市轉乘建議與替代路線。'
+    ],
     culture: [
       '通勤時段很擠，避開 8:00-9:30 與 18:00-19:30。',
       '熱門餐廳通常需拿號碼牌排隊。',
@@ -242,8 +315,17 @@ const transportProfiles = {
       'NS 線：Orchard、City Hall、Marina 區',
       'DT 線：Bugis、Little India'
     ],
-    stations: ['Changi Airport', 'City Hall', 'Bugis', 'Orchard'],
-    apps: ['Citymapper', 'Google Maps', 'Grab'],
+    stations: [
+      'Changi Airport：入境後轉 MRT/叫車起點。',
+      'City Hall：NS/EW 交會，往濱海灣與市中心方便。',
+      'Bugis：DT/EW 交會，飯店與商圈密集。',
+      'Orchard：購物區主軸站，行程常回訪。'
+    ],
+    apps: [
+      'Citymapper：都會交通最佳化轉乘建議。',
+      'Google Maps：全域導航與店家資訊。',
+      'Grab：多人或深夜回飯店叫車。'
+    ],
     culture: [
       '捷運與公車內禁食禁飲。',
       '法規執行嚴格，公共空間注意標示。',
@@ -364,8 +446,8 @@ function fallbackGuide(city) {
     ],
     airport: ['優先選機場快線、機場巴士或官方叫車點。', '深夜抵達先用叫車 App 或飯店接送。'],
     lines: ['先鎖定住宿附近 1-2 條主線，不要一開始就買太多 pass。'],
-    stations: [`${city} 主車站`, `${city} 市中心轉乘站`],
-    apps: ['Google Maps', '當地叫車 App', '官方地鐵/公車 App'],
+    stations: [`${city} 主車站：跨區移動與行李轉乘核心。`, `${city} 市中心轉乘站：串接主要景點最有效率。`],
+    apps: ['Google Maps：全程導航與步行銜接。', '當地叫車 App：夜間與行李移動備援。', '官方地鐵/公車 App：即時班次與停駛資訊。'],
     culture: ['尖峰時段預留排隊時間。', '先看車廂禁食/行李規則。', '夜間回程先查末班車時間。']
   };
 }
