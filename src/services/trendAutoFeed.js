@@ -42,19 +42,19 @@ async function refreshCityProfile(city, base) {
   const batches = await Promise.all(queries.map((query) => fetchNewsTitles(query)));
   const titles = uniq(batches.flat()).slice(0, env.M7_AUTO_HEADLINES_LIMIT);
 
-  const autoBuys = pickByKeywords(titles, buyKeywords, 2).map((title) => `新聞熱點：${title}`);
-  const autoSpots = pickByKeywords(titles, spotKeywords, 3).map((title) => `近期焦點：${title}`);
-  const autoPlans = pickByKeywords(titles, planKeywords, 2).map((title) => `跟風玩法：${title}`);
+  const autoBuys = pickByKeywords(titles, buyKeywords, 4).map((title) => `新聞熱點：${title}`);
+  const autoSpots = pickByKeywords(titles, spotKeywords, 5).map((title) => `近期焦點：${title}`);
+  const autoPlans = pickByKeywords(titles, planKeywords, 4).map((title) => `跟風玩法：${title}`);
 
   return {
     ...base,
     updated: todayIso(),
-    hotBuys: mergeList(autoBuys, base.hotBuys, 3),
-    hotSpots: mergeList(autoSpots, base.hotSpots, 3),
-    hotPlans: mergeList(autoPlans, base.hotPlans, 3),
+    hotBuys: mergeList(autoBuys, base.hotBuys, 8),
+    hotSpots: mergeList(autoSpots, base.hotSpots, 8),
+    hotPlans: mergeList(autoPlans, base.hotPlans, 8),
     caution: mergeList([
       `本頁依近期公開新聞自動更新（${todayIso()}），熱門變化快請再確認營業/預約資訊。`
-    ], base.caution, 3)
+    ], base.caution, 6)
   };
 }
 
