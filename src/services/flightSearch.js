@@ -64,12 +64,39 @@ export async function searchRouteFare({ origin, destination, departDate, returnD
   const rows = await fetchTravelpayoutsPrices({
     origin,
     destination,
-    departureAt: departDate?.slice(0, 7) || nextMonth(),
+    departureAt: departDate || nextMonth(),
     returnAt: returnDate?.slice(0, 7),
     limit: 10
   }).catch(() => []);
   const best = normalizeTravelpayoutsRows(origin, rows)[0];
   return best ?? buildFallbackFareRows(origin, new Date()).find((row) => row.code === destination);
+}
+
+export async function quickRouteRecommendations({ origin = 'TPE', destination }) {
+  const dates = nextDates(7);
+  const rows = [];
+
+  for (const date of dates) {
+    const found = await fetchTravelpayoutsPrices({
+      origin,
+      destination,
+      departureAt: date,
+      limit: 10,
+      sorting: 'price'
+    }).then((items) => normalizeTravelpayoutsRows(origin, items)).catch(() => []);
+    rows.push(...found.map((row) => ({ ...row, departDate: row.departDate || date })));
+  }
+
+  const candidates = rows.length ? rows : buildFallbackRouteRows(origin, destination, dates);
+  const cheapest = [...candidates].sort((a, b) => a.priceTwd - b.priceTwd)[0];
+  const directRows = candidates.filter((row) => row.stops === '直飛');
+  const fastest = (directRows.length ? directRows : candidates)
+    .sort((a, b) => durationRank(a.duration) - durationRank(b.duration) || a.priceTwd - b.priceTwd)[0];
+
+  return {
+    cheapest: formatRecommendation('近7天最便宜', cheapest),
+    fastest: formatRecommendation('最快/直飛建議', fastest)
+  };
 }
 
 async function getOrCreateFareSnapshot(from) {
@@ -149,6 +176,51 @@ function buildFallbackFareRows(from, date) {
       priceTwd: simulatedFare({ from, to: code, index, date }),
       provider: 'fallback'
     };
+  });
+}
+
+function buildFallbackRouteRows(from, to, dates) {
+  const meta = destinationMeta[to] ?? { city: to, duration: '-' };
+  return dates.map((date, index) => ({
+    from,
+    code: to,
+    city: meta.city,
+    duration: meta.duration,
+    stops: '直飛',
+    priceTwd: simulatedFare({ from, to, index, date: new Date(`${date}T00:00:00Z`) }),
+    departDate: date,
+    provider: 'fallback'
+  }));
+}
+
+function formatRecommendation(label, row) {
+  if (!row) return null;
+  return {
+    label,
+    route: `${row.from ?? ''} → ${row.code}`,
+    city: row.city,
+    departDate: row.departDate ? String(row.departDate).slice(0, 10) : '',
+    priceText: row.priceTwd ? `TWD ${row.priceTwd.toLocaleString()}` : '查詢中',
+    duration: row.duration || '',
+    stops: row.stops || '',
+    note: [row.departDate ? String(row.departDate).slice(0, 10) : '', row.duration, row.stops]
+      .filter(Boolean)
+      .join(' / ')
+  };
+}
+
+function durationRank(duration = '') {
+  const hours = String(duration).match(/(\d+(?:\.\d+)?)\s*小時/)?.[1];
+  if (hours) return Number(hours);
+  return 99;
+}
+
+function nextDates(count) {
+  const today = new Date();
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + index + 1);
+    return date.toISOString().slice(0, 10);
   });
 }
 
