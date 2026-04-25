@@ -1,4 +1,6 @@
 import { googleMapsSearchLink, googleSearchLink } from '../services/deepLinks.js';
+import { env } from '../config/env.js';
+import { loadTrendProfiles } from '../services/trendFeed.js';
 import { cardAsk, textValue } from './shared.js';
 import { popularDestinations } from './options.js';
 
@@ -18,7 +20,7 @@ const cityAliases = {
   馬尼拉: ['馬尼拉', 'manila', '菲律賓']
 };
 
-const trendProfiles = {
+const defaultTrendProfiles = {
   東京: {
     updated: '2026-04',
     hotBuys: [
@@ -298,9 +300,10 @@ const trendProfiles = {
 
 export const m7 = {
   async start() {
+    const mode = env.M7_TREND_FEED_URL ? '（已啟用自動更新）' : '（目前為內建資料）';
     return cardAsk(
       '現在最夯',
-      '選城市，直接給你「大家買什麼 + 新景點 + 爆款行程 + 注意事項」。',
+      `選城市，直接給你「大家買什麼 + 新景點 + 爆款行程 + 注意事項」${mode}。`,
       cityOptions,
       1
     );
@@ -309,7 +312,12 @@ export const m7 = {
   async handleStep({ message }) {
     const raw = textValue(message);
     const city = normalizeCity(raw);
-    const profile = trendProfiles[city] ?? fallbackProfile(city || raw || '目的地');
+    const { profiles, source } = await loadTrendProfiles(defaultTrendProfiles);
+    const profile = profiles[city] ?? fallbackProfile(city || raw || '目的地');
+    const freshness = freshnessLabel(profile.updated);
+    const caution = freshness.isStale
+      ? [`資料可能超過 ${env.M7_TREND_MAX_AGE_DAYS} 天未更新，出發前請二次確認。`, ...profile.caution]
+      : profile.caution;
 
     return {
       done: false,
@@ -319,7 +327,7 @@ export const m7 = {
         {
           type: 'flex',
           altText: `${city} 現在最夯`,
-          contents: trendCarousel(city, profile)
+          contents: trendCarousel(city, { ...profile, caution, freshnessText: freshness.text, source })
         },
         cardAsk('還想看哪個城市？', '可連續看 11 城，不用重開功能。', cityOptions, 1).messages[0]
       ]
@@ -337,11 +345,13 @@ function normalizeCity(input) {
 }
 
 function trendCarousel(city, profile) {
+  const sourceLabel = profile.source === 'remote' ? '自動更新來源' : '內建資料';
   return {
     type: 'carousel',
     contents: [
       infoBubble(`${city} 最夯摘要`, [
-        sectionText('資料時間', profile.updated),
+        sectionText('資料時間', `${profile.updated}（${profile.freshnessText}）`),
+        sectionText('資料來源', sourceLabel),
         sectionList('這波最紅', profile.hotSpots.slice(0, 3))
       ]),
       infoBubble(`${city} 大家都買`, [sectionList('熱門清單', profile.hotBuys)]),
@@ -453,4 +463,27 @@ function fallbackProfile(city) {
     officialLabel: `${city} 觀光官方資訊`,
     officialUri: googleSearchLink(`${city} tourism official`)
   };
+}
+
+function freshnessLabel(updated) {
+  const parsed = parseUpdatedDate(updated);
+  if (!parsed) return { text: '日期格式不明', isStale: true };
+  const days = Math.floor((Date.now() - parsed.getTime()) / 86400000);
+  if (days <= env.M7_TREND_MAX_AGE_DAYS) return { text: `近 ${days} 天`, isStale: false };
+  return { text: `約 ${days} 天前`, isStale: true };
+}
+
+function parseUpdatedDate(value) {
+  const text = String(value || '').trim();
+  if (!text) return null;
+  if (/^\d{4}-\d{2}$/.test(text)) {
+    const date = new Date(`${text}-01T00:00:00+08:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const date = new Date(`${text}T00:00:00+08:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
 }

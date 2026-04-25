@@ -23,7 +23,10 @@ export const env = {
   FARE_REFRESH_ORIGINS: process.env.FARE_REFRESH_ORIGINS || 'TPE',
   FARE_UPDATE_CRON: process.env.FARE_UPDATE_CRON || '0 9 * * 1,3,5',
   FARE_UPDATE_TIMEZONE: process.env.FARE_UPDATE_TIMEZONE || 'Asia/Taipei',
-  APP_BASE_URL: optionalEnv('APP_BASE_URL')
+  APP_BASE_URL: optionalEnv('APP_BASE_URL'),
+  M7_TREND_FEED_URL: optionalEnv('M7_TREND_FEED_URL'),
+  M7_TREND_CACHE_SECONDS: numberEnv('M7_TREND_CACHE_SECONDS', 21600),
+  M7_TREND_MAX_AGE_DAYS: numberEnv('M7_TREND_MAX_AGE_DAYS', 60)
 };
 
 function loadDotEnv() {

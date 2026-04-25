@@ -205,6 +205,17 @@ FARE_UPDATE_TIMEZONE=Asia/Taipei
 ENABLE_PRICE_PUSH=false
 ```
 
+M7 trends auto-update settings:
+
+```text
+M7_TREND_FEED_URL=
+M7_TREND_CACHE_SECONDS=21600
+M7_TREND_MAX_AGE_DAYS=60
+```
+
+If `M7_TREND_FEED_URL` is set, M7 reads remote trend profiles with cache and falls back to built-in profiles on fetch failure.
+Sample payload: `docs/m7-trend-feed.sample.json`
+
 Manual fare refresh:
 
 ```bash

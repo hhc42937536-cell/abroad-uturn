@@ -1,0 +1,30 @@
+{
+  "updatedAt": "2026-05-01",
+  "cities": {
+    "東京": {
+      "updated": "2026-05-01",
+      "hotBuys": [
+        "伴手禮：xxxx",
+        "小家電：xxxx",
+        "藥妝：xxxx"
+      ],
+      "hotSpots": [
+        "新景點：xxxx",
+        "新商場：xxxx",
+        "近期熱門活動：xxxx"
+      ],
+      "hotPlans": [
+        "玩法 A：xxxx",
+        "玩法 B：xxxx",
+        "玩法 C：xxxx"
+      ],
+      "caution": [
+        "提醒 1",
+        "提醒 2"
+      ],
+      "mapQuery": "東京 最新景點 2026",
+      "officialLabel": "官方連結名稱",
+      "officialUri": "https://example.com/official"
+    }
+  }
+}
