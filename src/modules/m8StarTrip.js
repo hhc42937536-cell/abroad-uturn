@@ -102,18 +102,28 @@ export const m8 = {
     if (step === 3) {
       const eventType = normalizeEventType(value);
       const eventSearch = await searchStarEvents(state.artistName, eventType);
-      const options = buildEventOptions(state.artistName, eventType, state.artistCategory, eventSearch);
+      const { options, choices } = buildEventOptions(state.artistName, eventType, state.artistCategory, eventSearch);
       return cardAsk(
         '先選場次',
         '依活動類型先挑一場，不再先問城市。',
         options,
         4,
-        { ...state, eventType, eventSearch }
+        { ...state, eventType, eventSearch, slotChoices: choices }
       );
     }
 
     if (step === 4) {
-      const picked = parseEventValue(value);
+      const picked = parseSlotChoice(value, state.slotChoices);
+      if (!picked) {
+        const { options, choices } = buildEventOptions(state.artistName, state.eventType, state.artistCategory, state.eventSearch);
+        return cardAsk(
+          '請重新選場次',
+          '剛剛的選項可能過期，請再點一次。',
+          options,
+          4,
+          { ...state, slotChoices: choices }
+        );
+      }
       return {
         done: false,
         nextStep: 5,
@@ -183,30 +193,24 @@ export const m8 = {
 function buildEventOptions(artistName, eventType, artistCategory, eventSearch) {
   const events = Array.isArray(eventSearch?.events) ? eventSearch.events : [];
   if (events.length) {
-    return events.slice(0, 10).map((event, index) => ({
-      label: `${event.city || '未定'} ${event.date || ''}`.trim(),
-      value: stringifyEventValue({
-        city: event.city || '',
-        venue: event.venue || `${artistName} ${eventType} 場館`,
-        date: event.date || '',
-        label: `${event.city || '未定'} ${event.venue || eventType}`
-      }),
-      note: `${event.venue || eventType}${event.date ? ` / ${event.date}` : ''}`
+    const choices = events.slice(0, 10).map((event) => ({
+      city: event.city || '',
+      venue: event.venue || `${artistName} ${eventType} 場館`,
+      date: event.date || '',
+      label: `${event.city || '未定'} ${event.venue || eventType}`
     }));
+    return toSlotOptions(choices, eventType);
   }
 
   const fallbackCities = inferLikelyCities(artistCategory);
   const eventTypeLabel = eventType === '不限' ? '全部活動' : eventType;
-  return fallbackCities.map((city, index) => ({
-    label: `${city} ${eventTypeLabel}${index + 1}`,
-    value: stringifyEventValue({
+  const choices = fallbackCities.map((city) => ({
       city,
       venue: `${artistName} ${eventTypeLabel} ${city} 場`,
       date: '日期待官方公告',
       label: `${city} ${eventTypeLabel}`
-    }),
-    note: `推薦候選（需再確認官方公告）`
-  }));
+    }));
+  return toSlotOptions(choices, eventTypeLabel);
 }
 
 function inferLikelyCities(artistCategory) {
@@ -225,17 +229,21 @@ function inferDestinationByCategory(artistCategory) {
   return '東京';
 }
 
-function stringifyEventValue(data) {
-  return `event|${encodePart(data.city)}|${encodePart(data.venue)}|${encodePart(data.date)}|${encodePart(data.label)}`;
+function toSlotOptions(choices, eventTypeLabel) {
+  const options = choices.map((choice, index) => ({
+    label: `${choice.city || '未定'} ${eventTypeLabel}${index + 1}`,
+    value: `slot|${index}`,
+    note: `${choice.venue}${choice.date ? ` / ${choice.date}` : ''}`
+  }));
+  return { options, choices };
 }
 
-function parseEventValue(value) {
+function parseSlotChoice(value, choices = []) {
   const text = String(value || '');
-  if (!text.startsWith('event|')) {
-    return { city: '', venue: text, date: '', label: text };
-  }
-  const [, city, venue, date, label] = text.split('|');
-  return { city: decodePart(city), venue: decodePart(venue), date: decodePart(date), label: decodePart(label) };
+  if (!text.startsWith('slot|')) return null;
+  const index = Number(text.split('|')[1]);
+  if (!Number.isInteger(index) || index < 0 || index >= choices.length) return null;
+  return choices[index];
 }
 
 function normalizeEventType(value) {
@@ -282,16 +290,4 @@ function keyValue(label, value) {
       { type: 'span', text: value, color: '#111827' }
     ]
   };
-}
-
-function encodePart(value) {
-  return encodeURIComponent(String(value || ''));
-}
-
-function decodePart(value) {
-  try {
-    return decodeURIComponent(String(value || ''));
-  } catch {
-    return String(value || '');
-  }
 }
