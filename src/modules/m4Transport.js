@@ -27,7 +27,17 @@ const cityAliases = {
 
 const transportProfiles = {
   東京: {
-    cards: 'Welcome Suica 或 PASMO PASSPORT（短期旅客最常用）',
+    cards: 'Welcome Suica（短期旅客常用）；長住可評估一般 Suica/PASMO',
+    cardNotes: [
+      'Welcome Suica 短期卡有效期 28 天，逾期不能再使用。',
+      'Welcome Suica 無押金；一般情況餘額不退（含到期後剩餘金額）。',
+      '僅卡片故障且符合 JR 規範時，才可走故障退款流程，不是一般退卡機制。',
+      'Welcome Suica 遺失不可補發，請不要一次儲值過多。',
+      'Welcome Suica 不能跨不同區域連續搭乘（例如東京直刷到仙台不行）。',
+      '儲值以現金為主，建議把「回程最後一天」預估後再加值，避免殘值。',
+      '卡面 GOOD THRU 不是你的 28 天效期，效期以購卡憑證（Reference Paper）為準。',
+      'PASMO PASSPORT 已於 2024-10 停止後續處理，旅客建議以 Welcome Suica 或一般 IC 卡替代。'
+    ],
     airport: [
       '成田 NRT -> Skyliner：上野、日暮里',
       '成田 NRT -> NEX：東京、品川、澀谷、新宿',
@@ -50,6 +60,11 @@ const transportProfiles = {
   },
   大阪: {
     cards: 'ICOCA（關西最通用）',
+    cardNotes: [
+      'ICOCA 可在關西多數鐵道與便利商店使用，離境前可到指定窗口處理退卡。',
+      '若是短期行程，先用 ICOCA + 單次特急券，通常比亂買多張 pass 省。',
+      '跨公司列車（JR/私鐵/地鐵）轉乘時，先看閘門與票券適用範圍。'
+    ],
     airport: [
       'KIX -> 南海電鐵：難波',
       'KIX -> JR 關空快速：天王寺、大阪站',
@@ -70,6 +85,11 @@ const transportProfiles = {
   },
   首爾: {
     cards: 'T-money（便利商店可買可儲值）',
+    cardNotes: [
+      'T-money 幾乎是首爾移動標配，地鐵公車都通用。',
+      '公車上下車都要刷，漏刷會影響轉乘優惠。',
+      '機場快線 AREX 與一般地鐵票價不同，轉乘前先確認車種。'
+    ],
     airport: [
       'ICN -> AREX 直達：首爾站（最快）',
       'ICN -> AREX 普通：弘大、首爾站等',
@@ -90,6 +110,11 @@ const transportProfiles = {
   },
   曼谷: {
     cards: 'Rabbit Card（BTS）；MRT 可單程或感應支付',
+    cardNotes: [
+      'Rabbit Card 主要給 BTS，用 MRT 仍可能要另購票或用感應支付。',
+      '曼谷塞車重，跨區優先鐵道，叫車放在短程或深夜。',
+      '機場線與 BTS 轉乘動線長，帶行李要多抓時間。'
+    ],
     airport: [
       'BKK -> Airport Rail Link：Phaya Thai（轉 BTS）',
       'DMK -> A1/A2 巴士：Mo Chit（轉 BTS/MRT）',
@@ -110,6 +135,11 @@ const transportProfiles = {
   },
   峴港: {
     cards: '無固定交通卡，市區以 Grab/包車為主',
+    cardNotes: [
+      '峴港多數旅客不需要交通卡，Grab 足夠應付市區行程。',
+      '會安、巴拿山這類跨區點，包車/一日團通常更省時省力。',
+      '叫車前先確認上車點，景點周邊常有管制區。'
+    ],
     airport: [
       'DAD -> 美溪沙灘飯店：Grab 約 15-20 分鐘',
       'DAD -> 韓江市區：Grab 約 10-15 分鐘'
@@ -128,6 +158,11 @@ const transportProfiles = {
   },
   河內: {
     cards: '無固定旅客卡，老城區步行 + Grab',
+    cardNotes: [
+      '河內旅遊以步行 + Grab 為主，不必特別買卡。',
+      '跨區通勤時間常受路況影響，行程不要排太滿。',
+      '熱門時段叫車等待較久，提早 10-15 分鐘叫車。'
+    ],
     airport: [
       'HAN -> 老城區：Grab 約 40-60 分鐘',
       'HAN -> 還劍湖：Grab 或飯店接送'
@@ -147,6 +182,11 @@ const transportProfiles = {
   },
   澳門: {
     cards: '以飯店接駁巴士 + 公車 + 計程車為主',
+    cardNotes: [
+      '澳門旅客多用飯店接駁與公車，通常不需要另辦交通卡。',
+      '半島與路氹來回可優先接駁巴士，省下計程車費。',
+      '晚間散場時段（演出後）叫車壓力高，先規劃回程。'
+    ],
     airport: [
       'MFM -> 路氹飯店：免費接駁巴士最方便',
       '口岸 -> 半島/路氹：接駁巴士或公車'
@@ -165,6 +205,11 @@ const transportProfiles = {
   },
   香港: {
     cards: '八達通 Octopus（地鐵、公車、便利商店都可用）',
+    cardNotes: [
+      '八達通幾乎全場景可用，先儲值可加快移動效率。',
+      '機場快線與一般港鐵票價差異大，依住宿區決定最省。',
+      '尖峰時段換乘站很擠，行李旅客建議避開通勤時段。'
+    ],
     airport: [
       'HKG -> 機場快線：香港站、九龍站',
       'HKG -> 機場巴士：可直達多數市區'
@@ -183,6 +228,11 @@ const transportProfiles = {
   },
   新加坡: {
     cards: 'SimplyGo（感應信用卡）或 EZ-Link',
+    cardNotes: [
+      '短期旅客可直接用感應信用卡搭車，省去買卡流程。',
+      '若同行有孩童或無國際卡，再補 EZ-Link 比較穩。',
+      '地鐵站內移動距離可能長，轉乘時間要保守估。'
+    ],
     airport: [
       'SIN -> MRT：樟宜機場線轉市區',
       'SIN -> 計程車/Grab：多人分攤更省時間'
@@ -244,6 +294,7 @@ function transportCard(city, guide) {
       contents: [
         { type: 'text', text: `${city} 交通攻略`, weight: 'bold', size: 'xl', wrap: true, color: '#111827' },
         sectionText('交通卡', guide.cards),
+        sectionList('卡片注意', guide.cardNotes),
         sectionList('機場進市區', guide.airport),
         sectionList('核心線路', guide.lines),
         sectionList('關鍵站點', guide.stations),
@@ -307,6 +358,10 @@ function linkButton(label, uri, color) {
 function fallbackGuide(city) {
   return {
     cards: '先查當地儲值交通卡或感應信用卡支付方式。',
+    cardNotes: [
+      '短期旅客先確認卡片有效期、是否可退餘額、遺失能否補發。',
+      '跨區搭乘前確認同一張卡是否支援，避免出站補票。'
+    ],
     airport: ['優先選機場快線、機場巴士或官方叫車點。', '深夜抵達先用叫車 App 或飯店接送。'],
     lines: ['先鎖定住宿附近 1-2 條主線，不要一開始就買太多 pass。'],
     stations: [`${city} 主車站`, `${city} 市中心轉乘站`],
