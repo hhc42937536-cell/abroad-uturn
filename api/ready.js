@@ -7,7 +7,7 @@ export default function handler(_req, res) {
     ok: true,
     runtime: 'vercel',
     storage: hasDatabase ? 'postgresql' : 'memory',
-    redis: Boolean(env.REDIS_URL),
+    redis: Boolean(env.REDIS_URL || env.UPSTASH_REDIS_URL),
     line: Boolean(env.LINE_CHANNEL_ACCESS_TOKEN && env.LINE_CHANNEL_SECRET),
     openai: Boolean(env.OPENAI_API_KEY),
     appBaseUrl: Boolean(env.APP_BASE_URL),
