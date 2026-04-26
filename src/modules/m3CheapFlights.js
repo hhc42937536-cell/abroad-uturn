@@ -1,36 +1,14 @@
 import { getUser } from '../repositories/userRepository.js';
 import { exploreCheapFlights } from '../services/flightSearch.js';
 import { skyscannerLink } from '../services/deepLinks.js';
-import { cardAsk, done, textValue } from './shared.js';
-
-const taiwanAirports = [
-  { label: '桃園 TPE', value: 'TPE', city: '台北' },
-  { label: '松山 TSA', value: 'TSA', city: '台北' },
-  { label: '高雄 KHH', value: 'KHH', city: '高雄' },
-  { label: '台中 RMQ', value: 'RMQ', city: '台中' },
-  { label: '台南 TNN', value: 'TNN', city: '台南' }
-];
+import { mainMenuFlex } from '../views/flex/mainMenu.js';
 
 export const m3 = {
   async start({ lineUserId }) {
     const user = await getUser(lineUserId);
-    const current = user?.departure_airport ?? 'TPE';
-    return cardAsk(
-      '探索最便宜',
-      `選出發機場，我會列出目前最適合衝一波的低價目的地。現在設定：${current}`,
-      taiwanAirports.map((airport) => ({
-        label: airport.label,
-        value: airport.value,
-        displayText: `從 ${airport.value} 找便宜機票`
-      })),
-      1
-    );
-  },
-
-  async handleStep({ message }) {
-    const from = textValue(message).toUpperCase() || 'TPE';
+    const from = user?.departure_airport ?? 'TPE';
     const flights = await exploreCheapFlights(from);
-    return done(flightCarousel(from, flights));
+    return { done: true, messages: [flightCarousel(from, flights), mainMenuFlex()] };
   }
 };
 
@@ -42,15 +20,22 @@ function flightCarousel(from, flights) {
       type: 'carousel',
       contents: flights.slice(0, 8).map((flight, index) => ({
         type: 'bubble',
-        size: 'micro',
+        header: {
+          type: 'box',
+          layout: 'vertical',
+          backgroundColor: '#1A1F3A',
+          paddingAll: '12px',
+          contents: [
+            { type: 'text', text: `${index + 1}. ${flight.city}`, weight: 'bold', size: 'md', color: '#FFFFFF' },
+            { type: 'text', text: `${from} → ${flight.code}`, size: 'xs', color: '#AAB4D4', margin: 'xs' }
+          ]
+        },
         body: {
           type: 'box',
           layout: 'vertical',
           spacing: 'sm',
           contents: [
-            { type: 'text', text: `${index + 1}. ${flight.city}`, weight: 'bold', size: 'lg', wrap: true },
-            { type: 'text', text: `${from} -> ${flight.code}`, color: '#2563eb', size: 'sm' },
-            { type: 'text', text: `TWD ${flight.priceTwd.toLocaleString()} 起`, weight: 'bold', size: 'md', color: '#dc2626' },
+            { type: 'text', text: `TWD ${flight.priceTwd.toLocaleString()} 起`, weight: 'bold', size: 'xl', color: '#dc2626' },
             { type: 'text', text: `${flight.duration} / ${flight.stops}`, size: 'xs', color: '#6b7280' },
             { type: 'text', text: comparisonText(flight), size: 'xs', color: flight.isCheaperThanLastWeek ? '#059669' : '#6b7280', wrap: true }
           ]
@@ -63,6 +48,7 @@ function flightCarousel(from, flights) {
             {
               type: 'button',
               style: 'primary',
+              color: '#1d4ed8',
               height: 'sm',
               action: {
                 type: 'uri',

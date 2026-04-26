@@ -16,6 +16,7 @@ export function ask(text, nextStep, state = {}) {
 }
 
 export function askWithQuickReplies(text, options, nextStep, state = {}) {
+  const controls = [quickReplyMessage('選單', '選單'), quickReplyMessage('取消', '取消')];
   return {
     done: false,
     nextStep,
@@ -24,7 +25,10 @@ export function askWithQuickReplies(text, options, nextStep, state = {}) {
       type: 'text',
       text,
       quickReply: {
-        items: options.slice(0, 13).map((option) => quickReplyMessage(option, option))
+        items: [
+          ...options.slice(0, 13 - controls.length).map((option) => quickReplyMessage(option, option)),
+          ...controls
+        ]
       }
     }]
   };

@@ -1,5 +1,6 @@
 import { createItinerary } from '../repositories/itineraryRepository.js';
 import { generateTravelPlan } from '../services/openai.js';
+import { showLoadingAnimation } from '../services/line.js';
 import { searchStarEvents } from '../services/starEvents.js';
 import { planCard } from '../views/flex/planCard.js';
 import { ask, cardAsk, done, quickAsk, textValue } from './shared.js';
@@ -176,6 +177,7 @@ export const m8 = {
       return ask('有沒有指定場館、搶票時間、必去店家或同行狀況？沒有請回「無」。', 7, { ...state, days: value });
     }
 
+    await showLoadingAnimation(lineUserId);
     const eventSearch = state.eventSearch ?? await searchStarEvents(state.artistName, state.eventType);
     const input = {
       ...state,

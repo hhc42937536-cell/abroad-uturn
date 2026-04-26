@@ -3,6 +3,7 @@ import { getUser } from '../repositories/userRepository.js';
 import { destinationAirportCode } from '../services/deepLinks.js';
 import { quickRouteRecommendations } from '../services/flightSearch.js';
 import { generateTravelPlan } from '../services/openai.js';
+import { showLoadingAnimation } from '../services/line.js';
 import { planCard } from '../views/flex/planCard.js';
 import { ask, askWithQuickReplies, cardAsk, done, quickAsk, textValue } from './shared.js';
 import { popularDestinations } from './options.js';
@@ -65,8 +66,8 @@ function parseTravelerCount(value) {
 
 function askSpecialNeeds(state) {
   return askWithQuickReplies(
-    '有沒有特殊需求？可輸入必去景點、必走行程、指定機場、出發/回程時間、同行狀況等。沒有就選「無」。',
-    ['無', '指定機場', '指定班機時間', '必去景點', '必走行程', '親子慢步調', '美食優先', '購物優先'],
+    '有必去景點或特殊狀況嗎？可直接輸入（例如：必去築地、帶小孩、要直飛）。沒有就選「無」。',
+    ['無', '親子慢步調', '美食優先', '購物優先', '直飛優先', '不要太趕'],
     5,
     state
   );
@@ -90,6 +91,7 @@ function broadDestinationPrompt(value, days) {
 }
 
 async function buildQuickPlan(lineUserId, state) {
+  await showLoadingAnimation(lineUserId);
   const user = await getUser(lineUserId);
   const from = user?.departure_airport ?? 'TPE';
   const to = destinationAirportCode(state.destination);

@@ -1,12 +1,63 @@
 import { agodaLink, bookingLink, googleMapsSearchLink } from '../services/deepLinks.js';
+import { mainMenuFlex } from '../views/flex/mainMenu.js';
 import { cardAsk, done, quickAsk, textValue } from './shared.js';
 import { popularDestinations } from './options.js';
 
 const hotelMap = {
+  東京: [
+    ['JR Kyushu Hotel Blossom Shinjuku', '新宿站旁，第一次去最省轉車'],
+    ['Daiwa Roynet Hotel Ginza Premier', '銀座/東京站動線順'],
+    ['Richmond Hotel Premier Asakusa', '淺草上野圈，成田進出方便']
+  ],
   大阪: [
     ['Hotel Monterey Grasmere Osaka', 'JR 難波直結，難波/心齋橋/道頓堀最順'],
     ['Hotel Vischio Osaka by Granvia', '梅田站旁，去京都、奈良、USJ 都好接'],
     ['Cross Hotel Osaka', '道頓堀旁，吃喝採買最方便']
+  ],
+  首爾: [
+    ['L7 Hongdae by LOTTE', '弘大機場快線方便，吃飯採買密度高'],
+    ['Nine Tree Premier Hotel Myeongdong 2', '明洞/乙支路動線好'],
+    ['LOTTE City Hotel Myeongdong', '市中心交通穩，第一次去好用']
+  ],
+  曼谷: [
+    ['Grande Centre Point Terminal 21', 'Asok 站直結，BTS/MRT 雙線最方便'],
+    ['Mercure Bangkok Siam', 'Siam 商圈旁，百貨和美食省時間'],
+    ['Chatrium Hotel Riverside Bangkok', '昭披耶河旁，河景與接駁船方便']
+  ],
+  香港: [
+    ['The Royal Pacific Hotel & Towers', '尖沙咀交通購物方便，機場巴士好接'],
+    ['Eaton HK', '佐敦站旁，往旺角尖沙咀中環都順'],
+    ['Regal Kowloon Hotel', '尖沙咀東，展覽館與購物方便']
+  ],
+  新加坡: [
+    ['Carlton Hotel Singapore', 'City Hall 旁，景點和 MRT 都方便'],
+    ['lyf Funan Singapore', 'Funan 商場內，短天數機能強'],
+    ['ibis Singapore on Bencoolen', 'Bras Basah MRT 旁，預算型好選']
+  ],
+  福岡: [
+    ['JR Kyushu Hotel Blossom Hakata Central', '博多站旁，機場和市區都好接'],
+    ['Richmond Hotel Tenjin Nishidori', '天神商圈中心，逛街採買方便'],
+    ['Hakata Tokyu REI Hotel', '博多站周邊，第一次去很穩']
+  ],
+  沖繩: [
+    ['Hotel Gracery Naha', '國際通旁，不開車也能方便吃買'],
+    ['Mercure Hotel Okinawa Naha', '壺川站旁，單軌和取車動線穩'],
+    ['APA Hotel Naha Matsuyama', '松山公園旁，價格實惠']
+  ],
+  吉隆坡: [
+    ['Pavilion Hotel Kuala Lumpur Managed by Banyan Tree', 'Bukit Bintang 商圈直結，最省心'],
+    ['Traders Hotel Kuala Lumpur', 'KLCC 旁，雙子星和市中心動線佳'],
+    ['Impiana KLCC Hotel', '雙子星步行距離，預算型好選']
+  ],
+  胡志明市: [
+    ['Fusion Original Saigon Centre', '第一郡 Saigon Centre 內，吃買叫車都方便'],
+    ['Silverland Yen Hotel', '濱城市場附近，景點可步行串接'],
+    ['The Myst Dong Khoi Hotel', '同起街旁，第一次去最穩']
+  ],
+  馬尼拉: [
+    ['Seda Bonifacio Global City', 'BGC 安全好逛，餐廳和商場集中'],
+    ['Holiday Inn & Suites Makati', 'Makati 商場直結，短天數移動省事'],
+    ['Acacia Hotel Manila', '離機場近，早班或晚班機很方便']
   ],
   峴港: [
     ['HAIAN Beach Hotel & Spa', '美溪沙灘旁，臨時度假最穩'],
@@ -22,16 +73,6 @@ const hotelMap = {
     ['Sofitel Macau At Ponte 16', '老城區旁，大三巴和歷史城區很近'],
     ['The Venetian Macao', '路氹金光大道核心，娛樂購物方便'],
     ['Holiday Inn Express Macau City Centre', '市中心平實選擇，交通方便']
-  ],
-  東京: [
-    ['JR Kyushu Hotel Blossom Shinjuku', '新宿站旁，第一次去最省轉車'],
-    ['Daiwa Roynet Hotel Ginza Premier', '銀座/東京站動線順'],
-    ['Richmond Hotel Premier Asakusa', '淺草上野圈，成田進出方便']
-  ],
-  首爾: [
-    ['L7 Hongdae by LOTTE', '弘大機場快線方便，吃飯採買密度高'],
-    ['Nine Tree Premier Hotel Myeongdong 2', '明洞/乙支路動線好'],
-    ['LOTTE City Hotel Myeongdong', '市中心交通穩，第一次去好用']
   ]
 };
 
@@ -53,7 +94,7 @@ export const m5 = {
 
     const city = state.city;
     const hotels = hotelMap[city] ?? fallbackHotels(city);
-    return done(hotelCarousel(city, value, hotels));
+    return done([hotelCarousel(city, value, hotels), mainMenuFlex()]);
   }
 };
 
@@ -65,7 +106,6 @@ function hotelCarousel(city, preference, hotels) {
       type: 'carousel',
       contents: hotels.map(([name, reason]) => ({
         type: 'bubble',
-        size: 'micro',
         body: {
           type: 'box',
           layout: 'vertical',

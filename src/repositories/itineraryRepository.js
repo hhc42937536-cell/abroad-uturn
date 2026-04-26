@@ -2,6 +2,19 @@ import { hasDatabase, query } from '../config/db.js';
 
 const memoryItineraries = [];
 
+export async function getLatestItinerary(lineUserId) {
+  if (!hasDatabase) {
+    return memoryItineraries
+      .filter((item) => item.line_user_id === lineUserId)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] ?? null;
+  }
+  const result = await query(
+    `SELECT * FROM itineraries WHERE line_user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+    [lineUserId]
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function createItinerary(lineUserId, payload) {
   if (!hasDatabase) {
     const itinerary = {

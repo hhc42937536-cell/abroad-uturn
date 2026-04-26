@@ -631,14 +631,18 @@ function infoBubble(title, sections) {
   return {
     type: 'bubble',
     size: 'mega',
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      backgroundColor: '#1A1F3A',
+      paddingAll: '14px',
+      contents: [{ type: 'text', text: title, weight: 'bold', size: 'md', color: '#FFFFFF', wrap: true }]
+    },
     body: {
       type: 'box',
       layout: 'vertical',
       spacing: 'md',
-      contents: [
-        { type: 'text', text: title, weight: 'bold', size: 'xl', wrap: true, color: '#111827' },
-        ...sections
-      ]
+      contents: sections
     }
   };
 }
@@ -647,14 +651,18 @@ function actionBubble(city, profile) {
   return {
     type: 'bubble',
     size: 'mega',
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      backgroundColor: '#1A1F3A',
+      paddingAll: '14px',
+      contents: [{ type: 'text', text: `${city} 注意事項`, weight: 'bold', size: 'md', color: '#FFFFFF', wrap: true }]
+    },
     body: {
       type: 'box',
       layout: 'vertical',
       spacing: 'md',
-      contents: [
-        { type: 'text', text: `${city} 注意事項`, weight: 'bold', size: 'xl', wrap: true, color: '#111827' },
-        sectionList('避免踩雷', profile.caution)
-      ]
+      contents: [sectionList('避免踩雷', profile.caution)]
     },
     footer: {
       type: 'box',
@@ -672,7 +680,7 @@ function actionBubble(city, profile) {
 function sectionText(title, text) {
   return {
     type: 'text',
-    size: 'md',
+    size: 'sm',
     wrap: true,
     contents: [
       { type: 'span', text: `${title}：`, color: '#2563eb', weight: 'bold' },
@@ -687,11 +695,11 @@ function sectionList(title, items) {
     layout: 'vertical',
     spacing: 'xs',
     contents: [
-      { type: 'text', text: title, size: 'md', weight: 'bold', color: '#0f172a' },
+      { type: 'text', text: title, size: 'sm', weight: 'bold', color: '#0f172a' },
       ...items.map((item) => ({
         type: 'text',
-        text: `- ${item}`,
-        size: 'md',
+        text: `• ${item}`,
+        size: 'sm',
         color: '#374151',
         wrap: true
       }))

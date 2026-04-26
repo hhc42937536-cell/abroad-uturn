@@ -69,3 +69,15 @@ export function replyFlex(replyToken, flex) {
 export function textMessage(text) {
   return { type: 'text', text };
 }
+
+export async function showLoadingAnimation(userId) {
+  if (!env.LINE_CHANNEL_ACCESS_TOKEN) return;
+  await fetch('https://api.line.me/v2/bot/chat/loading/start', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.LINE_CHANNEL_ACCESS_TOKEN}`,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ chatId: userId, loadingSeconds: 60 })
+  }).catch((error) => console.warn('Loading animation failed', error));
+}

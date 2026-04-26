@@ -15,17 +15,32 @@ export function planCard(plan, input = {}) {
     contents: {
       type: 'bubble',
       size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#1A1F3A',
+        paddingAll: '20px',
+        contents: [
+          { type: 'text', text: plan.title ?? '旅程規劃', weight: 'bold', size: 'lg', color: '#FFFFFF', wrap: true },
+          { type: 'text', text: destination, size: 'md', color: '#93C5FD', weight: 'bold', wrap: true, margin: 'xs' },
+          {
+            type: 'text',
+            text: plan.summary ?? '已整理一份可直接出發的行程草案。',
+            size: 'xs',
+            color: '#AAB4D4',
+            wrap: true,
+            margin: 'sm'
+          }
+        ]
+      },
       body: {
         type: 'box',
         layout: 'vertical',
         spacing: 'md',
         contents: [
-          { type: 'text', text: plan.title ?? '旅程規劃', weight: 'bold', size: 'xl', color: '#111827', wrap: true },
-          { type: 'text', text: destination, size: 'md', color: '#2563eb', weight: 'bold', wrap: true },
-          { type: 'text', text: plan.summary ?? '已整理一份可直接出發的行程草案。', size: 'sm', color: '#374151', wrap: true },
           ...(input.quickDecision ? quickDecisionSummary(input, plan) : []),
           sectionTitle('每日安排'),
-          ...days.map((day) => dayBlock(day))
+          ...days.map((day, index) => dayBlock(day, index))
         ]
       },
       footer: {
@@ -109,18 +124,29 @@ function budgetCard(budget) {
   ]);
 }
 
-function dayBlock(day) {
+const dayPalette = [
+  { bg: '#EEF2FF', border: '#C7D2FE', label: '#283593' },
+  { bg: '#FFF3EE', border: '#FED7AA', label: '#BF360C' },
+  { bg: '#E8F5E9', border: '#BBF7D0', label: '#166534' },
+  { bg: '#E1F5FE', border: '#BAE6FD', label: '#075985' },
+  { bg: '#F3E5F5', border: '#E9D5FF', label: '#6B21A8' },
+  { bg: '#FFFBEA', border: '#FEF08A', label: '#854D0E' },
+  { bg: '#E0F2F1', border: '#99F6E4', label: '#115E59' }
+];
+
+function dayBlock(day, index = 0) {
+  const color = dayPalette[index % dayPalette.length];
   return {
     type: 'box',
     layout: 'vertical',
     spacing: 'xs',
-    paddingAll: '8px',
-    backgroundColor: '#ffffff',
-    borderColor: '#e5e7eb',
+    paddingAll: '10px',
+    backgroundColor: color.bg,
+    borderColor: color.border,
     borderWidth: '1px',
     cornerRadius: 'md',
     contents: [
-      { type: 'text', text: `Day ${day.day}`, weight: 'bold', size: 'md', color: '#111827' },
+      { type: 'text', text: `Day ${day.day}`, weight: 'bold', size: 'sm', color: color.label },
       timeText('上午', day.morning),
       timeText('下午', day.afternoon),
       timeText('晚上', day.evening)
@@ -219,7 +245,8 @@ function quickDecisionButtons(destination, flightInput) {
     buttonRow([
       linkButton('住宿地圖', googleMapsSearchLink(`${destination} ${bestHotel?.title ?? '市中心 主要車站 飯店'}`), '#2563eb'),
       linkButton('景點地圖', googleMapsSearchLink(`${destination} 景點`), '#334155')
-    ])
+    ]),
+    exportPlanButton()
   ];
 }
 
@@ -234,10 +261,15 @@ function flightLink(input, pick) {
 
 function standardButtons(destination, flightInput) {
   return [
-    linkButton('查機票', skyscannerLink(flightInput), '#1d4ed8'),
-    linkButton('Agoda', agodaLink(destination), '#be123c'),
-    linkButton('Booking', bookingLink(destination), '#2563eb'),
-    linkButton('Trip.com', tripLink(destination), '#334155')
+    buttonRow([
+      linkButton('查機票', skyscannerLink(flightInput), '#1d4ed8'),
+      linkButton('Agoda', agodaLink(destination), '#be123c')
+    ]),
+    buttonRow([
+      linkButton('Booking', bookingLink(destination), '#2563eb'),
+      linkButton('Trip.com', tripLink(destination), '#334155')
+    ]),
+    exportPlanButton()
   ];
 }
 
@@ -265,5 +297,20 @@ function inlineLinkButton(label, uri, color = '#2563eb') {
     flex: 1,
     margin: 'xs',
     action: { type: 'uri', label, uri }
+  };
+}
+
+function exportPlanButton() {
+  return {
+    type: 'button',
+    style: 'secondary',
+    height: 'sm',
+    margin: 'sm',
+    action: {
+      type: 'postback',
+      label: '📋 產出計畫書',
+      data: 'action=export_plan',
+      displayText: '📋 產出計畫書'
+    }
   };
 }

@@ -13,6 +13,8 @@ import { onboardingFlex } from '../views/flex/onboarding.js';
 import { zh } from '../constants/text.js';
 import { updateUserSettings } from '../repositories/userRepository.js';
 import { createPriceTrack } from '../repositories/priceTrackingRepository.js';
+import { getLatestItinerary } from '../repositories/itineraryRepository.js';
+import { formatPlanDocument } from '../views/planDocument.js';
 
 export async function routeEvent(event) {
   try {
@@ -82,6 +84,10 @@ async function routeEventInternal(event) {
     }]);
   }
 
+  if (message.type === 'exportPlan') {
+    return exportPlan(event.replyToken, lineUserId);
+  }
+
   if (message.type === 'module') {
     return startModule(event.replyToken, lineUserId, message.value);
   }
@@ -115,12 +121,28 @@ async function routeEventInternal(event) {
   return replyMessages(event.replyToken, response.messages);
 }
 
+async function exportPlan(replyToken, lineUserId) {
+  const itinerary = await getLatestItinerary(lineUserId);
+  if (!itinerary) {
+    return replyMessages(replyToken, [
+      { type: 'text', text: '找不到最近的行程紀錄，請重新規劃一次再產出計畫書。' },
+      mainMenuFlex()
+    ]);
+  }
+  const text = formatPlanDocument(itinerary);
+  return replyMessages(replyToken, [{ type: 'text', text }]);
+}
+
 async function startModule(replyToken, lineUserId, moduleId) {
   const module = modules[moduleId];
   if (!module) return replyText(replyToken, zh.unknownModule);
 
   const first = await module.start({ lineUserId });
-  await startSession(lineUserId, moduleId, first.nextStep ?? 1, first.state ?? {});
+  if (first.done) {
+    await clearSession(lineUserId);
+  } else {
+    await startSession(lineUserId, moduleId, first.nextStep ?? 1, first.state ?? {});
+  }
   return replyMessages(replyToken, first.messages);
 }
 
@@ -138,6 +160,7 @@ function normalizeEvent(event) {
         price: Number(params.get('price')) || null
       };
     }
+    if (action === 'export_plan') return { type: 'exportPlan' };
     return {
       type: 'postback',
       action,
