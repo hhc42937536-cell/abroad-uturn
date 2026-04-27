@@ -1672,8 +1672,7 @@ def _prompt_travel_info(user_id: str) -> list:
             "quickReply": {
                 "items": [
                     {"type": "action", "action": {"type": "postback", "label": "\u27a1\ufe0f \u7522\u51fa\u8a08\u756b\u66f8", "data": "trip_step=8", "displayText": "\u7522\u51fa\u8a08\u756b\u66f8"}},
-                    *([{"type": "action", "action": {"type": "message", "label": "\u2708\ufe0f \u6a5f\u5834\u653b\u7565", "text": "\u6a5f\u5834\u653b\u7565"}}]
-                      if is_first_timer else []),
+                    {"type": "action", "action": {"type": "message", "label": "\u2708\ufe0f \u6a5f\u5834\u653b\u7565", "text": "\u6a5f\u5834\u653b\u7565"}},
                 ],
             },
         },
@@ -2030,6 +2029,32 @@ def _prompt_summary(user_id: str) -> list:
     slog(user_id, "plan_generated",
          destination=session.get("destination_code", ""),
          extra={"days": session.get("days"), "adults": session.get("adults")})
+
+    # 計畫書完成後：依目的地機場給 context-aware 機場攻略提示
+    _airport_names = {
+        "GMP": "金浦機場", "ICN": "仁川機場",
+        "NRT": "成田機場", "HND": "羽田機場",
+        "KIX": "關西機場", "FUK": "福岡機場",
+        "BKK": "蘇凡納布機場", "DMK": "廊曼機場",
+        "SIN": "樟宜機場", "HKG": "香港國際機場",
+        "DPS": "峇里島機場",
+    }
+    _dest = dest  # dest 已在函式上方定義
+    _airport_label = _airport_names.get(_dest, f"{city}機場")
+    msgs.append({
+        "type": "text",
+        "text": f"✈️ 你的目的地機場是 {_airport_label}\n\n第一次去？不確定入境流程怎麼走？\n點下方查看機場完整攻略 👇",
+        "quickReply": {
+            "items": [
+                {"type": "action", "action": {"type": "message",
+                    "label": f"✈️ {_airport_label}攻略", "text": "機場攻略"}},
+                {"type": "action", "action": {"type": "message",
+                    "label": "🌍 探索其他地點", "text": "便宜"}},
+                {"type": "action", "action": {"type": "message",
+                    "label": "🔄 重新規劃", "text": "開始規劃"}},
+            ],
+        },
+    })
 
     return msgs
 

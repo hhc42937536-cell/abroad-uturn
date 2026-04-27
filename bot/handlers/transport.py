@@ -363,4 +363,15 @@ def _show_detail(city_key: str) -> list:
             "altText": f"\U0001f687 {city} \u4ea4\u901a\u653b\u7565",
             "contents": {"type": "carousel", "contents": bubbles},
         },
+        {
+            "type": "text",
+            "text": "\u6709\u4e0d\u6e05\u695a\u6a5f\u5834\u5230\u98ef\u5e97\u600e\u9ebc\u8d70\uff1f",
+            "quickReply": {
+                "items": [
+                    {"type": "action", "action": {
+                        "type": "message", "label": "\u2708\ufe0f \u6a5f\u5834\u653b\u7565",
+                        "text": "\u6a5f\u5834\u653b\u7565"}},
+                ],
+            },
+        },
     ]
