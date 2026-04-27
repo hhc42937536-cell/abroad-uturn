@@ -1,8 +1,24 @@
-"""訊息路由（取代舊 handle_text_message）"""
+﻿"""訊息路由（取代舊 handle_text_message）"""
 
 from bot.session.manager import get_session, get_step, clear_session
 from bot.handlers.settings import get_user_origin
 from bot.handlers import trip_flow
+
+_ESCAPE_BTN = {"type": "action", "action": {
+    "type": "message", "label": "🏠 回主選單", "text": "取消規劃"}}
+
+
+def _inject_escape(msgs: list) -> list:
+    """在最後一則文字訊息的 quickReply 插入『回主選單』按鈕。"""
+    for msg in reversed(msgs):
+        if msg.get("type") == "text":
+            qr = msg.setdefault("quickReply", {"items": []})
+            items = qr.setdefault("items", [])
+            if not any(i.get("action", {}).get("text") == "取消規劃" for i in items):
+                if len(items) < 13:
+                    items.append(_ESCAPE_BTN)
+            return msgs
+    return msgs
 
 
 def route_text(text: str, user_id: str) -> list:
@@ -17,9 +33,9 @@ def route_text(text: str, user_id: str) -> list:
             "複製後貼到 Vercel → Settings → Environment Variables\n"
             "變數名稱：ADMIN_USER_ID"}]
 
-    if text in ("取消規劃", "重新開始"):
+    if text in ("取消規劃", "重新開始", "回主選單", "主選單", "回首頁"):
         clear_session(user_id)
-        return [{"type": "text", "text": "\u2705 \u5df2\u53d6\u6d88\u898f\u5283\uff0c\u96a8\u6642\u53ef\u4ee5\u91cd\u65b0\u958b\u59cb\uff01"}]
+        return build_welcome_message()
 
     if text in ("繼續規劃", "繼續"):
         step = get_step(user_id)
@@ -140,8 +156,8 @@ def route_text(text: str, user_id: str) -> list:
             # 在規劃流程中，處理預算相關輸入
             session = get_session(user_id) or {}
             if step == 3 and session.get("adults") and not session.get("budget"):
-                return trip_flow._prompt_budget_response(user_id, text)
-            return trip_flow.handle_step(user_id, text, step)
+                return _inject_escape(trip_flow._prompt_budget_response(user_id, text))
+            return _inject_escape(trip_flow.handle_step(user_id, text, step))
 
     # ── 3. 精確指令（按鈕觸發，不進計分）──
     if text in ("開始規劃", "我要規劃旅行", "完整出國規劃", "規劃旅程", "旅行規劃"):
@@ -499,3 +515,4 @@ def _static_fallback() -> list:
         "• 「我的追蹤」→ 查看追蹤清單\n\n"
         "輸入「使用教學」看完整說明 📖"
     }]
+
