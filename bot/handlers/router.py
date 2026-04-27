@@ -146,8 +146,8 @@ def route_text(text: str, user_id: str) -> list:
     if text in ("使用說明", "使用教學", "說明", "help", "Help", "HELP"):
         return build_help_message()
 
-    if any(kw in text for kw in ("機場攻略", "不會走機場", "辦理登機", "如何搭機",
-                                  "登機流程", "機場流程", "怎麼登機", "入境流程")):
+    if len(text) < 80 and any(kw in text for kw in ("機場攻略", "不會走機場", "辦理登機", "如何搭機",
+                                                      "登機流程", "機場流程", "怎麼登機", "入境流程")):
         from bot.handlers.airport_guide import handle_airport_guide
         from bot.session.manager import get_session as _gs
         _sess = _gs(user_id) or {}
