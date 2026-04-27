@@ -45,6 +45,27 @@ _NAME_MAP = {
     "中國": "CN",
 }
 
+# 國家碼 → 插座/電壓資訊
+_PLUG_INFO = {
+    "JP": ("A 型", "100V", "台灣電器可直接使用，免帶轉接頭"),
+    "KR": ("C / F 型", "220V", "需帶轉接頭；電壓與台灣不同，請確認電器標示"),
+    "TH": ("A / B / C / O 型", "220V", "各飯店插座不一，建議帶萬用轉接頭"),
+    "SG": ("G 型（英式）", "230V", "需帶三孔方腳轉接頭"),
+    "VN": ("A / C / G 型", "220V", "各地插座混用，建議帶萬用轉接頭"),
+    "MY": ("G 型（英式）", "240V", "需帶三孔方腳轉接頭"),
+    "HK": ("G 型（英式）", "220V", "需帶三孔方腳轉接頭"),
+    "MO": ("G 型（英式）", "220V", "需帶三孔方腳轉接頭"),
+    "ID": ("C / F 型", "220V", "需帶轉接頭"),
+    "PH": ("A / B 型", "220V", "插座形狀與台灣相同，但電壓較高，請確認電器標示"),
+    "US": ("A / B 型", "120V", "插座形狀與台灣相同；電壓偏低，請確認電器是否支援"),
+    "GB": ("G 型（英式）", "230V", "需帶三孔方腳轉接頭"),
+    "FR": ("C / E 型", "230V", "需帶轉接頭"),
+    "DE": ("C / F 型", "230V", "需帶轉接頭"),
+    "AU": ("I 型", "230V", "與台灣相似但有差異，部分需轉接頭"),
+    "AE": ("G 型（英式）", "220V", "需帶三孔方腳轉接頭"),
+    "CA": ("A / B 型", "120V", "插座形狀與台灣相同；電壓偏低，請確認電器標示"),
+}
+
 # 國家碼 → 貨幣
 _CURRENCY = {
     "JP": "JPY", "KR": "KRW", "TH": "THB", "SG": "SGD",
@@ -178,7 +199,11 @@ def handle_pre_trip_country(text: str, user_id: str = "") -> list:
     rate_info = get_exchange_rate(currency) if currency else None
     bubbles.append(_exchange_bubble(cc, flag, country_name, currency, rate_info))
 
-    # ── Bubble 4：打包清單 ──
+    # ── Bubble 4：插座資訊 ──
+    plug = _PLUG_INFO.get(cc)
+    bubbles.append(_plug_bubble(cc, flag, country_name, plug))
+
+    # ── Bubble 5：打包清單 ──
     packing = get_packing_list(cc, month)
     bubbles.append(_packing_bubble(cc, flag, country_name, packing))
 
@@ -393,6 +418,66 @@ def _exchange_bubble(cc: str, flag: str, name: str,
             "contents": [
                 {"type": "text", "text": "⚠️ 僅供參考，換錢以銀行牌告匯率為準",
                  "size": "xxs", "color": "#AAAAAA", "align": "center"},
+            ],
+        },
+    }
+
+
+def _plug_bubble(cc: str, flag: str, name: str,
+                 plug: tuple | None) -> dict:
+    if plug:
+        plug_type, voltage, tip = plug
+        body_items = [
+            {"type": "text", "text": "🔌 插座 & 電壓",
+             "weight": "bold", "size": "md", "color": "#E65100"},
+            {"type": "separator", "margin": "sm"},
+            {"type": "box", "layout": "horizontal", "margin": "md",
+             "contents": [
+                 {"type": "text", "text": "插座型號", "size": "sm", "color": "#888888", "flex": 3},
+                 {"type": "text", "text": plug_type, "size": "sm", "weight": "bold",
+                  "color": "#333333", "flex": 5, "wrap": True},
+             ]},
+            {"type": "box", "layout": "horizontal", "margin": "xs",
+             "contents": [
+                 {"type": "text", "text": "電壓", "size": "sm", "color": "#888888", "flex": 3},
+                 {"type": "text", "text": voltage, "size": "sm", "weight": "bold",
+                  "color": "#E65100", "flex": 5},
+             ]},
+            {"type": "separator", "margin": "sm"},
+            {"type": "text", "text": f"💡 {tip}", "size": "xs",
+             "color": "#666666", "wrap": True, "margin": "sm"},
+        ]
+    else:
+        body_items = [
+            {"type": "text", "text": "🔌 插座 & 電壓", "weight": "bold", "size": "md"},
+            {"type": "text",
+             "text": "建議攜帶萬用轉接頭，以應對各種插座類型",
+             "size": "sm", "color": "#666666", "wrap": True, "margin": "md"},
+        ]
+
+    return {
+        "type": "bubble", "size": "kilo",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#E65100", "paddingAll": "12px",
+            "contents": [
+                {"type": "text", "text": f"{flag} {name}", "color": "#FFFFFF",
+                 "weight": "bold", "size": "md"},
+                {"type": "text", "text": "插座類型 · 電壓確認",
+                 "color": "#FFCCBC", "size": "xs", "margin": "xs"},
+            ],
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "spacing": "xs", "paddingAll": "14px",
+            "contents": body_items,
+        },
+        "footer": {
+            "type": "box", "layout": "vertical", "paddingAll": "8px",
+            "contents": [
+                {"type": "text",
+                 "text": "⚠️ 台灣電壓 110V；出國前請確認電器標示是否支援當地電壓",
+                 "size": "xxs", "color": "#AAAAAA", "align": "center", "wrap": True},
             ],
         },
     }

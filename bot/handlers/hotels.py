@@ -28,6 +28,108 @@ _HOTEL_ESTIMATES = {
 
 _DEFAULT_ESTIMATE = {"price": "500~3,000", "rating": "8.2", "area": "市中心・交通便利區"}
 
+# 各城市精選飯店（名稱, 地理位置說明）
+_HOTEL_MAP: dict[str, list[tuple[str, str]]] = {
+    "TYO": [
+        ("JR Kyushu Hotel Blossom Shinjuku", "新宿站旁，步行 3 分鐘"),
+        ("Daiwa Roynet Hotel Ginza Premier", "銀座/東京站，交通極便"),
+        ("Richmond Hotel Premier Asakusa", "淺草・上野圈，感受老東京"),
+    ],
+    "NRT": [
+        ("JR Kyushu Hotel Blossom Shinjuku", "新宿站旁，步行 3 分鐘"),
+        ("Daiwa Roynet Hotel Ginza Premier", "銀座/東京站，交通極便"),
+        ("Richmond Hotel Premier Asakusa", "淺草・上野圈，感受老東京"),
+    ],
+    "HND": [
+        ("JR Kyushu Hotel Blossom Shinjuku", "新宿站旁，步行 3 分鐘"),
+        ("Daiwa Roynet Hotel Ginza Premier", "銀座/東京站，交通極便"),
+        ("Richmond Hotel Premier Asakusa", "淺草・上野圈，感受老東京"),
+    ],
+    "KIX": [
+        ("Hotel Monterey Grasmere Osaka", "JR 難波站直結，購物超方便"),
+        ("Hotel Vischio Osaka by Granvia", "梅田站旁，JR 大阪站步行 5 分"),
+        ("Cross Hotel Osaka", "道頓堀旁，心齋橋徒步圈"),
+    ],
+    "OSA": [
+        ("Hotel Monterey Grasmere Osaka", "JR 難波站直結，購物超方便"),
+        ("Hotel Vischio Osaka by Granvia", "梅田站旁，JR 大阪站步行 5 分"),
+        ("Cross Hotel Osaka", "道頓堀旁，心齋橋徒步圈"),
+    ],
+    "ICN": [
+        ("L7 Hongdae by LOTTE", "弘大站旁，接機鐵路直達"),
+        ("Nine Tree Premier Hotel Myeongdong 2", "明洞・乙支路，購物美食圈"),
+        ("LOTTE City Hotel Myeongdong", "明洞市中心，交通最便"),
+    ],
+    "SEL": [
+        ("L7 Hongdae by LOTTE", "弘大站旁，接機鐵路直達"),
+        ("Nine Tree Premier Hotel Myeongdong 2", "明洞・乙支路，購物美食圈"),
+        ("LOTTE City Hotel Myeongdong", "明洞市中心，交通最便"),
+    ],
+    "SGN": [
+        ("Liberty Central Saigon Riverside Hotel", "第一郡河畔，步行逛濱城市場"),
+        ("Silverland Jolie Hotel & Spa", "第一郡市中心，步行範圍廣"),
+        ("The Reverie Saigon", "高端首選，金融塔旁"),
+    ],
+    "HAN": [
+        ("Hanoi La Siesta Classic Ma May", "老城區精品旅館，氣氛佳"),
+        ("Sofitel Legend Metropole Hanoi", "還劍湖旁，百年法式經典"),
+        ("Lotte Hotel Hanoi", "西湖旁，俯瞰城市景觀"),
+    ],
+    "DPS": [
+        ("Stones Hotel – Legend Bali", "水明漾市中心，步行逛街"),
+        ("Katamama", "水明漾精品飯店，工藝設計"),
+        ("Hanging Gardens of Bali", "烏布叢林，無邊際泳池首選"),
+    ],
+}
+
+
+def _hotel_names_bubble(dest_code: str, city_name: str, flag: str) -> dict | None:
+    """回傳精選飯店 Flex Bubble，若無資料回傳 None"""
+    hotels = _HOTEL_MAP.get(dest_code)
+    if not hotels:
+        return None
+
+    rows = []
+    for i, (hotel_name, location) in enumerate(hotels):
+        rows.append({
+            "type": "box", "layout": "vertical",
+            "paddingAll": "10px", "margin": "sm",
+            "backgroundColor": "#FFF0F5", "cornerRadius": "8px",
+            "contents": [
+                {"type": "text", "text": f"{'🥇' if i == 0 else '🥈' if i == 1 else '🥉'} {hotel_name}",
+                 "size": "sm", "weight": "bold", "color": "#C2185B", "wrap": True},
+                {"type": "text", "text": f"📍 {location}",
+                 "size": "xs", "color": "#666666", "margin": "xs"},
+            ],
+        })
+
+    return {
+        "type": "bubble", "size": "mega",
+        "header": {
+            "type": "box", "layout": "vertical",
+            "backgroundColor": "#AD1457", "paddingAll": "15px",
+            "contents": [
+                {"type": "text", "text": f"{flag} {city_name} 精選飯店",
+                 "color": "#FFFFFF", "weight": "bold", "size": "lg"},
+                {"type": "text", "text": "編輯精選・性價比優先",
+                 "color": "#F8BBD9", "size": "xs", "margin": "xs"},
+            ],
+        },
+        "body": {
+            "type": "box", "layout": "vertical",
+            "paddingAll": "12px", "spacing": "xs",
+            "contents": rows,
+        },
+        "footer": {
+            "type": "box", "layout": "vertical", "paddingAll": "8px",
+            "contents": [
+                {"type": "text",
+                 "text": "💡 以上為編輯精選，實際價格以訂房平台為準",
+                 "size": "xxs", "color": "#AAAAAA", "align": "center", "wrap": True},
+            ],
+        },
+    }
+
 
 def _get_estimate(dest_code: str) -> dict:
     return _HOTEL_ESTIMATES.get(dest_code, _DEFAULT_ESTIMATE)
@@ -166,7 +268,16 @@ def handle_hotels(text: str, user_id: str = "") -> list:
         "size": "xs", "color": "#999999", "wrap": True, "margin": "md",
     })
 
-    return [{
+    result = []
+    names_bubble = _hotel_names_bubble(dest_code, city_name, flag)
+    if names_bubble:
+        result.append({
+            "type": "flex",
+            "altText": f"{city_name} \u7cbe\u9078\u98ef\u5e97",
+            "contents": names_bubble,
+        })
+
+    result.append({
         "type": "flex",
         "altText": f"{city_name} \u4f4f\u5bbf\u63a8\u85a6",
         "contents": {
@@ -199,4 +310,5 @@ def handle_hotels(text: str, user_id: str = "") -> list:
                 ],
             },
         },
-    }]
+    })
+    return result
