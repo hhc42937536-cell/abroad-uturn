@@ -113,6 +113,26 @@ def route_text(text: str, user_id: str) -> list:
         from bot.handlers.explore import handle_quick_explore
         return handle_quick_explore(origin)
 
+    if text in ("交通攻略", "當地交通", "交通"):
+        from bot.handlers.transport import handle_transport
+        return handle_transport(text, user_id)
+
+    if text in ("住宿", "住宿推薦", "飯店推薦", "飯店"):
+        from bot.handlers.hotels import handle_hotels
+        return handle_hotels(text, user_id)
+
+    if text in ("行前必知", "行前準備", "行前"):
+        from bot.handlers.pre_trip import handle_pre_trip_menu
+        return handle_pre_trip_menu()
+
+    if text in ("現在最夯", "最夯", "熱門", "伴手禮", "必買"):
+        from bot.handlers.souvenirs import handle_souvenirs
+        return handle_souvenirs(text, user_id)
+
+    if text in ("追星", "追星行程", "演唱會", "見面會"):
+        from bot.handlers.idol_trip import handle_idol_trip
+        return handle_idol_trip(text, user_id)
+
     if text in ("我的追蹤", "我的追蹤清單", "追蹤清單"):
         from bot.handlers.tracking import handle_my_tracks
         return handle_my_tracks(user_id)
