@@ -115,19 +115,19 @@ def route_text(text: str, user_id: str) -> list:
         from bot.handlers.explore import handle_quick_explore
         return handle_quick_explore(origin)
 
-    if _t.endswith(("交通攻略", "當地交通攻略", "當地交通")):
+    if any(kw in _t for kw in ("交通攻略", "當地交通攻略", "當地交通")):
         from bot.handlers.transport import handle_transport
         return handle_transport(_t, user_id)
 
-    if _t.endswith(("住宿", "住宿推薦", "飯店推薦")):
+    if any(kw in _t for kw in ("住宿推薦", "飯店推薦")) or _t.endswith("住宿"):
         from bot.handlers.hotels import handle_hotels
         return handle_hotels(_t, user_id)
 
-    if _t.endswith(("行前必知", "行前準備")):
+    if any(kw in _t for kw in ("行前必知", "行前準備")):
         from bot.handlers.pre_trip import handle_pre_trip_menu
         return handle_pre_trip_menu()
 
-    if _t.endswith(("現在最夯", "最夯")):
+    if any(kw in _t for kw in ("現在最夯",)) or _t == "最夯":
         from bot.handlers.souvenirs import handle_souvenirs
         return handle_souvenirs(_t, user_id)
 
