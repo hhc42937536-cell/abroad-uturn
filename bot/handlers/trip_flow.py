@@ -183,7 +183,6 @@ def start_smart(user_id: str, text: str) -> list:
 
     dest_code = parse_destination_keyword(text)
     if not dest_code:
-        # LLM 猜測失敗也走 step 1，但帶上已解析的 hints
         llm_code = parse_destination(text)
         if hints:
             update_session(user_id, {k: v for k, v in hints.items() if k in _HINT_KEYS})
@@ -195,6 +194,16 @@ def start_smart(user_id: str, text: str) -> list:
     country_code = IATA_TO_COUNTRY.get(dest_code, "")
     flag = CITY_FLAG.get(dest_code, "")
 
+    # 靜態日期解析（不呼叫 LLM）
+    from bot.utils.date_parser import parse_date_range
+    if not hints.get("depart_date"):
+        _depart, _ret = parse_date_range(text)
+        if _depart:
+            hints["depart_date"] = _depart
+            hints["flexibility"] = "specific"
+        if _ret:
+            hints["return_date"] = _ret
+
     session_data = {
         "destination_code": dest_code,
         "destination_name": city_name,
@@ -203,16 +212,26 @@ def start_smart(user_id: str, text: str) -> list:
     }
 
     has_date = bool(hints.get("depart_date"))
-    has_travelers = "adults" in hints
+    has_ret = bool(hints.get("return_date"))
 
-    if has_date and has_travelers:
-        update_session(user_id, session_data, step=4)
-        greeting = _smart_greeting(dest_code, city_name, flag, text, hints)
+    # 有目的地 + 出發日期 → 快速完整行程（0 API 呼叫）
+    if has_date:
+        update_session(user_id, session_data, step=6)
         slog(user_id, "trip_complete", destination=dest_code,
-             extra={"path": "start_smart_full"})
-        return [{"type": "text", "text": f"{greeting}\n\n✅ 目的地、日期、人數都記下了，幫你找機票！"}] + _prompt_flights(user_id)
+             extra={"path": "quick_plan_static"})
+        from bot.utils.quick_plan import build_quick_plan
+        adults = hints.get("adults", 1)
+        depart = hints["depart_date"]
+        ret = hints.get("return_date", "")
+        greeting = _smart_greeting(dest_code, city_name, flag, text, hints)
+        intro = {"type": "text", "text": f"{greeting}\n\n✨ 幫你整理好了！左右滑動看每天行程 👇"}
+        return [intro] + build_quick_plan(
+            dest_code=dest_code, city_name=city_name,
+            depart=depart, ret=ret,
+            adults=adults, raw_text=text,
+        )
 
-    # 資訊不齊 → 進 LLM 對話蒐集模式
+    # 沒有日期 → LLM 對話蒐集（只問日期）
     update_session(user_id, session_data, step=1)
     greeting = _smart_greeting(dest_code, city_name, flag, text, hints)
     return _llm_gather(user_id, text, greeting=greeting)
