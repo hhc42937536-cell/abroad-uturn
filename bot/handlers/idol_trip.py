@@ -53,8 +53,8 @@ def handle_idol_trip(text: str, user_id: str = "") -> list:
         if clean.lower() in actor["name"].lower() or actor["name"].lower() in clean.lower():
             return _show_artist_info(actor, data, country=cc, is_actor=True)
 
-    # 3. 沒匹配到，嘗試爬蟲搜尋
-    events = scrape_idol_events(clean)
+    # 3. 沒匹配到，嘗試爬蟲搜尋（webhook 路徑只用快取，避免 timeout）
+    events = scrape_idol_events(clean, cache_only=True)
     if events:
         return _show_scraped_events(clean, events)
 
@@ -370,7 +370,7 @@ def _show_artist_info(artist: dict, data: dict, country: str = "", is_actor: boo
     # Bubble 2: 近期活動（爬蟲即時）
     import urllib.parse
     search_name = artist.get("search_name", "")
-    events = scrape_idol_events(name, country, search_name=search_name, is_actor=is_actor)
+    events = scrape_idol_events(name, country, search_name=search_name, is_actor=is_actor, cache_only=True)
     if events:
         event_items = []
         for evt in events[:5]:

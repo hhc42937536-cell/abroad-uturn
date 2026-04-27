@@ -37,8 +37,25 @@ def redis_get(key: str):
     return _redis_cmd(["GET", key])
 
 
-def redis_keys(pattern: str):
-    return _redis_cmd(["KEYS", pattern]) or []
+def redis_scan(pattern: str, count: int = 100) -> list:
+    """以 SCAN 取代 KEYS，避免阻塞 Redis server"""
+    all_keys = []
+    cursor = "0"
+    while True:
+        result = _redis_cmd(["SCAN", cursor, "MATCH", pattern, "COUNT", str(count)])
+        if not result or not isinstance(result, list) or len(result) < 2:
+            break
+        cursor, keys = result[0], result[1]
+        if isinstance(keys, list):
+            all_keys.extend(keys)
+        if str(cursor) == "0":
+            break
+    return all_keys
+
+
+def redis_keys(pattern: str) -> list:
+    """已棄用：請改用 redis_scan。此函式保留向下相容。"""
+    return redis_scan(pattern)
 
 
 def redis_del(key: str):

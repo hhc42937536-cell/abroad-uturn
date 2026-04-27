@@ -7,18 +7,21 @@ import urllib.request
 import urllib.parse
 
 from bot.config import TRAVELPAYOUTS_TOKEN
+from bot.services.redis_store import redis_get, redis_set
 
-_tp_cache = {}
+_TP_CACHE_TTL = 300  # 5 分鐘
 
 
 def _tp_api(endpoint: str, params: dict) -> dict | list | None:
-    """呼叫 Travelpayouts API，有 5 分鐘 in-memory 快取"""
-    cache_key = f"{endpoint}:{json.dumps(params, sort_keys=True)}"
-    now = time.time()
+    """呼叫 Travelpayouts API，有 5 分鐘 Redis 快取"""
+    cache_key = f"tp_api:{endpoint}:{json.dumps(params, sort_keys=True)}"
 
-    cached = _tp_cache.get(cache_key)
-    if cached and now - cached["ts"] < 300:
-        return cached["data"]
+    cached = redis_get(cache_key)
+    if cached:
+        try:
+            return json.loads(cached)
+        except (json.JSONDecodeError, TypeError):
+            pass
 
     if TRAVELPAYOUTS_TOKEN:
         params["token"] = TRAVELPAYOUTS_TOKEN
@@ -32,7 +35,8 @@ def _tp_api(endpoint: str, params: dict) -> dict | list | None:
         with urllib.request.urlopen(req, timeout=10) as resp:
             result = json.loads(resp.read().decode("utf-8"))
             data = result.get("data") if isinstance(result, dict) else result
-            _tp_cache[cache_key] = {"data": data, "ts": now}
+            if data:
+                redis_set(cache_key, json.dumps(data, ensure_ascii=False), ttl=_TP_CACHE_TTL)
             return data
     except Exception as e:
         print(f"[tp_api] {endpoint} ERROR: {e}")
@@ -66,8 +70,6 @@ def search_flights(origin: str, destination: str, depart: str, ret: str = "") ->
 
 
 def search_cheapest_any(origin: str, **kwargs) -> list | None:
-    from bot.services.redis_store import redis_get, redis_set
-
     # 只有不帶額外篩選條件的基本查詢才使用 Redis（warm_flights 預熱的格式）
     redis_key = f"explore:routes:{origin}" if not kwargs else None
 
@@ -96,12 +98,7 @@ def search_cheapest_any(origin: str, **kwargs) -> list | None:
 
 
 def warm_popular_routes() -> dict:
-    """
-    預熱熱門出發地航線資料到 Redis（Cron Job 呼叫）
-    讓使用者打開「探索最便宜」時秒開，不等 API
-    """
-    from bot.services.redis_store import redis_set
-
+    """預熱熱門出發地航線資料到 Redis（Cron Job 呼叫）"""
     ORIGINS = ["TPE", "TSA", "KHH", "RMQ", "TNN"]
     results: dict = {"refreshed": [], "failed": []}
 

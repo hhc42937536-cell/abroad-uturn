@@ -21,3 +21,6 @@ UPSTASH_REDIS_TOKEN = os.environ.get("UPSTASH_REDIS_TOKEN", "")
 
 # 管理者 LINE userId（Vercel env var 設定一次，用於接收系統通知）
 ADMIN_USER_ID = os.environ.get("ADMIN_USER_ID", "")
+
+# Cron 端點保護 secret（Vercel Cron 在 Authorization header 帶此值）
+CRON_SECRET = os.environ.get("CRON_SECRET", "")

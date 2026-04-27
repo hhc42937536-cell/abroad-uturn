@@ -25,6 +25,21 @@ from bot.services.line_api import reply_message, verify_signature
 from bot.handlers.router import route_text, route_postback, build_welcome_message
 from bot.handlers.tracking import check_all_prices
 from bot.utils.logging import log_usage
+from bot.config import CRON_SECRET
+
+_CRON_PATHS = {
+    "/api/check_prices", "/api/refresh_trending", "/api/warm_exchange",
+    "/api/warm_flights", "/api/visa_reminder", "/api/check_policies",
+    "/api/check_feedback",
+}
+
+
+def _is_cron_authorized(headers) -> bool:
+    """Vercel Cron 會在 Authorization header 帶 Bearer <CRON_SECRET>"""
+    if not CRON_SECRET:
+        return False
+    auth = headers.get("Authorization", "")
+    return auth == f"Bearer {CRON_SECRET}"
 
 
 class handler(BaseHTTPRequestHandler):
@@ -32,6 +47,11 @@ class handler(BaseHTTPRequestHandler):
         """健康檢查 + 價格追蹤 Cron"""
         from urllib.parse import urlparse
         parsed = urlparse(self.path)
+
+        if parsed.path in _CRON_PATHS and not _is_cron_authorized(self.headers):
+            self.send_response(401)
+            self.end_headers()
+            return
 
         if parsed.path == "/api/check_prices":
             result = check_all_prices()
@@ -156,7 +176,12 @@ class handler(BaseHTTPRequestHandler):
                     if data:
                         if data.startswith("feedback:"):
                             from bot.utils.feedback import handle_feedback_postback
-                            score = int(data.split(":")[1])
+                            try:
+                                score = int(data.split(":")[1])
+                                if score < 1 or score > 5:
+                                    raise ValueError
+                            except (ValueError, IndexError):
+                                continue
                             messages = handle_feedback_postback(score, user_id)
                             log_usage(user_id, "feedback")
                         else:

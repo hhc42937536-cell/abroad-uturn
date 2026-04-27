@@ -61,7 +61,8 @@ def push_message(user_id: str, messages: list):
 
 def verify_signature(body: bytes, signature: str) -> bool:
     if not CHANNEL_SECRET:
-        return True
-    mac = hmac.new(CHANNEL_SECRET.encode("utf-8"), body, hashlib.sha256)
+        print("[verify_signature] CHANNEL_SECRET 未設定，拒絕所有請求")
+        return False
     import base64
+    mac = hmac.new(CHANNEL_SECRET.encode("utf-8"), body, hashlib.sha256)
     return hmac.compare_digest(base64.b64encode(mac.digest()).decode("utf-8"), signature)

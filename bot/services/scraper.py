@@ -24,12 +24,10 @@ def _fetch_url(url: str, timeout: int = 10) -> str | None:
 
 
 def scrape_idol_events(artist_name: str, country: str = "", search_name: str = "",
-                       is_actor: bool = False) -> list:
+                       is_actor: bool = False, cache_only: bool = False) -> list:
     """
-    爬蟲搜尋藝人/演員活動資訊
-    search_name: 英文搜尋名（優先用於外部平台搜尋）
-    is_actor: True 時走演員專用來源（Interpark / Melon Ticket）
-    回傳: [{"title": "...", "date": "...", "venue": "...", "city": "...", "url": "..."}]
+    爬蟲搜尋藝人/演員活動資訊。
+    cache_only=True：只回傳 Redis 快取，不做即時爬取（webhook 路徑用）。
     """
     cache_key = f"idol_events:{artist_name}:{country}"
     cached = redis_get(cache_key)
@@ -38,6 +36,9 @@ def scrape_idol_events(artist_name: str, country: str = "", search_name: str = "
             return json.loads(cached)
         except (json.JSONDecodeError, TypeError):
             pass
+
+    if cache_only:
+        return []
 
     events = []
     query = search_name if search_name else artist_name
