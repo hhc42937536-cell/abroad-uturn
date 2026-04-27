@@ -108,30 +108,32 @@ def route_text(text: str, user_id: str) -> list:
         if dest_code and depart:
             return trip_flow.start_with_flight(user_id, dest_code, depart, ret)
 
-    # ── 1b. 全域 Rich Menu 逃生口（不管 session 狀態都能觸發）──
-    if text in ("便宜", "探索最便宜", "最便宜", "便宜機票", "看哪裡便宜"):
+    # ── 1b. 全域 Rich Menu 逃生口（endswith 相容帶 emoji 的舊格式）──
+    _t = text  # 保留原始以便後續 handler 使用
+
+    if _t.endswith(("便宜", "探索最便宜", "便宜機票")) or _t in ("最便宜", "看哪裡便宜"):
         from bot.handlers.explore import handle_quick_explore
         return handle_quick_explore(origin)
 
-    if text in ("交通攻略", "當地交通", "交通"):
+    if _t.endswith(("交通攻略", "當地交通攻略", "當地交通")):
         from bot.handlers.transport import handle_transport
-        return handle_transport(text, user_id)
+        return handle_transport(_t, user_id)
 
-    if text in ("住宿", "住宿推薦", "飯店推薦", "飯店"):
+    if _t.endswith(("住宿", "住宿推薦", "飯店推薦")):
         from bot.handlers.hotels import handle_hotels
-        return handle_hotels(text, user_id)
+        return handle_hotels(_t, user_id)
 
-    if text in ("行前必知", "行前準備", "行前"):
+    if _t.endswith(("行前必知", "行前準備")):
         from bot.handlers.pre_trip import handle_pre_trip_menu
         return handle_pre_trip_menu()
 
-    if text in ("現在最夯", "最夯", "熱門", "伴手禮", "必買"):
+    if _t.endswith(("現在最夯", "最夯")):
         from bot.handlers.souvenirs import handle_souvenirs
-        return handle_souvenirs(text, user_id)
+        return handle_souvenirs(_t, user_id)
 
-    if text in ("追星", "追星行程", "演唱會", "見面會"):
+    if _t.endswith(("追星行程規劃", "追星行程", "追星")) or "演唱會" in _t:
         from bot.handlers.idol_trip import handle_idol_trip
-        return handle_idol_trip(text, user_id)
+        return handle_idol_trip(_t, user_id)
 
     if text in ("我的追蹤", "我的追蹤清單", "追蹤清單"):
         from bot.handlers.tracking import handle_my_tracks
