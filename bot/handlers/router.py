@@ -187,7 +187,8 @@ def route_text(text: str, user_id: str) -> list:
         else:
             # 計分系統判斷是否為全域功能（不屬於規劃流程），若是則跳出 session
             from bot.utils.intent import classify_intent as _ci
-            _global_intents = {"transport", "visa", "hotel", "souvenir", "explore"}
+            _global_intents = {"transport", "visa", "hotel", "souvenir", "explore",
+                               "pre_trip", "tracking", "idol", "help"}
             if _ci(text) in _global_intents:
                 step = 0  # 讓後面的路由處理
             else:
