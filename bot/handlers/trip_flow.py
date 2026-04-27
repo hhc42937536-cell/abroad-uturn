@@ -289,12 +289,13 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
         f"請：\n"
         f"1. 從用戶訊息萃取新資訊（只萃取明確說的）：\n"
         f"   destination=城市中文名、depart_date=YYYY-MM或YYYY-MM-DD、"
-        f"return_date=YYYY-MM-DD、adults=整數、budget=台幣整數、custom_requests=偏好文字\n"
+        f"return_date=YYYY-MM-DD、adults=整數、budget=台幣整數、custom_requests=偏好文字（景點/活動/固定日期行程，格式：YYYY-MM-DD@景點名）、"
+        f"is_first_timer=true/false（用戶是否說第一次/從未出過國/沒有出國經驗）\n"
         f"2. 合併已知+新萃取，若同時具備「目的地」和「出發日期/月份」→ ready:true\n"
         f"3. ready:false 時，用一句口語繁體中文問最重要的缺口，15-25 字，親切自然\n\n"
         "只回傳 JSON，不要其他文字：\n"
         '{"extracted":{"destination":"","depart_date":"","return_date":"",'
-        '"adults":0,"budget":0,"custom_requests":""},"next_question":"","ready":false}'
+        '"adults":0,"budget":0,"custom_requests":"","is_first_timer":false},"next_question":"","ready":false}'
     )
 
     try:
@@ -346,6 +347,8 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
         exist = session.get("custom_requests", "")
         nc = extracted["custom_requests"]
         updates["custom_requests"] = f"{exist}；{nc}" if exist else nc
+    if extracted.get("is_first_timer") is True:
+        updates["is_first_timer"] = True
 
     # 真正 ready 的條件：dest_code + depart_date 都存在
     has_dest = updates.get("destination_code") or session.get("destination_code")
@@ -1423,25 +1426,45 @@ def _prompt_itinerary(user_id: str) -> list:
             },
         }]
 
+    session2 = get_session(user_id) or {}
+    country2 = session2.get("country_code", "")
+    dest_code2 = session2.get("destination_code", "")
+
+    # 依目的地給不同的快捷選項
+    if country2 == "KR":
+        items = [
+            {"type": "action", "action": {"type": "message", "label": "♨️ 汗蒸幕+聖水洞", "text": "想去汗蒸幕體驗，也想逛聖水洞咖啡街"}},
+            {"type": "action", "action": {"type": "message", "label": "🎨 藝術展畫展", "text": "對藝術展覽有興趣，想去畫廊或當代藝術館"}},
+            {"type": "action", "action": {"type": "message", "label": "🛍️ 明洞+弘大", "text": "購物為主，明洞弘大"}},
+            {"type": "action", "action": {"type": "message", "label": "🤖 幫我規劃", "text": "幫我規劃"}},
+        ]
+        hint = "• 「汗蒸幕+聖水洞」\n• 「想看藝術展、畫廊」\n• 「5/8要去建大貨櫃屋」（格式：2025-05-08@建大貨櫃屋）"
+    elif country2 == "JP":
+        items = [
+            {"type": "action", "action": {"type": "message", "label": "🏯 古蹟文化", "text": "古蹟文化行程"}},
+            {"type": "action", "action": {"type": "message", "label": "🍣 美食為主", "text": "美食為主"}},
+            {"type": "action", "action": {"type": "message", "label": "🛍️ 購物掃貨", "text": "購物掃貨"}},
+            {"type": "action", "action": {"type": "message", "label": "🤖 幫我規劃", "text": "幫我規劃"}},
+        ]
+        hint = "• 「想去築地市場吃早餐」\n• 「某月某日要去迪士尼」（格式：2025-04-20@迪士尼）\n• 「美食為主」"
+    else:
+        items = [
+            {"type": "action", "action": {"type": "message", "label": "🏰 熱門景點", "text": "熱門景點"}},
+            {"type": "action", "action": {"type": "message", "label": "🍜 美食為主", "text": "美食為主"}},
+            {"type": "action", "action": {"type": "message", "label": "🛍️ 購物行程", "text": "購物行程"}},
+            {"type": "action", "action": {"type": "message", "label": "🤖 幫我規劃", "text": "幫我規劃"}},
+        ]
+        hint = "• 「想去迪士尼」\n• 「想逃避觀光客」\n• 「美食為主」"
+
     return [{
         "type": "text", "text":
             f"[6/8] 行程大綱\n\n"
             f"目的地：{city}\n"
             f"天數：{days_text}\n\n"
-            f"有沒有特別想去的景點或想避開的？\n\n"
-            f"可以告訴我，例如：\n"
-            f"• 「想去迪士尼」\n"
-            f"• 「想逃避觀光客」\n"
-            f"• 「美食為主」\n\n"
-            f"或點「幫我規劃」由我自動安排",
-        "quickReply": {
-            "items": [
-                {"type": "action", "action": {"type": "message", "label": "🏰 熱門景點", "text": "熱門景點"}},
-                {"type": "action", "action": {"type": "message", "label": "🍜 美食為主", "text": "美食為主"}},
-                {"type": "action", "action": {"type": "message", "label": "🛍️ 購物行程", "text": "購物行程"}},
-                {"type": "action", "action": {"type": "message", "label": "🤖 幫我規劃", "text": "幫我規劃"}},
-            ],
-        },
+            f"有沒有特別想去的景點或固定日期行程？\n\n"
+            f"可以告訴我，例如：\n{hint}\n\n"
+            f"或點下方快捷，或輸入「幫我規劃」由我自動安排",
+        "quickReply": {"items": items},
     }]
 
 
@@ -1467,8 +1490,45 @@ def _prompt_travel_info(user_id: str) -> list:
     depart = session.get("depart_date", "")
     ret = session.get("return_date", "")
     country_name = COUNTRY_NAME.get(country, city)
+    is_first_timer = session.get("is_first_timer", False)
 
     bubbles = []
+
+    # ── Bubble 新手：首次出國專屬指南（is_first_timer 時置頂）──
+    if is_first_timer:
+        dest_upper = dest.upper() if dest else ""
+        # 目的地專屬交通卡與 APP
+        transport_card = {
+            "KR": "T-money 卡（티머니）：在機場或便利商店（CU/GS25/7-11）購買，建議一次儲值 50,000 韓元。可搭地鐵、公車、部分計程車。",
+            "JP": "Suica / ICOCA：在機場自動售票機購買，可搭電車、地鐵、便利商店結帳。",
+            "TH": "Rabbit Card（曼谷 BTS）或使用 Google Pay 感應搭乘 MRT Blue Line。",
+            "SG": "EZ-Link 卡：機場地鐵站旁 Passenger Service Centre 購買，用於地鐵、公車。",
+        }.get(country, "建議在機場購買當地交通卡，詳問機場旅客服務中心。")
+
+        apps = {
+            "KR": "• Kakao Map（導航/地鐵路線，最準確）\n• Kakao T（叫計程車，可綁信用卡）\n• Naver Map（餐廳評價）\n• Seoul Metro（離線地鐵圖）",
+            "JP": "• Google Maps（地鐵路線）\n• Yahoo!乗換案内（電車轉乘）\n• 食べログ（餐廳評價）",
+            "TH": "• Google Maps\n• Grab（叫車，比路邊攔計程車安全）",
+            "SG": "• Google Maps\n• Grab（叫車）\n• MyTransport（公車/地鐵時刻）",
+        }.get(country, "• Google Maps（導航）\n• Grab（叫車，東南亞適用）")
+
+        airport_to_hotel = {
+            "GMP": "金浦機場 → 飯店：搭 首爾地鐵 5 號線（紫色）至孔德站，轉 6 號線至忠武路站（近明洞），約 50 分鐘、1,500 韓元。或叫 Kakao T 計程車約 25,000-35,000 韓元。",
+            "ICN": "仁川機場 → 首爾市區：搭 機場鐵路（AREX）直達列車至首爾站約 43 分鐘，再轉地鐵。或機場巴士（리무진버스）直達明洞約 70 分鐘。",
+        }.get(dest_upper, f"{city}機場 → 市區：建議在入境大廳查詢機場接駁資訊看板，或使用 Google Maps 搜尋「{city}機場到市區」。")
+
+        first_timer_text = (
+            "✈️ 出發前 2.5 小時到機場\n"
+            "① 找航空公司櫃台辦理 Check-in → 拿登機證\n"
+            "② 行李 X 光安全檢查（液體 100ml 以下裝透明袋）\n"
+            "③ 出境查驗護照（走「本國人」通道）\n"
+            "④ 對照登機證的 Gate 號碼找登機門\n"
+            "⑤ 提前 30 分鐘在登機門等候，聽廣播叫號\n\n"
+            f"🚇 機場到飯店\n{airport_to_hotel}\n\n"
+            f"💳 交通卡\n{transport_card}\n\n"
+            f"📱 必裝 APP\n{apps}"
+        )
+        bubbles.append(_info_bubble("🧳 新手出國完整指南", first_timer_text, "#1565C0"))
 
     # ── Bubble 0: 旅遊警示（Level 3/4 才顯示，置頂）──
     if country:

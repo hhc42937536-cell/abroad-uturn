@@ -4,9 +4,11 @@
 輸出為 LINE Flex Bubble（可放進 Carousel 或單獨回覆）。
 """
 
+import hashlib
 import json
 import os
 import datetime
+import re
 
 _SEASONAL_EVENTS = {
     "JP": [
@@ -250,10 +252,30 @@ def get_hotel_recs(dest_code: str, city_name: str, budget: str = "",
     return None
 
 
+def _parse_fixed_dates(custom_requests: str, depart_date: str) -> str:
+    """從 custom_requests 解析 YYYY-MM-DD@景點 格式，計算是第幾天，回傳提示字串"""
+    if not depart_date or not custom_requests:
+        return ""
+    try:
+        dep = datetime.date.fromisoformat(depart_date[:10])
+    except Exception:
+        return ""
+    anchors = []
+    for m in re.finditer(r"(\d{4}-\d{2}-\d{2})@([^\s；,，]+)", custom_requests):
+        try:
+            fixed = datetime.date.fromisoformat(m.group(1))
+            day_num = (fixed - dep).days + 1
+            anchors.append(f"Day {day_num}（{m.group(1)}）必須去「{m.group(2)}」")
+        except Exception:
+            pass
+    return "\n".join(anchors)
+
+
 def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
                    budget: str = "", adults: int = 1,
                    custom_requests: str = "",
-                   dest_code: str = "") -> list | None:
+                   dest_code: str = "",
+                   depart_date: str = "") -> list | None:
     """
     呼叫 Claude Haiku 生成每日行程 JSON。
     回傳 list[{"theme":..., "am":..., "pm":..., "eve":...}] 或 None（失敗時）。
@@ -265,7 +287,8 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     except ImportError:
         return None
 
-    cache_key = f"llm_itinerary:{city_name}:{days}:{budget}:{custom_requests[:20]}"
+    cr_hash = hashlib.md5(custom_requests.encode()).hexdigest()[:8] if custom_requests else "0"
+    cache_key = f"llm_itinerary:{city_name}:{days}:{budget}:{cr_hash}"
     cached = redis_get(cache_key)
     if cached:
         try:
@@ -277,6 +300,11 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     budget_hint = f"預算約 {budget}" if budget else ""
     adults_hint = f"{adults}人同行" if adults > 1 else "獨自旅行"
     custom_hint = f"\n特別需求：{custom_requests}" if custom_requests else ""
+
+    # 固定日期錨點
+    fixed_anchors = _parse_fixed_dates(custom_requests, depart_date)
+    if fixed_anchors:
+        custom_hint += f"\n\n【固定行程（必須排入，不可移動）】\n{fixed_anchors}"
 
     # 注入在地眉角 + 精選餐廳
     knowledge_block = ""
@@ -387,7 +415,7 @@ def build_itinerary_flex(dest_code: str, depart_date: str, return_date: str,
     if days >= 3:
         llm_plans = _llm_day_plans(
             display_city, days, seasonal_tag, budget, adults, custom_requests,
-            dest_code=dest_code
+            dest_code=dest_code, depart_date=depart_date,
         )
 
     bubbles = []
