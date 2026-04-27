@@ -4,12 +4,12 @@
     {
       "src": "api/webhook.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "50mb" }
+      "config": { "maxLambdaSize": "50mb", "maxDuration": 25 }
     },
     {
       "src": "api/download.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "50mb" }
+      "config": { "maxLambdaSize": "50mb", "maxDuration": 25 }
     },
     {
       "src": "api/view.py",
@@ -24,7 +24,7 @@
     },
     {
       "src": "/api/download",
-      "dest": "api/webhook.py"
+      "dest": "api/download.py"
     },
     {
       "src": "/api/view",
