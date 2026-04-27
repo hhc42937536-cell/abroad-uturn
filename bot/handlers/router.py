@@ -185,11 +185,17 @@ def route_text(text: str, user_id: str) -> list:
             _clear(user_id)
             step = 0  # 當作無 session 繼續往下處理
         else:
-            # 在規劃流程中，處理預算相關輸入
-            session = get_session(user_id) or {}
-            if step == 3 and session.get("adults") and not session.get("budget"):
-                return _inject_escape(trip_flow._prompt_budget_response(user_id, text))
-            return _inject_escape(trip_flow.handle_step(user_id, text, step))
+            # 計分系統判斷是否為全域功能（不屬於規劃流程），若是則跳出 session
+            from bot.utils.intent import classify_intent as _ci
+            _global_intents = {"transport", "visa", "hotel", "souvenir", "explore"}
+            if _ci(text) in _global_intents:
+                step = 0  # 讓後面的路由處理
+            else:
+                # 在規劃流程中，處理預算相關輸入
+                session = get_session(user_id) or {}
+                if step == 3 and session.get("adults") and not session.get("budget"):
+                    return _inject_escape(trip_flow._prompt_budget_response(user_id, text))
+                return _inject_escape(trip_flow.handle_step(user_id, text, step))
 
     # ── 3. 精確指令（按鈕觸發，不進計分）──
     if text in ("開始規劃", "我要規劃旅行", "完整出國規劃", "規劃旅程", "旅行規劃"):
