@@ -1672,6 +1672,8 @@ def _prompt_travel_info(user_id: str) -> list:
             "quickReply": {
                 "items": [
                     {"type": "action", "action": {"type": "postback", "label": "\u27a1\ufe0f \u7522\u51fa\u8a08\u756b\u66f8", "data": "trip_step=8", "displayText": "\u7522\u51fa\u8a08\u756b\u66f8"}},
+                    *([{"type": "action", "action": {"type": "message", "label": "\u2708\ufe0f \u6a5f\u5834\u653b\u7565", "text": "\u6a5f\u5834\u653b\u7565"}}]
+                      if is_first_timer else []),
                 ],
             },
         },
