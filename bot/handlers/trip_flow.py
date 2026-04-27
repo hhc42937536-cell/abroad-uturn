@@ -1925,6 +1925,23 @@ def _prompt_summary(user_id: str) -> list:
     import json as _json
 
     download_token = uuid.uuid4().hex
+    # 取 LLM 行程（step7 已生成並 Redis 快取，這裡命中快取不重打 API）
+    _llm_itinerary = None
+    try:
+        from bot.utils.itinerary_builder import _llm_day_plans, _get_seasonal_tag
+        import datetime as _dt
+        _travel_month = _dt.date.fromisoformat(depart[:10]).month if depart else _dt.date.today().month
+        _seasonal = _get_seasonal_tag(dest, _travel_month)
+        _seasonal_tag = _seasonal[0] if _seasonal else ""
+        _budget_str = f"NT${budget//10000}萬" if budget else ""
+        _llm_itinerary = _llm_day_plans(
+            city, _calc_days(depart, ret), _seasonal_tag,
+            _budget_str, adults, custom,
+            dest_code=dest, depart_date=depart,
+        )
+    except Exception as _e:
+        print(f"[plan_data] llm_itinerary error: {_e}")
+
     plan_data = {
         "flag": flag, "city": city, "days_text": days_text,
         "origin_name": origin_name, "date_display": date_display,
@@ -1937,6 +1954,12 @@ def _prompt_summary(user_id: str) -> list:
         "plug_text": culture_highlights,
         "custom": custom,
         "dest_code": dest,
+        "country_code": country,
+        "depart_date": depart,
+        "return_date": ret,
+        "origin_code": origin,
+        "is_first_timer": session.get("is_first_timer", False),
+        "llm_itinerary": _llm_itinerary,
         "must_eat": _get_must_eat(dest),
         "itinerary": _get_itinerary_for_download(dest, depart, ret),
         "insider": _get_insider_for_download(dest),

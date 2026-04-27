@@ -160,6 +160,136 @@ def _add_day_block(doc, day: dict):
     doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
 
+# ── 機場交通資料 ────────────────────────────────────────
+_AIRPORT_TRANSIT: dict[str, dict] = {
+    "GMP": {
+        "name": "金浦機場（GMP）",
+        "to_hotel": [
+            "出境大廳找「地下鐵 5 號線」入口（地下 1 樓）",
+            "刷 T-money 卡進閘口，搭 5 號線（紫色）",
+            "孔德站（공덕역）轉 6 號線（棕色）",
+            "忠武路站（충무로역）下車，3 號出口步行 8 分鐘到明洞",
+            "全程約 50 分鐘 ｜ 費用約 1,500 韓元（NT$35）",
+        ],
+        "tip": "不想轉車？叫 Kakao T 計程車直達飯店，約 25,000–35,000 韓元（NT$600–850）",
+    },
+    "ICN": {
+        "name": "仁川機場（ICN）",
+        "to_hotel": [
+            "入境大廳 B1 搭機場鐵路（AREX）",
+            "直達列車到首爾站約 43 分鐘，1,500 韓元",
+            "一般列車各站停，約 66 分鐘，900 韓元",
+            "首爾站轉 1 號線或 4 號線到明洞",
+        ],
+        "tip": "機場巴士（리무진버스）也可直達明洞，約 70 分鐘，16,000 韓元",
+    },
+    "NRT": {
+        "name": "成田機場（NRT）",
+        "to_hotel": [
+            "成田特快 N'EX 到新宿/渋谷約 90 分鐘，3,070 日元",
+            "京成 Skyliner 到上野/日暮里約 41 分鐘，2,570 日元",
+            "利木津巴士到主要飯店區，約 60–90 分鐘",
+        ],
+        "tip": "建議台灣出發前購買 Suica/Pasmo IC 卡，機場自動售票機也可購買",
+    },
+    "HND": {
+        "name": "羽田機場（HND）",
+        "to_hotel": [
+            "東京單軌電車到浜松町，轉 JR 山手線，約 30 分鐘",
+            "京急線直通品川站約 13 分鐘，600 日元",
+            "利木津巴士到主要飯店區約 30–60 分鐘",
+        ],
+        "tip": "計程車到新宿約 4,500–6,000 日元，距市區較近",
+    },
+}
+
+_KOREA_APPS: list[tuple[str, str]] = [
+    ("Kakao Map",   "韓國最準確的地圖，支援步行/地鐵/計程車路線"),
+    ("Kakao T",     "叫計程車必備，可用信用卡付款"),
+    ("Naver Map",   "景點評論豐富，適合查餐廳開放時間"),
+    ("Seoul Metro", "首爾地鐵路線圖，可離線使用"),
+    ("Papago",      "韓語翻譯、相機即時翻字幕"),
+]
+
+_JAPAN_APPS: list[tuple[str, str]] = [
+    ("Google Maps",    "東京地鐵路線最準確"),
+    ("Yahoo!乗換案内", "電車換乘查詢最詳細"),
+    ("Tabelog",        "日本餐廳評論第一名"),
+    ("じゃらん",        "景點預訂、查票價/開放時間"),
+]
+
+
+def _add_airport_guide_section(doc: "Document", dest_code: str) -> None:
+    """✈️ 機場攻略 section：出發流程＋入境＋交通到飯店＋APP"""
+    dest_upper = dest_code.upper() if dest_code else ""
+    transit = _AIRPORT_TRANSIT.get(dest_upper)
+
+    _add_section_heading(doc, "✈️  機場攻略", bg_color="37474F")
+
+    _add_sub_heading(doc, "🛫 出發流程（台灣機場）")
+    for step in [
+        "出發前 2.5 小時抵達機場，看電子看板確認航班與航空公司報到櫃台",
+        "Check-in：護照＋電子機票給地勤，托運行李（提前在家秤重，超重費很貴！）",
+        "安全檢查：電腦、外套、皮帶放 X 光籃；液體/凝膠 ≤100ml 裝透明夾鏈袋",
+        "出境查驗：走「本國人」通道遞護照，或使用 e-Gate 自動通關（須事先向移民署申辦）",
+        "候機：提前 30 分鐘到登機門等候，廣播叫號後再排隊",
+        "行動電源限 100Wh（≈27,000mAh）以下才能帶上機",
+    ]:
+        p = doc.add_paragraph(style="List Bullet")
+        p.paragraph_format.left_indent = Cm(0.5)
+        p.paragraph_format.space_before = Pt(1)
+        p.paragraph_format.space_after = Pt(1)
+        p.add_run(step).font.size = Pt(9)
+
+    _add_sub_heading(doc, "🛬 抵達目的地入境")
+    for step in [
+        "跟著「入境 / Arrivals」指標走，外國人通道（Foreigner）排隊",
+        "護照遞給海關，問「旅遊目的」回答「Tourism / 觀光」",
+        "看入境大廳電子看板，找航班號碼對應的行李轉盤取行李",
+        "沒超額物品走綠色通道「Nothing to Declare」直接出關",
+    ]:
+        p = doc.add_paragraph(style="List Bullet")
+        p.paragraph_format.left_indent = Cm(0.5)
+        p.paragraph_format.space_before = Pt(1)
+        p.paragraph_format.space_after = Pt(1)
+        p.add_run(step).font.size = Pt(9)
+
+    if transit:
+        _add_sub_heading(doc, f"🚇 {transit['name']} → 飯店")
+        for step in transit["to_hotel"]:
+            p = doc.add_paragraph(style="List Bullet")
+            p.paragraph_format.left_indent = Cm(0.5)
+            p.paragraph_format.space_before = Pt(1)
+            p.paragraph_format.space_after = Pt(1)
+            p.add_run(step).font.size = Pt(9)
+        tip_p = doc.add_paragraph()
+        tip_p.paragraph_format.left_indent = Cm(0.5)
+        tip_r = tip_p.add_run(f"💡 {transit['tip']}")
+        tip_r.font.size = Pt(9)
+        tip_r.font.color.rgb = _hex("gray")
+        tip_r.italic = True
+
+    if dest_upper in ("GMP", "ICN"):
+        _add_sub_heading(doc, "💳 T-money 交通卡")
+        _add_info_table(doc, [
+            ("在哪買",   "便利商店（GS25、CU、7-Eleven）或地鐵站自動售票機"),
+            ("充值方式", "便利商店現金儲值，最少 1,000 韓元起"),
+            ("優惠",     "刷卡比現金便宜 100 韓元，轉乘 30 分鐘內免費"),
+            ("退卡",     "回台前到地鐵客服退押金 500 韓元＋剩餘餘額"),
+        ])
+
+    app_list = (
+        _KOREA_APPS if dest_upper in ("GMP", "ICN") else
+        _JAPAN_APPS if dest_upper in ("NRT", "HND") else []
+    )
+    if app_list:
+        country = "韓國" if dest_upper in ("GMP", "ICN") else "日本"
+        _add_sub_heading(doc, f"📱 {country}必備 APP")
+        _add_info_table(doc, list(app_list))
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
+
 def _build_docx(plan: dict) -> bytes:
     doc = Document()
 
@@ -237,9 +367,35 @@ def _build_docx(plan: dict) -> bytes:
         _add_section_heading(doc, "🗺  旅遊資訊")
         _add_info_table(doc, info_rows)
 
+    # ── 機場攻略（有 dest_code 就加） ────────────────────
+    dest_code = plan.get("dest_code", "")
+    if dest_code:
+        _add_airport_guide_section(doc, dest_code)
+
     # ── 天天行程 ─────────────────────────────────────────
+    llm_itinerary = plan.get("llm_itinerary") or []
     itinerary = plan.get("itinerary", [])
-    if itinerary:
+
+    if llm_itinerary:
+        _add_section_heading(doc, "📅  天天行程  ✨ AI 個人化")
+        depart = plan.get("depart_date", "")
+        import datetime as _dt
+        for i, day in enumerate(llm_itinerary):
+            date_label = ""
+            if depart:
+                try:
+                    d = _dt.date.fromisoformat(depart[:10]) + _dt.timedelta(days=i)
+                    date_label = d.strftime("%m/%d")
+                except Exception:
+                    pass
+            _add_day_block(doc, {
+                "title": f"Day {i + 1}  {day.get('theme', '')}",
+                "date_label": date_label,
+                "am":  day.get("am", ""),
+                "pm":  day.get("pm", ""),
+                "eve": day.get("eve", ""),
+            })
+    elif itinerary:
         _add_section_heading(doc, "📅  天天行程")
         for day in itinerary:
             _add_day_block(doc, day)
