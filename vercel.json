@@ -15,6 +15,11 @@
       "src": "api/view.py",
       "use": "@vercel/python",
       "config": { "maxLambdaSize": "50mb", "maxDuration": 30 }
+    },
+    {
+      "src": "api/plan.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "50mb", "maxDuration": 10 }
     }
   ],
   "routes": [
@@ -29,6 +34,10 @@
     {
       "src": "/api/view",
       "dest": "api/view.py"
+    },
+    {
+      "src": "/api/plan",
+      "dest": "api/plan.py"
     },
     {
       "src": "/api/check_prices",

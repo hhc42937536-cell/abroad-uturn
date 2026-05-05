@@ -1982,8 +1982,7 @@ def _prompt_summary(user_id: str) -> list:
     redis_set(f"download:{download_token}", _json.dumps(plan_data, ensure_ascii=False), ttl=259200)
 
     # 取得 Vercel 部署 URL
-    vercel_url = "https://abroad-uturn.vercel.app"
-    download_url = f"{vercel_url}/api/view?token={download_token}"
+    download_url = f"https://uturn-web.vercel.app/docx?token={download_token}"
 
     footer_buttons.append({
         "type": "button", "style": "primary", "height": "sm",
