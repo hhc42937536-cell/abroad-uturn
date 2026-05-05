@@ -221,7 +221,7 @@ def handle_pre_trip_country(text: str, user_id: str = "") -> list:
 
 def _visa_bubble(cc: str, flag: str, name: str, visa: dict | None) -> dict:
     if visa:
-        vtype = visa.get("type", "")
+        vtype = visa.get("type", "") or "請查詢官方網站"
         days = visa.get("days", "")
         note = visa.get("note", "")
 
