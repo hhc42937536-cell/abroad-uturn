@@ -501,7 +501,6 @@ def handle_postback(user_id: str, data: str) -> list:
 
     if "quick_custom" in params:
         from bot.handlers.quick_trip import handle_quick_pick
-        from bot.session.manager import get_session
         s = get_session(user_id) or {}
         idx = s.get("quick_pending_pick", 0)
         return handle_quick_pick(user_id, idx, custom=params["quick_custom"])
