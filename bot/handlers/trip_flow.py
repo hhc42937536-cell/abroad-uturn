@@ -1,4 +1,4 @@
-"""8 步引導式旅程規劃流程控制器（狀態機核心）
+﻿"""8 步引導式旅程規劃流程控制器（狀態機核心）
 
 Phase 2 會完整實作每個步驟。目前先建立骨架。
 """
@@ -1994,6 +1994,19 @@ def _prompt_summary(user_id: str) -> list:
         "type": "button", "style": "primary", "height": "sm",
         "action": {"type": "uri", "label": "✨ 查看行程計畫書（可存 PDF）",
                    "uri": download_url},
+    })
+
+    # 製作 Word 計畫書（連結到 uturn-web）
+    import urllib.parse as _uparse
+    _web_params = f"dest={_uparse.quote(str(city))}&depCity={_uparse.quote(str(origin_name))}&depDate={depart}&retDate={ret}&people={adults}"
+    if budget:
+        _web_params += f"&budget=NT%24{budget:,}"
+    if custom:
+        _web_params += f"&style={_uparse.quote(str(custom))}"
+    footer_buttons.append({
+        "type": "button", "style": "primary", "color": "#A86F5A", "height": "sm",
+        "action": {"type": "uri", "label": "📄 下載 Word 計畫書",
+                   "uri": f"https://uturn-web.vercel.app/docx?{_web_params}"},
     })
     footer_buttons.extend([
         {"type": "button", "style": "secondary", "height": "sm",
