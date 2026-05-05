@@ -439,7 +439,7 @@
 
   <!-- ── Download Button ── -->
   <div class="download-btn-wrap no-print">
-    <button class="download-btn" onclick="window.print()">⬇ 儲存 PDF</button>
+    <button class="download-btn" id="pdf-btn" onclick="exportPDF()">⬇ 下載 PDF</button>
   </div>
 
   <div class="body-wrap">
@@ -675,6 +675,40 @@
   </div>
 
 </div><!-- /page -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function exportPDF() {
+  const btn = document.getElementById('pdf-btn');
+  btn.textContent = '⏳ 產生中…';
+  btn.disabled = true;
+
+  const el = document.querySelector('.page');
+  const city = '{{ city }}';
+  const date = '{{ date_display }}'.replace(/\//g, '-').replace(/ ~ /g, '_');
+  const filename = `${city}_${date}_行程計畫書.pdf`;
+
+  html2pdf()
+    .set({
+      margin:      [10, 10, 10, 10],
+      filename:    filename,
+      image:       { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:   { mode: ['avoid-all', 'css'] },
+    })
+    .from(el)
+    .save()
+    .then(() => {
+      btn.textContent = '⬇ 下載 PDF';
+      btn.disabled = false;
+    })
+    .catch(() => {
+      btn.textContent = '⬇ 下載 PDF';
+      btn.disabled = false;
+    });
+}
+</script>
 
 </body>
 </html>
