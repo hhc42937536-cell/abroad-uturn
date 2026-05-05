@@ -62,6 +62,16 @@ def route_text(text: str, user_id: str) -> list:
         idx = session["quick_pending_pick"]
         return handle_quick_pick(user_id, idx, custom=text)
 
+    # ── 說走就走：等待用戶輸入指定目的地 ──
+    if session.get("quick_want_dest_days"):
+        days = int(session["quick_want_dest_days"])
+        from bot.utils.date_parser import parse_destination_keyword, parse_destination
+        from bot.handlers.quick_trip import find_quick_specific
+        dest_code = parse_destination_keyword(text) or parse_destination(text)
+        if dest_code:
+            return find_quick_specific(user_id, dest_code, days)
+        return [{"type": "text", "text": "😅 找不到這個地點，請輸入城市名，例如「首爾」「東京」「曼谷」"}]
+
     # ── Rich Menu 精確按鈕（不進計分，保持即時回應）──
     if text in ("說走就走", "說走就飛", "馬上飛", "快速規劃"):
         from bot.handlers.quick_trip import handle_quick_trip

@@ -491,6 +491,10 @@ def handle_postback(user_id: str, data: str) -> list:
         from bot.handlers.quick_trip import _find_options
         return _find_options(user_id, int(params["quick_days"]))
 
+    if "quick_want_dest" in params:
+        from bot.handlers.quick_trip import ask_quick_dest
+        return ask_quick_dest(user_id, int(params["quick_want_dest"]))
+
     if "quick_pick" in params:
         from bot.handlers.quick_trip import _ask_custom
         return _ask_custom(user_id, int(params["quick_pick"]))

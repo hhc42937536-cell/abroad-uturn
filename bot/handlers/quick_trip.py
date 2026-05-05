@@ -1,4 +1,4 @@
-"""🚀 說走就走模式（MVP）
+﻿"""🚀 說走就走模式（MVP）
 
 極簡流程：
   使用者打「說走就走」
@@ -223,6 +223,10 @@ def _find_options(user_id: str, days: int) -> list:
         "footer": {
             "type": "box", "layout": "vertical", "paddingAll": "10px", "spacing": "sm",
             "contents": [
+                {"type": "button", "style": "primary", "color": "#E91E63", "height": "sm",
+                 "action": {"type": "postback", "label": "\U0001f3af \u6307\u5b9a\u5730\u9ede",
+                            "data": f"quick_want_dest={days}",
+                            "displayText": "\u6211\u60f3\u53bb\u6307\u5b9a\u5730\u9ede"}},
                 {"type": "button", "style": "secondary", "height": "sm",
                  "action": {"type": "postback", "label": "\u518d\u627e 3 \u500b",
                             "data": f"quick_days={days}", "displayText": "\u518d\u627e"}},
@@ -412,3 +416,115 @@ def handle_quick_pick(user_id: str, idx: int, custom: str = "") -> list:
     # LINE 最多 5 則
     all_msgs = itinerary_msgs + flex_travel + summary_msgs + [budget_msg]
     return all_msgs[:5]
+
+
+def ask_quick_dest(user_id: str, days: int) -> list:
+    """說走就走指定地點 — 問用戶想去哪"""
+    update_session(user_id, {"quick_want_dest_days": days})
+    return [{"type": "text", "text": (
+        "🎯 想去哪裡？\n\n"
+        "直接告訴我目的地，例如：\n"
+        "「首爾」「東京」「曼谷」「峇里島」\n\n"
+        "我幫你找最近最便宜的出發日！"
+    )}]
+
+
+def find_quick_specific(user_id: str, dest_code: str, days: int) -> list:
+    """找指定城市在天數範圍內的最便宜方案"""
+    from bot.utils.date_parser import parse_destination_keyword
+    origin = get_user_origin(user_id)
+    city_name = IATA_TO_NAME.get(dest_code, dest_code)
+    flag = CITY_FLAG.get(dest_code, "✈️")
+
+    flights = None
+    if TRAVELPAYOUTS_TOKEN:
+        flights = search_cheapest_any(origin, destination=dest_code, limit=30)
+    if not flights:
+        flights = search_cheapest_any(origin, limit=80) or []
+        flights = [f for f in flights if f.get("destination") == dest_code]
+
+    if not flights:
+        return [{"type": "text", "text": (
+            f"😔 目前找不到 {flag} {city_name} 的便宜機票\n\n"
+            "試試看其他日期，或輸入「說走就走」重新選目的地"
+        )}]
+
+    today = datetime.date.today()
+    candidates = []
+    for f in flights:
+        dep = f.get("departure_at", "")
+        ret = f.get("return_at", "")
+        if not dep or len(dep) < 10:
+            continue
+        try:
+            d1 = datetime.date.fromisoformat(dep[:10])
+            if d1 < today:
+                continue
+            if ret and len(ret) >= 10:
+                d2 = datetime.date.fromisoformat(ret[:10])
+                actual = (d2 - d1).days + 1
+                if abs(actual - days) <= 2:
+                    f["_days"] = actual
+                    candidates.append(f)
+            else:
+                f["_days"] = days
+                candidates.append(f)
+        except ValueError:
+            continue
+
+    if not candidates:
+        candidates = sorted(flights, key=lambda x: x.get("price", 99999))[:3]
+        for c in candidates:
+            c["_days"] = days
+
+    candidates.sort(key=lambda x: x.get("price", 99999))
+    top3 = candidates[:3]
+
+    quick_options = []
+    for f in top3:
+        quick_options.append({
+            "destination": dest_code,
+            "price": f.get("price", 0),
+            "airline": f.get("airline", ""),
+            "departure_at": f.get("departure_at", ""),
+            "return_at": f.get("return_at", ""),
+            "transfers": f.get("transfers", 0),
+            "days": f.get("_days", days),
+        })
+    update_session(user_id, {
+        "quick_trip_options": quick_options,
+        "quick_trip_origin": origin,
+        "quick_want_dest_days": None,
+    })
+
+    bubbles = [_build_option_card(i, opt, days) for i, opt in enumerate(top3)]
+    bubbles.append({
+        "type": "bubble", "size": "kilo",
+        "body": {
+            "type": "box", "layout": "vertical",
+            "justifyContent": "center", "alignItems": "center",
+            "paddingAll": "20px", "spacing": "md",
+            "contents": [
+                {"type": "text", "text": "🔄", "size": "3xl", "align": "center"},
+                {"type": "text", "text": "改找其他地點？",
+                 "weight": "bold", "size": "md", "align": "center"},
+            ],
+        },
+        "footer": {
+            "type": "box", "layout": "vertical", "paddingAll": "10px", "spacing": "sm",
+            "contents": [
+                {"type": "button", "style": "secondary", "height": "sm",
+                 "action": {"type": "postback", "label": "再找 3 個隨機",
+                            "data": f"quick_days={days}", "displayText": "再找隨機"}},
+                {"type": "button", "style": "secondary", "height": "sm",
+                 "action": {"type": "postback", "label": "🎯 指定其他地點",
+                            "data": f"quick_want_dest={days}", "displayText": "指定其他地點"}},
+            ],
+        },
+    })
+
+    return [
+        {"type": "text", "text": f"🎯 {flag} {city_name}，{days} 天最便宜方案："},
+        {"type": "flex", "altText": f"{city_name} 說走就走",
+         "contents": {"type": "carousel", "contents": bubbles}},
+    ]
