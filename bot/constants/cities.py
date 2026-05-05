@@ -1,4 +1,4 @@
-"""城市 IATA 代碼、名稱對照、國旗 emoji、台灣機場"""
+﻿"""城市 IATA 代碼、名稱對照、國旗 emoji、台灣機場"""
 
 # 城市 IATA 代碼對照表
 CITY_CODES = {
@@ -114,7 +114,7 @@ IATA_TO_NAME = {
     "CTS": "札幌", "OKA": "沖繩", "KIX": "京都/關西",
     "SEL": "首爾", "PUS": "釜山", "CJU": "濟州",
     "BKK": "曼谷", "CNX": "清邁", "HKT": "普吉島", "SIN": "新加坡",
-    "KUL": "吉隆坡", "SGN": "胡志明市", "HAN": "河內",
+    "KUL": "吉隆坡", "SGN": "胡志明市", "HAN": "河內", "DAD": "峴港",
     "DPS": "峇里島", "MNL": "馬尼拉", "CEB": "宿霧", "JKT": "雅加達",
     "HKG": "香港", "MFM": "澳門", "SHA": "上海", "BJS": "北京",
     "CAN": "廣州", "SZX": "深圳",
@@ -147,7 +147,7 @@ CITY_FLAG = {
     "ICN": "\U0001f1f0\U0001f1f7",
     "BKK": "\U0001f1f9\U0001f1ed", "CNX": "\U0001f1f9\U0001f1ed", "HKT": "\U0001f1f9\U0001f1ed",
     "SIN": "\U0001f1f8\U0001f1ec", "KUL": "\U0001f1f2\U0001f1fe",
-    "SGN": "\U0001f1fb\U0001f1f3", "HAN": "\U0001f1fb\U0001f1f3",
+    "SGN": "\U0001f1fb\U0001f1f3", "HAN": "\U0001f1fb\U0001f1f3", "DAD": "\U0001f1fb\U0001f1f3",
     "DPS": "\U0001f1ee\U0001f1e9", "JKT": "\U0001f1ee\U0001f1e9",
     "MNL": "\U0001f1f5\U0001f1ed", "CEB": "\U0001f1f5\U0001f1ed",
     "HKG": "\U0001f1ed\U0001f1f0", "MFM": "\U0001f1f2\U0001f1f4",
@@ -202,7 +202,7 @@ IATA_TO_COUNTRY = {
     "SEL": "KR", "PUS": "KR", "CJU": "KR", "ICN": "KR",
     "BKK": "TH", "CNX": "TH", "HKT": "TH",
     "SIN": "SG", "KUL": "MY", "BKI": "MY", "LGK": "MY", "PEN": "MY",
-    "SGN": "VN", "HAN": "VN",
+    "SGN": "VN", "HAN": "VN", "DAD": "VN",
     "DPS": "ID", "JKT": "ID",
     "MNL": "PH", "CEB": "PH",
     "HKG": "HK", "MFM": "MO",
