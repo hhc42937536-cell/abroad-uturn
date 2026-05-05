@@ -19,7 +19,7 @@ def _redis_cmd(cmd: list):
                 "Content-Type": "application/json",
             },
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=2) as resp:
             result = json.loads(resp.read().decode("utf-8"))
             return result.get("result")
     except Exception as e:

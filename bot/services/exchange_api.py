@@ -110,10 +110,10 @@ def get_exchange_rate(currency_code: str) -> dict | None:
             pass
 
     try:
-        # open.er-api.com：免費、免 key、支援 TWD
+        # open.er-api.com：免費、免 key、支援 TWD（timeout 縮短為 1.5s 避免 Vercel 超時）
         url = "https://open.er-api.com/v6/latest/TWD"
         req = urllib.request.Request(url, headers={"User-Agent": "AbroadUturn/1.0"})
-        with urllib.request.urlopen(req, timeout=4) as resp:
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
 
         if data.get("result") != "success":
