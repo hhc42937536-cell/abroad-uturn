@@ -196,7 +196,7 @@ def get_hotel_recs(dest_code: str, city_name: str, budget: str = "",
     快取 48 小時。
     """
     try:
-        import anthropic
+        import google.generativeai as genai
         from bot.services.redis_store import redis_get, redis_set
     except ImportError:
         return None
@@ -231,16 +231,13 @@ def get_hotel_recs(dest_code: str, city_name: str, budget: str = "",
 請列 3~4 個區域，從最推薦到次選排列。"""
 
     try:
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        api_key = os.environ.get("GEMINI_API_KEY", "")
         if not api_key:
             return None
-        client = anthropic.Anthropic(api_key=api_key, timeout=8.0)
-        message = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=800,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw = message.content[0].text.strip()
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        resp = model.generate_content(prompt)
+        raw = resp.text.strip()
         start, end = raw.find("{"), raw.rfind("}") + 1
         if start == -1 or end == 0:
             return None
@@ -282,7 +279,7 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     結果以 Redis 快取 24 小時，避免重複呼叫。
     """
     try:
-        import anthropic
+        import google.generativeai as genai
         from bot.services.redis_store import redis_get, redis_set
     except ImportError:
         return None
@@ -364,16 +361,13 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
 }}"""
 
     try:
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        api_key = os.environ.get("GEMINI_API_KEY", "")
         if not api_key:
             return None
-        client = anthropic.Anthropic(api_key=api_key, timeout=12.0)
-        message = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=2048,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw = message.content[0].text.strip()
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        resp = model.generate_content(prompt)
+        raw = resp.text.strip()
         # 擷取 JSON array（防止 LLM 回傳多餘文字）
         start = raw.find("[")
         end = raw.rfind("]") + 1

@@ -121,19 +121,17 @@ def _llm_tip(dest_code: str, city_name: str, style: str) -> str:
         if cached:
             return cached
 
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        api_key = os.environ.get("GEMINI_API_KEY", "")
         if not api_key:
             return ""
-        import anthropic
-        client = anthropic.Anthropic(api_key=api_key, timeout=3.0)
-        msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=60,
-            messages=[{"role": "user", "content":
-                f"你是台灣旅遊達人。用戶想去{city_name}體驗「{style}」。"
-                f"用一句繁體中文問他一個能幫助規劃的關鍵問題，親切口語，不超過30字，不要開頭問候。"}],
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        resp = model.generate_content(
+            f"你是台灣旅遊達人。用戶想去{city_name}體驗「{style}」。"
+            f"用一句繁體中文問他一個能幫助規劃的關鍵問題，親切口語，不超過30字，不要開頭問候。"
         )
-        tip = msg.content[0].text.strip()
+        tip = resp.text.strip()
         redis_set(cache_key, tip, ttl=7 * 86400)
         return tip
     except Exception as e:
@@ -297,7 +295,7 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
         if session.get(k):
             known[label] = session[k]
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
         return _gather_fallback(user_id, text, session)
 
@@ -318,14 +316,11 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
     )
 
     try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=api_key, timeout=5.0)
-        msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=220,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw = msg.content[0].text.strip()
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        resp = model.generate_content(prompt)
+        raw = resp.text.strip()
         s, e = raw.find("{"), raw.rfind("}") + 1
         if s == -1:
             raise ValueError("no JSON")
@@ -1785,7 +1780,7 @@ def _llm_plan_tagline(city: str, custom: str, days: int, adults: int,
         if cached:
             return cached
 
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        api_key = os.environ.get("GEMINI_API_KEY", "")
         if not api_key:
             return ""
 
@@ -1796,18 +1791,16 @@ def _llm_plan_tagline(city: str, custom: str, days: int, adults: int,
             except Exception:
                 pass
 
-        import anthropic
-        client = anthropic.Anthropic(api_key=api_key, timeout=4.0)
-        msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=50,
-            messages=[{"role": "user", "content":
-                f"為這趟旅行寫一句吸引人的中文標語（繁體，15字內，不加引號）：\n"
-                f"目的地：{city}　{month}　{days}天　{adults}人\n"
-                f"主題：{custom or '自由行'}\n"
-                f"要有畫面感，讓人看了想分享。"}],
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        resp = model.generate_content(
+            f"為這趟旅行寫一句吸引人的中文標語（繁體，15字內，不加引號）：\n"
+            f"目的地：{city}　{month}　{days}天　{adults}人\n"
+            f"主題：{custom or '自由行'}\n"
+            f"要有畫面感，讓人看了想分享。"
         )
-        tagline = msg.content[0].text.strip()
+        tagline = resp.text.strip()
         redis_set(cache_key, tagline, ttl=7 * 86400)
         return tagline
     except Exception as e:

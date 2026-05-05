@@ -463,12 +463,12 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
     print(f"[fallback] user={user_id[:8]} text={repr(text[:80])}")
 
     try:
-        import anthropic
+        import google.generativeai as genai
     except ImportError:
-        print(f"[fallback] no_anthropic → static")
+        print(f"[fallback] no_genai → static")
         return _static_fallback()
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
         print(f"[fallback] no_api_key → static")
         return _static_fallback()
@@ -493,13 +493,10 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
 - UNKNOWN        完全與旅遊無關（例如：問天氣、數學、健康問題）"""
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=20,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        intent = msg.content[0].text.strip().upper()
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        resp = model.generate_content(prompt)
+        intent = resp.text.strip().upper()
         print(f"[fallback] intent={intent} text={repr(text[:60])}")
     except Exception as e:
         print(f"[fallback] llm_error={e} text={repr(text[:60])}")
