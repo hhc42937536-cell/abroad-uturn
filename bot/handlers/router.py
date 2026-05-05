@@ -463,7 +463,7 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
     print(f"[fallback] user={user_id[:8]} text={repr(text[:80])}")
 
     try:
-        import google.generativeai as genai
+        from google import genai
     except ImportError:
         print(f"[fallback] no_genai → static")
         return _static_fallback()
@@ -493,9 +493,8 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
 - UNKNOWN        完全與旅遊無關（例如：問天氣、數學、健康問題）"""
 
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        resp = model.generate_content(prompt)
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         intent = resp.text.strip().upper()
         print(f"[fallback] intent={intent} text={repr(text[:60])}")
     except Exception as e:

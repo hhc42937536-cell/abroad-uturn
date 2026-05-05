@@ -124,12 +124,14 @@ def _llm_tip(dest_code: str, city_name: str, style: str) -> str:
         api_key = os.environ.get("GEMINI_API_KEY", "")
         if not api_key:
             return ""
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        resp = model.generate_content(
-            f"你是台灣旅遊達人。用戶想去{city_name}體驗「{style}」。"
-            f"用一句繁體中文問他一個能幫助規劃的關鍵問題，親切口語，不超過30字，不要開頭問候。"
+        from google import genai
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=(
+                f"你是台灣旅遊達人。用戶想去{city_name}體驗「{style}」。"
+                f"用一句繁體中文問他一個能幫助規劃的關鍵問題，親切口語，不超過30字，不要開頭問候。"
+            ),
         )
         tip = resp.text.strip()
         redis_set(cache_key, tip, ttl=7 * 86400)
@@ -316,10 +318,9 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
     )
 
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        resp = model.generate_content(prompt)
+        from google import genai
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         raw = resp.text.strip()
         s, e = raw.find("{"), raw.rfind("}") + 1
         if s == -1:
@@ -1791,14 +1792,16 @@ def _llm_plan_tagline(city: str, custom: str, days: int, adults: int,
             except Exception:
                 pass
 
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        resp = model.generate_content(
-            f"為這趟旅行寫一句吸引人的中文標語（繁體，15字內，不加引號）：\n"
-            f"目的地：{city}　{month}　{days}天　{adults}人\n"
-            f"主題：{custom or '自由行'}\n"
-            f"要有畫面感，讓人看了想分享。"
+        from google import genai
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=(
+                f"為這趟旅行寫一句吸引人的中文標語（繁體，15字內，不加引號）：\n"
+                f"目的地：{city}　{month}　{days}天　{adults}人\n"
+                f"主題：{custom or '自由行'}\n"
+                f"要有畫面感，讓人看了想分享。"
+            ),
         )
         tagline = resp.text.strip()
         redis_set(cache_key, tagline, ttl=7 * 86400)

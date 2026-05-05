@@ -196,7 +196,7 @@ def get_hotel_recs(dest_code: str, city_name: str, budget: str = "",
     快取 48 小時。
     """
     try:
-        import google.generativeai as genai
+        from google import genai
         from bot.services.redis_store import redis_get, redis_set
     except ImportError:
         return None
@@ -234,9 +234,8 @@ def get_hotel_recs(dest_code: str, city_name: str, budget: str = "",
         api_key = os.environ.get("GEMINI_API_KEY", "")
         if not api_key:
             return None
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        resp = model.generate_content(prompt)
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         raw = resp.text.strip()
         start, end = raw.find("{"), raw.rfind("}") + 1
         if start == -1 or end == 0:
@@ -279,7 +278,7 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     結果以 Redis 快取 24 小時，避免重複呼叫。
     """
     try:
-        import google.generativeai as genai
+        from google import genai
         from bot.services.redis_store import redis_get, redis_set
     except ImportError:
         return None
@@ -364,9 +363,8 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
         api_key = os.environ.get("GEMINI_API_KEY", "")
         if not api_key:
             return None
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        resp = model.generate_content(prompt)
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         raw = resp.text.strip()
         # 擷取 JSON array（防止 LLM 回傳多餘文字）
         start = raw.find("[")

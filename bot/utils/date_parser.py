@@ -212,13 +212,15 @@ def parse_destination(text: str) -> str:
     if not api_key:
         return ""
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        resp = model.generate_content(
-            f"用戶說：「{text}」\n"
-            "請判斷他最可能想去的城市，只回傳英文城市名（如 Tokyo、Los Angeles、Seoul），"
-            "完全無法判斷才回傳 UNKNOWN。不要其他文字。"
+        from google import genai
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=(
+                f"用戶說：「{text}」\n"
+                "請判斷他最可能想去的城市，只回傳英文城市名（如 Tokyo、Los Angeles、Seoul），"
+                "完全無法判斷才回傳 UNKNOWN。不要其他文字。"
+            ),
         )
         city_en = resp.text.strip()
         if city_en.upper() == "UNKNOWN":
