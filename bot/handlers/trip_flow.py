@@ -258,7 +258,7 @@ _INTENT_LABELS: dict[str, str] = {
 }
 
 # 這些步驟使用者輸入的是自由文字，不做計分攔截
-_FREE_INPUT_STEPS = {1, 2, 3, 6}
+_FREE_INPUT_STEPS = {1, 2, 3, 6, 7}
 
 # 計分達到此門檻才視為「明確的其他意圖」
 _INTENT_INTERCEPT_SCORE = 4
@@ -452,6 +452,14 @@ def handle_postback(user_id: str, data: str) -> list:
     """處理 postback 事件（步驟導航按鈕）"""
     import urllib.parse
     params = dict(urllib.parse.parse_qsl(data))
+
+    if data == "airport_guide":
+        from bot.handlers.airport_guide import handle_airport_guide
+        session = get_session(user_id) or {}
+        return handle_airport_guide(
+            dest_code=session.get("destination_code", ""),
+            origin_code=session.get("origin", ""),
+        )
 
     if "trip_step" in params:
         target_step = int(params["trip_step"])
@@ -1691,7 +1699,7 @@ def _prompt_travel_info(user_id: str) -> list:
             "quickReply": {
                 "items": [
                     {"type": "action", "action": {"type": "postback", "label": "\u27a1\ufe0f \u7522\u51fa\u8a08\u756b\u66f8", "data": "trip_step=8", "displayText": "\u7522\u51fa\u8a08\u756b\u66f8"}},
-                    {"type": "action", "action": {"type": "message", "label": "\u2708\ufe0f \u6a5f\u5834\u653b\u7565", "text": "\u6a5f\u5834\u653b\u7565"}},
+                    {"type": "action", "action": {"type": "postback", "label": "✈️ 機場攻略", "data": "airport_guide", "displayText": "機場攻略"}},
                 ],
             },
         },
