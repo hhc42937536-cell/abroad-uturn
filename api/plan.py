@@ -51,7 +51,7 @@ class handler(BaseHTTPRequestHandler):
             "destination": plan.get("city", ""),
             "dest_code":   plan.get("dest_code", ""),
             "dep_date":    plan.get("depart_date", ""),
-            "ret_date":    "",
+            "ret_date":    plan.get("return_date", ""),
             "people":      plan.get("adults", 1),
             "budget":      plan.get("budget", ""),
             "style":       plan.get("hotel_pref", ""),
