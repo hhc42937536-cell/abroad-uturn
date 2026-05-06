@@ -504,7 +504,7 @@ def _llm_intent_fallback(text: str, user_id: str) -> list:
 
     try:
         client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        resp = client.models.generate_content(model="gemini-2.5-flash-preview-05-20", contents=prompt)
         intent = resp.text.strip().upper()
         print(f"[fallback] intent={intent} text={repr(text[:60])}")
     except Exception as e:

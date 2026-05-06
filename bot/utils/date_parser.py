@@ -215,7 +215,7 @@ def parse_destination(text: str) -> str:
         from google import genai
         client = genai.Client(api_key=api_key)
         resp = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash-preview-05-20",
             contents=(
                 f"用戶說：「{text}」\n"
                 "請判斷他最可能想去的城市，只回傳英文城市名（如 Tokyo、Los Angeles、Seoul），"

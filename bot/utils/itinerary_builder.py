@@ -235,7 +235,7 @@ def get_hotel_recs(dest_code: str, city_name: str, budget: str = "",
         if not api_key:
             return None
         client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        resp = client.models.generate_content(model="gemini-2.5-flash-preview-05-20", contents=prompt)
         raw = resp.text.strip()
         start, end = raw.find("{"), raw.rfind("}") + 1
         if start == -1 or end == 0:
@@ -364,7 +364,7 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
         if not api_key:
             return None
         client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        resp = client.models.generate_content(model="gemini-2.5-flash-preview-05-20", contents=prompt)
         raw = resp.text.strip()
         # 擷取 JSON array（防止 LLM 回傳多餘文字）
         start = raw.find("[")
