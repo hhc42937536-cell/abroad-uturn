@@ -671,6 +671,23 @@ def _step1_destination(user_id: str, text: str) -> list:
     # ── 先用關鍵字比對（確定） ──
     dest_code = parse_destination_keyword(text)
     if dest_code:
+        # 首爾（SEL）→ 詢問要落地哪個機場
+        if dest_code == "SEL":
+            update_session(user_id, {
+                "destination_name": "首爾",
+                "country_code": "KR",
+                **hints,
+            }, step=1)  # 保留 step=1 等待機場選擇
+            return [{
+                "type": "text",
+                "text": "🇰🇷 首爾！請問你要落地哪個機場？\n\n"
+                        "• 仁川（ICN）—— 大部分國際航班、離市區較遠\n"
+                        "• 金浦（GMP）—— 部分廉航/航點、離市區較近",
+                "quickReply": {"items": [
+                    {"type": "action", "action": {"type": "message", "label": "✈️ 仁川（ICN）", "text": "首爾仁川"}},
+                    {"type": "action", "action": {"type": "message", "label": "✈️ 金浦（GMP）", "text": "首爾金浦"}},
+                ]},
+            }]
         city_name = IATA_TO_NAME.get(dest_code, dest_code)
         country_code = IATA_TO_COUNTRY.get(dest_code, "")
         update_session(user_id, {
