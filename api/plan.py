@@ -61,6 +61,9 @@ class handler(BaseHTTPRequestHandler):
             "itinerary":   plan.get("itinerary", []),
             "insider":     plan.get("insider", ""),
             "must_eat":    plan.get("must_eat", ""),
+            "arr_airport": plan.get("arr_airport", ""),
+            "must_visit":  plan.get("must_visit", ""),
+            "budget_breakdown": plan.get("budget_breakdown", {}),
         }
         self._json(200, payload)
 
