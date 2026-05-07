@@ -270,6 +270,7 @@ def _parse_fixed_dates(custom_requests: str, depart_date: str) -> str:
 def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
                    budget: str = "", adults: int = 1,
                    custom_requests: str = "",
+                   must_visit: str = "",
                    dest_code: str = "",
                    depart_date: str = "") -> list | None:
     """
@@ -295,7 +296,9 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
     season_hint = f"（出發時正值{seasonal_tag}）" if seasonal_tag else ""
     budget_hint = f"預算約 {budget}" if budget else ""
     adults_hint = f"{adults}人同行" if adults > 1 else "獨自旅行"
-    custom_hint = f"\n特別需求：{custom_requests}" if custom_requests else ""
+    custom_hint = f"\n旅遊風格偏好：{custom_requests}" if custom_requests else ""
+    if must_visit:
+        custom_hint += f"\n\n【用戶指定必去景點（一定要安排進行程，不可省略）】\n{must_visit}"
 
     # 固定日期錨點
     fixed_anchors = _parse_fixed_dates(custom_requests, depart_date)
@@ -382,6 +385,7 @@ def _llm_day_plans(city_name: str, days: int, seasonal_tag: str = "",
 
 def build_itinerary_flex(dest_code: str, depart_date: str, return_date: str,
                          city_name: str = "", custom_requests: str = "",
+                         must_visit: str = "",
                          budget: str = "", adults: int = 1) -> list:
     """
     生成行程大綱 Flex Carousel（1 則訊息）
@@ -407,7 +411,7 @@ def build_itinerary_flex(dest_code: str, depart_date: str, return_date: str,
     if days >= 3:
         llm_plans = _llm_day_plans(
             display_city, days, seasonal_tag, budget, adults, custom_requests,
-            dest_code=dest_code, depart_date=depart_date,
+            must_visit=must_visit, dest_code=dest_code, depart_date=depart_date,
         )
 
     bubbles = []

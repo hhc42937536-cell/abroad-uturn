@@ -465,16 +465,17 @@ def handle_postback(user_id: str, data: str) -> list:
             depart = session.get("depart_date", "")
             ret = session.get("return_date", "")
             custom = session.get("custom_requests", "")
+            must_visit = session.get("must_visit", "")
             budget_num = session.get("budget", 0)
             budget = f"NT${budget_num//10000}萬" if budget_num else ""
             adults = session.get("adults", 1)
-            print(f"[step8] dest={dest!r} depart={depart!r} ret={ret!r} custom={custom!r}")
+            print(f"[step8] dest={dest!r} depart={depart!r} ret={ret!r} custom={custom!r} must_visit={must_visit!r}")
             itinerary_msgs = []
             if dest and depart:
                 try:
                     itinerary_msgs = build_itinerary_flex(
                         dest, depart, ret, city,
-                        custom_requests=custom, budget=budget, adults=adults,
+                        custom_requests=custom, must_visit=must_visit, budget=budget, adults=adults,
                     )
                 except Exception as e:
                     print(f"[step8] itinerary error: {e}")
@@ -1429,11 +1430,10 @@ def _prompt_itinerary(user_id: str) -> list:
         # 已從初始訊息偵測到行程偏好，直接顯示並讓用戶確認或修改
         return [{
             "type": "text", "text":
-                f"[6/8] 行程大綱\n\n"
-                f"目的地：{city}\n"
-                f"天數：{days_text}\n\n"
-                f"✅ 我已記住你的行程偏好：\n「{pre_filled}」\n\n"
-                f"可以直接點「繼續」讓我規劃，或輸入其他想法來調整：",
+                f"[6/8] 必去景點\n\n"
+                f"目的地：{city}　天數：{days_text}\n\n"
+                f"✅ 已記住你的指定：\n「{pre_filled}」\n\n"
+                f"還有其他非去不可的景點嗎？\n沒有就點「繼續」讓 AI 排行程：",
             "quickReply": {
                 "items": [
                     {"type": "action", "action": {"type": "message", "label": "✅ 就這樣，繼續", "text": pre_filled}},
@@ -1476,18 +1476,22 @@ def _prompt_itinerary(user_id: str) -> list:
 
     return [{
         "type": "text", "text":
-            f"[6/8] 行程大綱\n\n"
-            f"目的地：{city}\n"
-            f"天數：{days_text}\n\n"
-            f"有沒有特別想去的景點或固定日期行程？\n\n"
-            f"可以告訴我，例如：\n{hint}\n\n"
-            f"或點下方快捷，或輸入「幫我規劃」由我自動安排",
+            f"[6/8] 必去景點\n\n"
+            f"目的地：{city}　天數：{days_text}\n\n"
+            f"有沒有非去不可的景點？🗺️\n"
+            f"告訴我，AI 一定會幫你排進行程！\n\n"
+            f"例如：\n{hint}\n\n"
+            f"沒有指定景點？點「幫我規劃」，AI 自動安排",
         "quickReply": {"items": items},
     }]
 
 
 def _step6_itinerary(user_id: str, text: str) -> list:
-    update_session(user_id, {"custom_requests": text.strip()}, step=7)
+    t = text.strip()
+    updates: dict = {"custom_requests": t}
+    if t and t not in ("幫我規劃", "跳過", "沒有", ""):
+        updates["must_visit"] = t
+    update_session(user_id, updates, step=7)
     return _prompt_travel_info(user_id)
 
 
@@ -1733,13 +1737,14 @@ def _step7_travel_info(user_id: str, text: str) -> list:
     budget = f"NT${_budget_num//10000}萬" if _budget_num else ""
     adults = session.get("adults", 1)
     custom = session.get("custom_requests", "")
-    print(f"[step7] dest={dest!r} depart={depart!r} ret={ret!r} custom={custom!r}")
+    must_visit = session.get("must_visit", "")
+    print(f"[step7] dest={dest!r} depart={depart!r} ret={ret!r} custom={custom!r} must_visit={must_visit!r}")
     itinerary_msgs = []
     if dest and depart:
         try:
             itinerary_msgs = build_itinerary_flex(
                 dest, depart, ret, city,
-                custom_requests=custom, budget=budget, adults=adults,
+                custom_requests=custom, must_visit=must_visit, budget=budget, adults=adults,
             )
         except Exception as e:
             print(f"[step7] itinerary error: {e}")
