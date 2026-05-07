@@ -711,6 +711,24 @@ def _step1_destination(user_id: str, text: str) -> list:
                     for btn, txt, _ in info["options"]
                 ]},
             }]
+        # 機場碼 → 還原成城市碼 + 記錄 arr_airport
+        _AIRPORT_TO_CITY = {
+            "GMP": ("SEL", "首爾"), "ICN": ("SEL", "首爾"),
+            "HND": ("TYO", "東京"), "NRT": ("TYO", "東京"),
+            "KIX": ("OSA", "大阪"), "ITM": ("OSA", "大阪"),
+            "DMK": ("BKK", "曼谷"),
+        }
+        if dest_code in _AIRPORT_TO_CITY:
+            city_code, city_name = _AIRPORT_TO_CITY[dest_code]
+            country_code = IATA_TO_COUNTRY.get(city_code, "")
+            update_session(user_id, {
+                "destination_code": city_code,
+                "destination_name": city_name,
+                "country_code": country_code,
+                "arr_airport": dest_code,
+                **hints,
+            }, step=2)
+            return _after_destination_set(user_id, city_name, hints)
         city_name = IATA_TO_NAME.get(dest_code, dest_code)
         country_code = IATA_TO_COUNTRY.get(dest_code, "")
         update_session(user_id, {
@@ -2001,6 +2019,7 @@ def _prompt_summary(user_id: str) -> list:
             city, _calc_days(depart, ret), _seasonal_tag,
             _budget_str, adults, custom,
             dest_code=dest, depart_date=depart,
+            must_visit=session.get("must_visit", ""),
         )
     except Exception as _e:
         print(f"[plan_data] llm_itinerary error: {_e}")
@@ -2022,6 +2041,8 @@ def _prompt_summary(user_id: str) -> list:
         "return_date": ret,
         "origin_code": origin,
         "is_first_timer": session.get("is_first_timer", False),
+        "arr_airport": session.get("arr_airport", ""),
+        "must_visit": session.get("must_visit", ""),
         "llm_itinerary": _llm_itinerary,
         "must_eat": _get_must_eat(dest),
         "itinerary": _get_itinerary_for_download(dest, depart, ret),
