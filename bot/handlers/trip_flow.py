@@ -371,7 +371,9 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
 
     if ready and has_dest and has_date:
         if not updates.get("adults") and not session.get("adults"):
-            updates["adults"] = 1
+            import re as _re
+            _m = _re.search(r"(\d+)", text)
+            updates["adults"] = int(_m.group(1)) if _m else 1
         update_session(user_id, updates, step=4)
         from bot.services.supabase_logger import log as slog
         turns = session.get("gather_turns", 0) + 1
