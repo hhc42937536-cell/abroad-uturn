@@ -673,6 +673,13 @@ def _step1_destination(user_id: str, text: str) -> list:
     if dest_code:
         # 雙機場城市 → 詢問要落地哪個機場
         _DUAL_AIRPORTS = {
+            "TYO": {
+                "name": "東京", "flag": "🇯🇵",
+                "options": [
+                    ("✈️ 羽田（HND）", "東京羽田", "近市區，多台灣直飛"),
+                    ("✈️ 成田（NRT）", "東京成田", "國際航班為主，離市區較遠"),
+                ],
+            },
             "SEL": {
                 "name": "首爾", "flag": "🇰🇷",
                 "options": [
