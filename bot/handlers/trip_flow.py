@@ -2009,6 +2009,13 @@ def _prompt_summary(user_id: str) -> list:
                        "uri": agoda_url(city_kw, depart, ret)},
         })
 
+    # 機票實際價格（優先用使用者選定的，其次用搜尋第一筆）
+    _flight_price_for_breakdown = 0
+    if flight_choice:
+        _flight_price_for_breakdown = flight_choice.get("price", 0)
+    elif session.get("flight_results"):
+        _flight_price_for_breakdown = session["flight_results"][0].get("price", 0)
+
     # 產生下載 token，存行程資料到 Redis（72 小時）
     import uuid
     from bot.services.redis_store import redis_set
@@ -2052,7 +2059,7 @@ def _prompt_summary(user_id: str) -> list:
         "is_first_timer": session.get("is_first_timer", False),
         "arr_airport": session.get("arr_airport", ""),
         "must_visit": session.get("must_visit", ""),
-        "budget_breakdown": _get_budget_breakdown(dest, _calc_days(depart, ret), adults, budget),
+        "budget_breakdown": _get_budget_breakdown(dest, _calc_days(depart, ret), adults, _flight_price_for_breakdown),
         "llm_itinerary": _llm_itinerary,
         "must_eat": _get_must_eat(dest),
         "itinerary": _get_itinerary_for_download(dest, depart, ret),
@@ -2078,14 +2085,9 @@ def _prompt_summary(user_id: str) -> list:
 
     # ── 預估支出 Bubble ──
     from bot.utils.budget_estimator import build_budget_bubble
-    flight_price = 0
-    if flight_choice:
-        flight_price = flight_choice.get("price", 0)
-    elif session.get("flight_results"):
-        flight_price = session["flight_results"][0].get("price", 0)
     budget_bubble = None
-    if dest and days > 0 and flight_price > 0:
-        budget_bubble = build_budget_bubble(dest, city, days, adults, flight_price, flag)
+    if dest and days > 0 and _flight_price_for_breakdown > 0:
+        budget_bubble = build_budget_bubble(dest, city, days, adults, _flight_price_for_breakdown, flag)
 
     # 儲存回饋排程（回程後 D+1 push 滿意度問卷）
     if ret and dest:
