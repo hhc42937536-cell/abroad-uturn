@@ -702,7 +702,7 @@ def _step1_destination(user_id: str, text: str) -> list:
                 "country_code": IATA_TO_COUNTRY.get(dest_code, ""),
                 **hints,
             }, step=1)
-            lines = "\n".join(f"• {label} —— {desc}" for _, _, desc in info["options"])
+            lines = "\n".join(f"• {btn} —— {desc}" for btn, _, desc in info["options"])
             return [{
                 "type": "text",
                 "text": f"{info['flag']} {info['name']}！請問你要落地哪個機場？\n\n{lines}",
