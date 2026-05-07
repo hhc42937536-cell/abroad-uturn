@@ -2043,6 +2043,7 @@ def _prompt_summary(user_id: str) -> list:
         "is_first_timer": session.get("is_first_timer", False),
         "arr_airport": session.get("arr_airport", ""),
         "must_visit": session.get("must_visit", ""),
+        "budget_breakdown": _get_budget_breakdown(dest, _calc_days(depart, ret), adults, budget),
         "llm_itinerary": _llm_itinerary,
         "must_eat": _get_must_eat(dest),
         "itinerary": _get_itinerary_for_download(dest, depart, ret),
@@ -2163,6 +2164,16 @@ def _prompt_summary(user_id: str) -> list:
     })
 
     return msgs
+
+
+def _get_budget_breakdown(dest: str, days: int, adults: int, flight_price: int) -> dict:
+    """回傳預算估算 dict，供 docx 使用。"""
+    try:
+        from bot.utils.budget_estimator import estimate_budget
+        flight_per_person = (flight_price // adults) if adults and flight_price else 0
+        return estimate_budget(dest, days, adults, flight_per_person)
+    except Exception:
+        return {}
 
 
 def _get_must_eat(dest_code: str) -> list:
