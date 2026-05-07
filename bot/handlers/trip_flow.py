@@ -671,21 +671,44 @@ def _step1_destination(user_id: str, text: str) -> list:
     # ── 先用關鍵字比對（確定） ──
     dest_code = parse_destination_keyword(text)
     if dest_code:
-        # 首爾（SEL）→ 詢問要落地哪個機場
-        if dest_code == "SEL":
+        # 雙機場城市 → 詢問要落地哪個機場
+        _DUAL_AIRPORTS = {
+            "SEL": {
+                "name": "首爾", "flag": "🇰🇷",
+                "options": [
+                    ("✈️ 仁川（ICN）", "首爾仁川", "大部分國際航班、離市區較遠"),
+                    ("✈️ 金浦（GMP）", "首爾金浦", "部分廉航/航點、離市區較近"),
+                ],
+            },
+            "OSA": {
+                "name": "大阪", "flag": "🇯🇵",
+                "options": [
+                    ("✈️ 關西（KIX）", "大阪關西", "多數國際航班"),
+                    ("✈️ 伊丹（ITM）", "大阪伊丹", "部分亞洲航線、近市區"),
+                ],
+            },
+            "BKK": {
+                "name": "曼谷", "flag": "🇹🇭",
+                "options": [
+                    ("✈️ 素萬那普（BKK）", "曼谷素萬那普", "多數國際航班"),
+                    ("✈️ 廊曼（DMK）", "曼谷廊曼", "廉航常用（虎航/獅航）"),
+                ],
+            },
+        }
+        if dest_code in _DUAL_AIRPORTS:
+            info = _DUAL_AIRPORTS[dest_code]
             update_session(user_id, {
-                "destination_name": "首爾",
-                "country_code": "KR",
+                "destination_name": info["name"],
+                "country_code": IATA_TO_COUNTRY.get(dest_code, ""),
                 **hints,
-            }, step=1)  # 保留 step=1 等待機場選擇
+            }, step=1)
+            lines = "\n".join(f"• {label} —— {desc}" for _, _, desc in info["options"])
             return [{
                 "type": "text",
-                "text": "🇰🇷 首爾！請問你要落地哪個機場？\n\n"
-                        "• 仁川（ICN）—— 大部分國際航班、離市區較遠\n"
-                        "• 金浦（GMP）—— 部分廉航/航點、離市區較近",
+                "text": f"{info['flag']} {info['name']}！請問你要落地哪個機場？\n\n{lines}",
                 "quickReply": {"items": [
-                    {"type": "action", "action": {"type": "message", "label": "✈️ 仁川（ICN）", "text": "首爾仁川"}},
-                    {"type": "action", "action": {"type": "message", "label": "✈️ 金浦（GMP）", "text": "首爾金浦"}},
+                    {"type": "action", "action": {"type": "message", "label": btn, "text": txt}}
+                    for btn, txt, _ in info["options"]
                 ]},
             }]
         city_name = IATA_TO_NAME.get(dest_code, dest_code)
