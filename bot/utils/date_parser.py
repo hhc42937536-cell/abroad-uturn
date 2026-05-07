@@ -191,7 +191,7 @@ def parse_date_range(text: str) -> tuple:
 def parse_destination_keyword(text: str) -> str:
     """只用關鍵字比對，不呼叫 LLM。找不到回傳空字串。"""
     text_lower = text.lower().strip()
-    for name, code in CITY_CODES.items():
+    for name, code in sorted(CITY_CODES.items(), key=lambda x: -len(x[0])):
         if name in text_lower:
             return code
     m = re.search(r"\b([A-Z]{3})\b", text)
