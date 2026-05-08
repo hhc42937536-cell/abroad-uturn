@@ -342,9 +342,22 @@ def _llm_gather(user_id: str, text: str, greeting: str = "") -> list:
         code = (parse_destination_keyword(extracted["destination"])
                 or parse_destination(extracted["destination"]))
         if code:
-            updates["destination_code"] = code
-            updates["destination_name"] = IATA_TO_NAME.get(code, extracted["destination"])
-            updates["country_code"] = IATA_TO_COUNTRY.get(code, "")
+            _ap2city = {
+                "GMP": ("SEL", "首爾"), "ICN": ("SEL", "首爾"),
+                "HND": ("TYO", "東京"), "NRT": ("TYO", "東京"),
+                "KIX": ("OSA", "大阪"), "ITM": ("OSA", "大阪"),
+                "DMK": ("BKK", "曼谷"),
+            }
+            if code in _ap2city:
+                city_code, city_name = _ap2city[code]
+                updates["destination_code"] = city_code
+                updates["destination_name"] = city_name
+                updates["country_code"] = IATA_TO_COUNTRY.get(city_code, "")
+                updates["arr_airport"] = code
+            else:
+                updates["destination_code"] = code
+                updates["destination_name"] = IATA_TO_NAME.get(code, extracted["destination"])
+                updates["country_code"] = IATA_TO_COUNTRY.get(code, "")
         else:
             updates["destination_name"] = extracted["destination"]
 
@@ -425,6 +438,12 @@ def handle_step(user_id: str, text: str, step: int) -> list:
 
     # Steps 1-3 全部走 LLM 對話蒐集，降級時再走個別制式 handler
     if step in (1, 2, 3):
+        # 雙機場待選狀態：destination_name 已設但 destination_code 尚未確認
+        # 必須在 LLM 前攔截，否則 LLM 把 destination 視為已知而不重新萃取機場碼
+        if step == 1:
+            _s = get_session(user_id) or {}
+            if _s.get("destination_name") and not _s.get("destination_code"):
+                return _step1_destination(user_id, text)
         try:
             return _llm_gather(user_id, text)
         except Exception as e:
@@ -669,6 +688,29 @@ def _step1_destination(user_id: str, text: str) -> list:
         ]
 
     hints = _parse_hints_from_text(text)
+
+    # ── 優先：文字中直接含機場名稱關鍵字 → 直接設定，不再詢問 ──
+    _TEXT_TO_AIRPORT = {
+        "羽田": ("HND", "TYO", "東京"),
+        "成田": ("NRT", "TYO", "東京"),
+        "仁川": ("ICN", "SEL", "首爾"),
+        "金浦": ("GMP", "SEL", "首爾"),
+        "關西": ("KIX", "OSA", "大阪"),
+        "伊丹": ("ITM", "OSA", "大阪"),
+        "素萬那普": ("BKK", "BKK", "曼谷"),
+        "廊曼": ("DMK", "BKK", "曼谷"),
+    }
+    for kw, (ap_code, city_code, city_name) in _TEXT_TO_AIRPORT.items():
+        if kw in text:
+            country_code = IATA_TO_COUNTRY.get(city_code, "")
+            update_session(user_id, {
+                "destination_code": city_code,
+                "destination_name": city_name,
+                "country_code": country_code,
+                "arr_airport": ap_code,
+                **hints,
+            }, step=2)
+            return _after_destination_set(user_id, city_name, hints)
 
     # ── 先用關鍵字比對（確定） ──
     dest_code = parse_destination_keyword(text)
